@@ -1,9 +1,9 @@
 ---
 title: API設計・エンドポイント仕様
-author: team
-created: 2025-08-28
-updated: 2025-08-28
-status: draft
+author: @claude
+created: 2025-09-03
+updated: 2025-09-03
+status: published
 ---
 
 # API設計・エンドポイント仕様
@@ -133,45 +133,45 @@ status: draft
 ```typescript
 // 成功レスポンス
 interface SuccessResponse<T> {
-  success: true;
-  data: T;
-  message?: string;
+  success: true
+  data: T
+  message?: string
 }
 
 // エラーレスポンス
 interface ErrorResponse {
-  success: false;
+  success: false
   error: {
-    code: string;
-    message: string;
-    details?: any;
-  };
+    code: string
+    message: string
+    details?: any
+  }
 }
 
 // ページネーション
 interface PaginatedResponse<T> {
-  success: true;
-  data: T[];
+  success: true
+  data: T[]
   pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }
 ```
 
 ### エラーハンドリング
 
-| ステータス | 説明 | 使用場面 |
-|------------|------|----------|
-| 200 | OK | 正常な取得・更新 |
-| 201 | Created | リソースの作成 |
-| 400 | Bad Request | 不正なリクエスト |
-| 401 | Unauthorized | 認証が必要 |
-| 403 | Forbidden | 権限不足 |
-| 404 | Not Found | リソースが存在しない |
-| 500 | Internal Server Error | サーバー内部エラー |
+| ステータス | 説明                  | 使用場面             |
+| ---------- | --------------------- | -------------------- |
+| 200        | OK                    | 正常な取得・更新     |
+| 201        | Created               | リソースの作成       |
+| 400        | Bad Request           | 不正なリクエスト     |
+| 401        | Unauthorized          | 認証が必要           |
+| 403        | Forbidden             | 権限不足             |
+| 404        | Not Found             | リソースが存在しない |
+| 500        | Internal Server Error | サーバー内部エラー   |
 
 ### 認証ヘッダー
 
@@ -268,29 +268,32 @@ const UserSchema = z.object({
 // 2. OpenAPIルート定義
 const app = new OpenAPIHono()
 
-app.openapi({
-  method: 'get',
-  path: '/api/users/{id}',
-  request: {
-    params: z.object({
-      id: z.string(),
-    }),
-  },
-  responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: UserSchema,
+app.openapi(
+  {
+    method: 'get',
+    path: '/api/users/{id}',
+    request: {
+      params: z.object({
+        id: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: UserSchema,
+          },
         },
+        description: 'ユーザー詳細',
       },
-      description: 'ユーザー詳細',
     },
   },
-}, async (c) => {
-  const { id } = c.req.valid('param')
-  // 実装...
-  return c.json({ id, name: 'User', email: 'user@example.com' })
-})
+  async c => {
+    const { id } = c.req.valid('param')
+    // 実装...
+    return c.json({ id, name: 'User', email: 'user@example.com' })
+  }
+)
 
 // 3. OpenAPI仕様生成
 app.doc('/doc', {

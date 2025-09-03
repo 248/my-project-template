@@ -1,3 +1,11 @@
+---
+title: Go移行戦略
+author: @claude
+created: 2025-09-03
+updated: 2025-09-03
+status: published
+---
+
 # Go移行戦略
 
 ## 概要

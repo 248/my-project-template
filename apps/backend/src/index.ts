@@ -1,3 +1,6 @@
+// OpenTelemetryを最初に初期化（他のimportより前に実行）
+import { telemetrySDK } from '@/utils/telemetry'
+
 import { serve } from '@hono/node-server'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
@@ -7,6 +10,7 @@ import { timing } from 'hono/timing'
 import { swaggerUI } from '@hono/swagger-ui'
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { createLogger } from '@/utils/logger'
+import { tracingMiddleware } from '@/middleware/tracing'
 // API契約パッケージからOpenAPI生成型を使用
 import { HealthCheckSchema } from '@template/api-contracts-ts'
 
@@ -17,6 +21,7 @@ const log = createLogger('server')
 const app = new OpenAPIHono()
 
 // ミドルウェア設定
+app.use('*', tracingMiddleware()) // OpenTelemetryトレーシング
 app.use('*', honoLogger())
 app.use('*', timing())
 app.use('*', prettyJSON())
@@ -80,6 +85,10 @@ app.doc('/api/openapi.json', {
 })
 
 app.get('/api/docs', swaggerUI({ url: '/api/openapi.json' }))
+
+// OpenTelemetryを開始
+telemetrySDK.start()
+log.info('📊 OpenTelemetry telemetry started')
 
 // サーバー起動
 const port = Number(process.env['PORT']) || 8000

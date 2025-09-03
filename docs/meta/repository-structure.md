@@ -1,9 +1,9 @@
 ---
 title: リポジトリガイドライン
-author: ChatGPT
-created: 2025-08-28
-updated: 2025-08-28
-status: draft
+author: @claude
+created: 2025-09-03
+updated: 2025-09-03
+status: published
 ---
 
 # 推奨モノレポ構成（コード＋ドキュメント統合）
@@ -45,7 +45,7 @@ repo/
 ├─ infra/
 │  ├─ docker/                   # Dockerfile群（fe/be）
 │  ├─ k8s/                      # (任意) マニフェスト
-│  └─ compose.yaml              # FE/BE/DB/Redis まとめ起動
+│  └─ docker-compose.yml        # FE/BE/DB/Redis まとめ起動
 ├─ .devcontainer/               # VS Code/Devcontainers（FE/BE両方入る）
 ├─ .github/workflows/           # CI（パスベースで分離デプロイ）
 └─ CODEOWNERS
