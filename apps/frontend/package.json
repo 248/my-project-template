@@ -23,7 +23,6 @@
   "dependencies": {
     "@template/api-contracts-ts": "workspace:*",
     "@template/shared": "workspace:*",
-    "@template/ui": "workspace:*",
     "@clerk/nextjs": "^6.31.5",
     "@heroicons/react": "^2.2.0",
     "@prisma/client": "^6.15.0",
