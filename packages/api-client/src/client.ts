@@ -12,7 +12,10 @@ export function createApiClient(baseUrl: string): ApiClient {
   return {
     async get<T>(path: string): Promise<T> {
       const response = await fetch(`${baseUrl}${path}`)
-      return response.json() as Promise<T>
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      return await response.json()
     },
     async post<T>(path: string, data?: unknown): Promise<T> {
       const response = await fetch(`${baseUrl}${path}`, {
@@ -20,7 +23,10 @@ export function createApiClient(baseUrl: string): ApiClient {
         headers: { 'Content-Type': 'application/json' },
         body: data ? JSON.stringify(data) : undefined,
       })
-      return response.json() as Promise<T>
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      return await response.json()
     },
     async put<T>(path: string, data?: unknown): Promise<T> {
       const response = await fetch(`${baseUrl}${path}`, {
@@ -28,13 +34,19 @@ export function createApiClient(baseUrl: string): ApiClient {
         headers: { 'Content-Type': 'application/json' },
         body: data ? JSON.stringify(data) : undefined,
       })
-      return response.json() as Promise<T>
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      return await response.json()
     },
     async delete<T>(path: string): Promise<T> {
       const response = await fetch(`${baseUrl}${path}`, {
         method: 'DELETE',
       })
-      return response.json() as Promise<T>
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      return await response.json()
     },
   }
 }

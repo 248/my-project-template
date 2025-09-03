@@ -60,7 +60,7 @@ const healthCheckRoute = createRoute({
   },
 })
 
-app.openapi(healthCheckRoute, (c) => {
+app.openapi(healthCheckRoute, c => {
   return c.json({
     message: 'Project Template API Server',
     version: '0.1.0',
@@ -79,7 +79,7 @@ app.doc('/api/openapi.json', {
   },
   servers: [
     {
-      url: `http://localhost:${Number(process.env.PORT) || 8000}`,
+      url: `http://localhost:${Number(process.env['PORT']) || 8000}`,
       description: '開発環境',
     },
   ],
@@ -87,8 +87,8 @@ app.doc('/api/openapi.json', {
 
 app.get('/api/docs', swaggerUI({ url: '/api/openapi.json' }))
 
-// サーバー起動  
-const port = Number(process.env.PORT) || 8000
+// サーバー起動
+const port = Number(process.env['PORT']) || 8000
 console.log(`🚀 Server is running on port ${port}`)
 console.log(`📖 API Docs: http://localhost:${port}/api/docs`)
 console.log(`🔍 OpenAPI Spec: http://localhost:${port}/api/openapi.json`)

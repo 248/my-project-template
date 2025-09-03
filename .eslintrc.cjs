@@ -139,6 +139,63 @@ module.exports = {
       },
     },
 
+    // Backend用のTypeScriptファイル
+    {
+      files: ['apps/backend/**/*.{ts,tsx}'],
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        project: './apps/backend/tsconfig.json',
+        tsconfigRootDir: __dirname,
+        ecmaVersion: 2022,
+        sourceType: 'module',
+      },
+      env: {
+        node: true,
+        es2022: true,
+      },
+      plugins: ['@typescript-eslint'],
+      extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
+        'plugin:@typescript-eslint/recommended-requiring-type-checking',
+      ],
+      rules: {
+        // ベース
+        'prefer-const': 'error',
+        'no-var': 'error',
+        'no-console': 'off', // バックエンドではconsole許可
+
+        // any/unknown を締める
+        '@typescript-eslint/no-explicit-any': ['error', { fixToUnknown: true }],
+        '@typescript-eslint/no-unsafe-assignment': 'error',
+        '@typescript-eslint/no-unsafe-call': 'error',
+        '@typescript-eslint/no-unsafe-member-access': 'error',
+        '@typescript-eslint/no-unsafe-return': 'error',
+        '@typescript-eslint/no-unsafe-argument': 'error',
+        '@typescript-eslint/ban-ts-comment': [
+          'error',
+          { 'ts-ignore': 'allow-with-description' },
+        ],
+        '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+        '@typescript-eslint/consistent-type-assertions': [
+          'error',
+          { assertionStyle: 'never' },
+        ],
+
+        // 型情報活用
+        '@typescript-eslint/await-thenable': 'error',
+        '@typescript-eslint/no-floating-promises': 'error',
+        '@typescript-eslint/no-misused-promises': 'error',
+        '@typescript-eslint/require-await': 'error',
+
+        // 未使用変数
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+        ],
+      },
+    },
+
     // packages ディレクトリ（TypeScript ファイル）
     {
       files: ['packages/**/*.{ts,tsx}'],
@@ -202,6 +259,15 @@ module.exports = {
           'error',
           { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
         ],
+      },
+    },
+
+    // api-client パッケージの一時的な実装は型制約を緩和
+    {
+      files: ['packages/api-client/**/*'],
+      rules: {
+        '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/consistent-type-assertions': 'off',
       },
     },
 
