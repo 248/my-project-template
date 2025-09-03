@@ -111,7 +111,7 @@ my-project-template/
 │   └── docker/            # 🐳 Docker開発環境
 │       ├── Dockerfile.frontend
 │       ├── Dockerfile.backend
-│       └── compose.yaml
+│       └── docker-compose.yml
 ├── docs/                  # プロジェクトドキュメント
 └── tools/                 # 開発ツール
 ```
