@@ -1,0 +1,48 @@
+openapi: 3.0.3
+info:
+  title: Project Template API
+  version: 0.1.0
+  description: A template API built with Hono and OpenAPI
+
+servers:
+  - url: http://localhost:8000
+    description: 開発環境
+
+components:
+  schemas:
+    # ヘルスチェック
+    HealthCheck:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Project Template API Server"
+        version:
+          type: string
+          example: "0.1.0"
+        status:
+          type: string
+          example: "healthy"
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - message
+        - version
+        - status
+        - timestamp
+
+paths:
+  # ヘルスチェック
+  /:
+    get:
+      operationId: healthCheck
+      summary: ヘルスチェック
+      description: APIサーバーの状態確認
+      responses:
+        '200':
+          description: サーバー正常
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'

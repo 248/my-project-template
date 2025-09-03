@@ -5,8 +5,11 @@
   "packageManager": "pnpm@8.15.0",
   "scripts": {
     "dev": "pnpm --filter @template/frontend dev",
+    "dev:api": "pnpm --filter @template/backend dev",
+    "dev:fullstack": "pnpm run dev:api & pnpm run dev",
     "build": "pnpm -r build",
     "start": "pnpm --filter @template/frontend start",
+    "start:api": "pnpm --filter @template/backend start",
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "eslint . --ext .ts,.tsx --fix --cache",
     "type-check": "pnpm -r type-check",
