@@ -1,9 +1,9 @@
 ---
 title: リポジトリガイドライン
-author: ChatGPT
-created: 2025-08-28
-updated: 2025-08-28
-status: draft
+author: @claude
+created: 2025-09-03
+updated: 2025-09-03
+status: published
 ---
 
 # 推奨モノレポ構成（コード＋ドキュメント統合）

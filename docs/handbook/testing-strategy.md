@@ -1,8 +1,8 @@
 ---
 title: テスト戦略・品質保証方針
-author: team
-created: 2025-08-28
-updated: 2025-08-28
+author: @claude
+created: 2025-09-03
+updated: 2025-09-03
 status: published
 ---
 
@@ -141,19 +141,19 @@ TypeScriptコンパイラオプションの厳格な設定：
 
 ### 必須メトリクス
 
-| 項目 | 基準 | 測定方法 |
-|------|------|----------|
-| TypeScriptエラー | 0件 | `pnpm type-check` |
-| ESLintエラー・警告 | 0件 | `pnpm lint` |
-| ビルド成功率 | 100% | `pnpm build` |
+| 項目               | 基準 | 測定方法          |
+| ------------------ | ---- | ----------------- |
+| TypeScriptエラー   | 0件  | `pnpm type-check` |
+| ESLintエラー・警告 | 0件  | `pnpm lint`       |
+| ビルド成功率       | 100% | `pnpm build`      |
 
 ### 将来メトリクス（テスト導入後）
 
-| 項目 | 目標 | 測定方法 |
-|------|------|----------|
-| テストカバレッジ | 80%以上 | Istanbul |
-| テスト成功率 | 100% | CI/CD |
-| パフォーマンス | Core Web Vitals | Lighthouse |
+| 項目             | 目標            | 測定方法   |
+| ---------------- | --------------- | ---------- |
+| テストカバレッジ | 80%以上         | Istanbul   |
+| テスト成功率     | 100%            | CI/CD      |
+| パフォーマンス   | Core Web Vitals | Lighthouse |
 
 ---
 
