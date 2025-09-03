@@ -27,10 +27,14 @@ status: published
 pnpm install
 ```
 
-### 2. Docker サービス起動（DB 等）
+### 2. Docker サービス起動（PostgreSQL + Redis）
 
 ```bash
-cd infra/docker && docker compose up -d
+# PostgreSQL + Redis 起動
+pnpm db:up
+
+# または従来の方法
+cd infra/docker && docker compose up -d postgres redis
 cd -
 ```
 
@@ -150,10 +154,17 @@ pnpm db:generate         # Prisma → DBクライアント生成（server境界�
 ### データベース操作
 
 ```bash
-pnpm --filter frontend db:push      # Prisma schema → DB反映（開発用）
-pnpm --filter frontend db:migrate   # マイグレーション実行
-pnpm --filter frontend db:studio    # Prisma Studio起動
-pnpm --filter frontend db:seed      # シードデータ投入
+# データベースサービス管理
+pnpm db:up           # PostgreSQL + Redis 起動
+pnpm db:down         # PostgreSQL + Redis 停止
+pnpm db:restart      # データベース再起動
+pnpm db:logs         # データベースログ確認
+
+# Prismaデータベース操作（バックエンド）
+pnpm db:push         # Prisma schema → DB反映（開発用）
+pnpm db:migrate      # マイグレーション実行
+pnpm db:studio       # Prisma Studio起動
+pnpm db:seed         # シードデータ投入（要実装）
 ```
 
 ### プロジェクト特有
@@ -169,7 +180,14 @@ pnpm dev                 # 開発サーバー起動
 ### Docker環境
 
 ```bash
-cd infra/docker && docker-compose up -d  # PostgreSQL + Redis + pgAdmin起動
+# データベースのみ起動
+pnpm db:up
+
+# 全サービス（フロントエンド + バックエンド + データベース）
+pnpm dev:docker
+
+# 従来の方法
+cd infra/docker && docker compose up -d postgres redis
 ```
 
 ---

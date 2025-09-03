@@ -37,9 +37,42 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=8000
+      - DATABASE_URL=postgresql://template_user:template_pass@postgres:5432/template_db
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
     networks:
       - app-network
     command: ['pnpm', '--filter', '@template/backend', 'dev']
+
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_DB=template_db
+      - POSTGRES_USER=template_user
+      - POSTGRES_PASSWORD=template_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+  redis_data:
 
 networks:
   app-network:

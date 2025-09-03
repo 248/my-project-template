@@ -30,6 +30,9 @@
 # 環境構築
 pnpm install
 
+# データベース起動（PostgreSQL + Redis）
+pnpm db:up
+
 # 開発開始（フロントエンド）
 pnpm dev
 
