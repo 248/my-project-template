@@ -15,6 +15,8 @@
     "type-check": "pnpm -r type-check",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "quality-check": "pnpm codegen && pnpm type-check && pnpm lint",
+    "quality-fix": "pnpm lint:fix && pnpm format",
     "codegen": "node tools/codegen/generate-ts-client.mjs",
     "db:generate": "pnpm --filter @template/frontend exec prisma generate",
     "postinstall": "echo 'Setup completed'",

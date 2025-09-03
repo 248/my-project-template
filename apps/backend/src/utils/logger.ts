@@ -1,7 +1,7 @@
 import pino from 'pino'
 
 // 開発環境では pretty-print、本番環境では JSON
-const isProduction = process.env.NODE_ENV === 'production'
+const isProduction = process.env['NODE_ENV'] === 'production'
 
 const transport = isProduction
   ? undefined
@@ -16,7 +16,7 @@ const transport = isProduction
 
 // ベースロガー
 const baseLogger = pino({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env['LOG_LEVEL'] || 'info',
   transport,
 })
 
