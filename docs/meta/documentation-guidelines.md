@@ -1,9 +1,9 @@
 ---
 title: Documentation Guidelines
-author: core-team
-created: 2025-08-28
+author: @claude
+created: 2025-09-03
 updated: 2025-09-03
-status: draft
+status: published
 ---
 
 # Documentation Guidelines

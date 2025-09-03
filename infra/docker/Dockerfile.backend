@@ -1,0 +1,28 @@
+FROM node:20-alpine
+
+# pnpmをインストール
+RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
+
+WORKDIR /app
+
+# package.jsonと関連ファイルをコピー（キャッシュ効率を向上）
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/backend/package.json ./apps/backend/
+# packagesのpackage.jsonを個別にコピー
+COPY packages/api-contracts/codegen/ts/package.json ./packages/api-contracts/codegen/ts/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/config/package.json ./packages/config/
+COPY packages/ui/package.json ./packages/ui/
+
+# 依存関係をインストール（再現性のため--frozen-lockfileを使用）
+RUN pnpm install --frozen-lockfile
+
+# ソースコードをコピー
+COPY . .
+
+# TypeScript型生成
+RUN pnpm codegen
+
+# 開発サーバーを起動
+EXPOSE 8000
+CMD ["pnpm", "--filter", "@template/backend", "dev"]
