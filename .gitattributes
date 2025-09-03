@@ -1,0 +1,69 @@
+# テキストファイルはすべて LF に統一
+* text=auto eol=lf
+
+# TypeScript/JavaScript
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+
+# 設定ファイル
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.env text eol=lf
+*.env.* text eol=lf
+
+# ドキュメント
+*.md text eol=lf
+*.mdx text eol=lf
+*.txt text eol=lf
+
+# Web関連
+*.html text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.sass text eol=lf
+*.less text eol=lf
+*.svg text eol=lf
+*.xml text eol=lf
+
+# シェルスクリプト
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+
+# 設定ファイル
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.editorconfig text eol=lf
+.prettierrc text eol=lf
+.eslintrc text eol=lf
+.babelrc text eol=lf
+Dockerfile text eol=lf
+Makefile text eol=lf
+.prettierignore text eol=lf
+.eslintignore text eol=lf
+
+# バイナリファイルは改行変換しない
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
