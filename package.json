@@ -46,7 +46,6 @@
     "js-yaml": "^4.1.0",
     "lint-staged": "^15.2.10",
     "openapi-typescript": "^7.4.2",
-    "openapi-zod-client": "^1.18.2",
     "postcss": "^8.4.49",
     "prettier": "^3.3.3",
     "tailwindcss": "^3.4.14"

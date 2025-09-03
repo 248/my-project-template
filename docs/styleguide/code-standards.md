@@ -151,9 +151,9 @@ const result = ApiResponseSchema.parse(response.data)
 
 以下のファイルは OpenAPI 仕様から自動生成されるため、**手動編集禁止**:
 
-- `packages/shared/api-client/src/generated/types.ts` - OpenAPIからの型定義
-- `packages/shared/api-client/src/generated/schemas.ts` - Zodスキーマ
-- `packages/shared/api-client/src/generated/client.ts` - 型安全APIクライアント
+- `packages/api-contracts/codegen/ts/src/generated/types.ts` - OpenAPIからの型定義
+- `packages/api-contracts/codegen/ts/src/generated/schemas.ts` - Zodスキーマ
+- `packages/api-contracts/codegen/ts/src/generated/client.ts` - 型安全APIクライアント
 
 ### 変更手順
 

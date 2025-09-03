@@ -161,7 +161,7 @@ pnpm lint --fix    # 自動修正
 
 ### 📋 自動生成ファイル（手動編集禁止）
 
-- `packages/shared/api-client/src/generated/**` - OpenAPI生成ファイル
+- `packages/api-contracts/codegen/ts/src/generated/**` - OpenAPI生成ファイル
 - 自動生成された型定義・スキーマ・クライアントファイル
 
 ---
