@@ -1,0 +1,29 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@db": ["./src/server/db/client.ts"],
+      "@db/*": ["./src/server/db/*"],
+      "@template/shared": ["../../packages/shared/src"],
+      "@template/ui": ["../../packages/ui/src"],
+      "@template/config": ["../../packages/config/src"],
+      "@template/api-client": ["../../packages/api-client/src"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/middleware.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "src/server/generated/**"]
+}

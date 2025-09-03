@@ -1,0 +1,58 @@
+{
+  "name": "my-project-template",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@8.15.0",
+  "scripts": {
+    "dev": "pnpm --filter @template/frontend dev",
+    "build": "pnpm -r build",
+    "start": "pnpm --filter @template/frontend start",
+    "lint": "eslint . --ext .ts,.tsx --cache",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix --cache",
+    "type-check": "pnpm -r type-check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "codegen": "node tools/codegen/generate-ts-client.mjs",
+    "db:generate": "pnpm --filter @template/frontend exec prisma generate",
+    "postinstall": "echo 'Setup completed'",
+    "prebuild": "pnpm codegen && pnpm db:generate",
+    "prepare": "husky",
+    "clean": "pnpm -r clean"
+  },
+  "dependencies": {
+    "next": "15.5.2",
+    "openapi-fetch": "^0.12.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.6.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-parser": "^10.1.0",
+    "@types/node": "^22.8.6",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "15.5.2",
+    "husky": "^9.1.7",
+    "js-yaml": "^4.1.0",
+    "lint-staged": "^15.2.10",
+    "openapi-typescript": "^7.4.2",
+    "openapi-zod-client": "^1.18.2",
+    "postcss": "^8.4.49",
+    "prettier": "^3.3.3",
+    "tailwindcss": "^3.4.14"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix --cache",
+      "prettier --write"
+    ],
+    "*.{json,md,yaml,yml}": [
+      "prettier --write"
+    ]
+  }
+}

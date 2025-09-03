@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "useUnknownInCatchVariables": true,
+    // "exactOptionalPropertyTypes": true, // 自動生成APIクライアントとの整合性を考慮して一時無効化
+    "noImplicitThis": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "incremental": true,
+    "jsx": "preserve",
+    "lib": ["dom", "dom.iterable", "ES2022"],
+    "baseUrl": ".",
+    "paths": {
+      "@template/shared": ["./packages/shared/src"],
+      "@template/ui": ["./packages/ui/src"],
+      "@template/config": ["./packages/config/src"],
+      "@template/api-client": ["./packages/api-client/src"]
+    }
+  }
+}
