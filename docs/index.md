@@ -1,8 +1,8 @@
 ---
-title: プロジェクトドキュメント
-author: team
-created: 2025-08-28
-updated: 2025-09-01
+title: プロジェクトテンプレート ドキュメント
+author: @claude
+created: 2025-09-03
+updated: 2025-09-03
 status: published
 ---
 

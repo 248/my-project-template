@@ -1,9 +1,9 @@
 ---
 title: システム概要・アーキテクチャ
-author: team
-created: 2025-08-28
-updated: 2025-08-28
-status: draft
+author: @claude
+created: 2025-09-03
+updated: 2025-09-03
+status: published
 ---
 
 # システム概要・アーキテクチャ
@@ -84,7 +84,7 @@ graph LR
     API --> DB[PostgreSQL]
     API --> Cache[Redis Cache]
     API --> Auth[Clerk Auth]
-    
+
     Frontend --> CDN[Static Assets]
     OpenAPI[OpenAPI Spec] --> |generates| Types[TypeScript Types]
     Types --> Frontend
