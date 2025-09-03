@@ -16,13 +16,13 @@ components:
       properties:
         message:
           type: string
-          example: "Project Template API Server"
+          example: 'Project Template API Server'
         version:
           type: string
-          example: "0.1.0"
+          example: '0.1.0'
         status:
           type: string
-          example: "healthy"
+          example: 'healthy'
         timestamp:
           type: string
           format: date-time

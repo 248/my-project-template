@@ -14,7 +14,9 @@
       "@template/shared": ["../../packages/shared/src"],
       "@template/ui": ["../../packages/ui/src"],
       "@template/config": ["../../packages/config/src"],
-      "@template/api-client": ["../../packages/api-client/src"]
+      "@template/api-contracts-ts": [
+        "../../packages/api-contracts/codegen/ts/src"
+      ]
     }
   },
   "include": [

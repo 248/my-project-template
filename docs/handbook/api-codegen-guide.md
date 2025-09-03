@@ -12,7 +12,7 @@ status: published
 
 ## 🎯 概要
 
-このプロジェクトでは、OpenAPI 仕様 (`contracts/openapi.yaml`) から型安全な API クライアントを自動生成しています。
+このプロジェクトでは、OpenAPI 仕様 (`packages/api-contracts/openapi.yaml`) から型安全な API クライアントを自動生成しています。
 
 ### 特徴
 
@@ -28,31 +28,34 @@ status: published
 ### ファイル構成
 
 ```
-packages/shared/api-client/
-├── src/
-│   ├── generated/              # 🚫 .gitignore 除外（自動生成）
-│   │   ├── types.ts           # TypeScript型定義
-│   │   ├── schemas.ts         # Zodバリデーションスキーマ
-│   │   └── client.ts          # 型安全APIクライアント
-│   ├── index.ts               # 🎯 境界ラッパ（公開面制御）
-│   ├── package.json
-│   └── tsconfig.json
-└── tools/codegen/
-    └── generate-ts-client.mjs  # 決定的生成スクリプト
+packages/api-contracts/
+├── openapi.yaml                # 🌍 OpenAPI仕様（言語非依存）
+└── codegen/
+    └── ts/                     # TypeScript契約パッケージ
+        ├── src/
+        │   ├── generated/       # 🚫 .gitignore 除外（自動生成）
+        │   │   ├── types.ts     # TypeScript型定義
+        │   │   ├── schemas.ts   # Zodバリデーションスキーマ
+        │   │   └── client.ts    # 型安全APIクライアント
+        │   └── index.ts         # 🎯 境界ラッパ（公開面制御）
+        ├── package.json
+        └── tsconfig.json
+tools/codegen/
+└── generate-ts-client.mjs      # 決定的生成スクリプト
 ```
 
 ### 生成フロー
 
-1. **OpenAPI 仕様** (`contracts/openapi.yaml`)
+1. **OpenAPI 仕様** (`packages/api-contracts/openapi.yaml`)
 2. **決定的生成** (`pnpm codegen`)
    - 固定バージョンのコード生成ツール使用
    - 環境変数で出力先制御
-3. **境界ラッパ** (`packages/shared/api-client/src/index.ts`)
+3. **境界ラッパ** (`packages/api-contracts/codegen/ts/src/index.ts`)
    - 必要な型・APIのみ公開
    - カスタムエラー型・型ガード追加
 4. **アプリでの利用**
    ```typescript
-   import { api, User, ApiError } from '@project/api-client'
+   import { api, User, ApiError } from '@template/api-contracts-ts'
    ```
 
 ---
@@ -62,7 +65,7 @@ packages/shared/api-client/
 ### 基本コマンド
 
 ```bash
-# 推奨：決定的生成（packages/shared/api-client）
+# 推奨：決定的生成（packages/api-contracts/codegen/ts）
 pnpm codegen
 ```
 
@@ -84,7 +87,7 @@ import {
   User,
   isUser,
   ApiValidationError,
-} from '@project/api-client'
+} from '@template/api-contracts-ts'
 
 try {
   // 型安全な API 呼び出し
@@ -114,7 +117,7 @@ try {
 const OPENAPI_TYPESCRIPT_VERSION = '7.4.2'
 
 // 出力先設定
-const OUTPUT_BASE = 'packages/shared/api-client/src/generated'
+const OUTPUT_BASE = 'packages/api-contracts/codegen/ts/src/generated'
 ```
 
 ### ESLint 除外設定
@@ -123,7 +126,7 @@ const OUTPUT_BASE = 'packages/shared/api-client/src/generated'
 
 ```javascript
 {
-  files: ['packages/shared/api-client/src/generated/**/*'],
+  files: ['packages/api-contracts/codegen/ts/src/generated/**/*'],
   parser: 'espree',
   parserOptions: { project: null },
   rules: {
@@ -136,7 +139,7 @@ const OUTPUT_BASE = 'packages/shared/api-client/src/generated'
 
 ### TypeScript 設定
 
-`packages/shared/api-client/tsconfig.json`:
+`packages/api-contracts/codegen/ts/tsconfig.json`:
 
 ```json
 {
@@ -150,18 +153,18 @@ const OUTPUT_BASE = 'packages/shared/api-client/src/generated'
 
 ### よくある問題
 
-| 問題             | 原因                 | 解決策                                                        |
-| ---------------- | -------------------- | ------------------------------------------------------------- |
-| 生成が失敗する   | OpenAPI 仕様エラー   | `contracts/openapi.yaml` を修正                               |
-| 型エラーが出る   | 境界ラッパの型不一致 | `src/index.ts` の型定義を調整                                 |
-| 古い生成物が残る | Git キャッシュ       | `git rm --cached -r packages/shared/api-client/src/generated` |
-| ビルドが遅い     | 毎回生成される       | `.gitignore` 設定を確認                                       |
+| 問題             | 原因                 | 解決策                                                               |
+| ---------------- | -------------------- | -------------------------------------------------------------------- |
+| 生成が失敗する   | OpenAPI 仕様エラー   | `packages/api-contracts/openapi.yaml` を修正                         |
+| 型エラーが出る   | 境界ラッパの型不一致 | `packages/api-contracts/codegen/ts/src/index.ts` の型定義を調整      |
+| 古い生成物が残る | Git キャッシュ       | `git rm --cached -r packages/api-contracts/codegen/ts/src/generated` |
+| ビルドが遅い     | 毎回生成される       | `.gitignore` 設定を確認                                              |
 
 ### デバッグコマンド
 
 ```bash
 # 1. 生成物をクリア
-rm -rf packages/shared/api-client/src/generated
+rm -rf packages/api-contracts/codegen/ts/src/generated
 
 # 2. 決定的生成を実行
 pnpm codegen
@@ -222,7 +225,7 @@ export const safeApi = {
 - **[開発者ガイド](./developer-guide.md)** - 基本コマンド・セットアップ
 - **[システム概要](../architecture/system-overview.md)** - アーキテクチャ全体
 - **[コード規約](../styleguide/code-standards.md)** - 品質基準
-- **[API 仕様](../../contracts/openapi.yaml)** - OpenAPI 仕様書
+- **[API 仕様](../../packages/api-contracts/openapi.yaml)** - OpenAPI 仕様書
 
 ---
 

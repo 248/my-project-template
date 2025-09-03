@@ -15,10 +15,15 @@ repo/
 │  └─ backend/                  # Hono API サーバー（TypeScript）
 ├─ packages/
 │  ├─ ui/                       # 共有UI(React)
-│  ├─ shared/                   # TS共通型/ユーティリティ（FE中心）
-│  │  └─ api-client/            # 🆕 OpenAPI生成物の境界ラッパ（型安全APIクライアント）
-├─ contracts/
-│  └─ openapi.yaml              # API契約の単一ソース（真実の源泉）
+│  ├─ shared/                   # 軽量・言語非依存ユーティリティ
+│  ├─ api-contracts/            # 🆕 OpenAPI契約の単一ソース
+│  │  ├─ openapi.yaml           # API仕様（言語非依存）
+│  │  └─ codegen/
+│  │      ├─ ts/                # TypeScript契約パッケージ
+│  │      │   ├─ src/generated/ # 型安全APIクライアント・スキーマ
+│  │      │   └─ src/index.ts   # 境界ラッパ（公開面制御）
+│  │      └─ go/                # Go契約パッケージ（将来対応）
+│  ├─ config/                   # 設定管理
 ├─ docs/                        # ← ドキュメントのトップ
 │  ├─ index.md                  # ポータル（読む導線を役割別に整理）
 │  ├─ meta/                     # プロジェクトのドキュメントポリシーや運用ルール
@@ -28,7 +33,7 @@ repo/
 │  ├─ adr/                      # Architectural Decision Records（YYYY-MM-DD-*.md）
 │  ├─ rfc/                      # 大きめの提案/仕様検討（ドラフト→採択）
 │  ├─ product/                  # 要件/ロードマップ/ユーザーストーリー
-│  ├─ api/                      # ← contracts から自動生成されたAPIドキュメント
+│  ├─ api/                      # ← packages/api-contracts から自動生成されたAPIドキュメント
 │  ├─ contrib/                  # コントリビュートガイド/レビュー方針
 │  ├─ styleguide/               # コード規約/命名/ブランチ・コミット規約
 │  └─ _assets/                  # 画像/図（Mermaid/PlantUML等）
@@ -50,7 +55,8 @@ repo/
 
 - ドキュメントは `docs/` に集約し、**役割別にサブディレクトリ**を切る（探しやすい）。
 - **APIドキュメントは自動生成**して `docs/api/` に配置（手書きと明確に分離）。
-- 契約は `contracts/openapi.yaml` を**唯一の真実**に。変更時は FE/BE 両方のビルド/テストを CI で走らせる。
+- 契約は `packages/api-contracts/openapi.yaml` を**唯一の真実**に。変更時は FE/BE 両方のビルド/テストを CI で走らせる。
+- 言語別契約パッケージで責務分離：TypeScript（`codegen/ts/`）、Go（`codegen/go/`）
 - `CODEOWNERS` で `docs/` 配下の責務を明確化（例：`runbooks` は SRE、`adr` はTech Lead+PM）。
 
 ---
@@ -153,15 +159,15 @@ mkdirSync('docs/api', { recursive: true })
 // HTML or Markdown 生成（好きなジェネレータでOK）
 execSync(
   `
-  npx redoc-cli bundle contracts/openapi.yaml \
+  npx redoc-cli bundle packages/api-contracts/openapi.yaml \
     -o docs/api/index.html --options.theme.colors.primary.main=#0ea5e9
 `,
   { stdio: 'inherit' }
 )
 
 // 型やクライアント生成もここで一緒に
-// - TypeScript client -> packages/shared/api
-// - Go server stubs  -> apps/backend/internal/gen
+// - TypeScript client -> packages/api-contracts/codegen/ts/src/generated/
+// - Go server stubs  -> packages/api-contracts/codegen/go/
 ```
 
 `package.json`（ルート）
@@ -189,7 +195,7 @@ on:
   push:
     paths:
       - 'docs/**'
-      - 'contracts/**'
+      - 'packages/api-contracts/**'
       - 'tools/codegen/**'
 jobs:
   build:
@@ -214,7 +220,7 @@ jobs:
 
 - `apps/frontend/**` 変更 → フロントだけビルド/デプロイ
 - `apps/backend/**` 変更 → バックだけビルド/デプロイ
-- `contracts/**` 変更 → **両方**のテストを必ず実行
+- `packages/api-contracts/**` 変更 → **両方**のテストを必ず実行
 
 ---
 
@@ -227,13 +233,14 @@ jobs:
 /docs/architecture/   @backend @frontend
 /docs/runbooks/       @sre
 /docs/adr/            @techlead @pm
-/contracts/           @backend @frontend
+/packages/api-contracts/  @backend @frontend
 
 # コード
 /apps/frontend/       @frontend
 /apps/backend/        @backend
 /packages/ui/         @frontend
-/packages/shared/     @frontend
+/packages/shared/     @frontend @backend
+/packages/config/     @backend @frontend
 ```
 
 ---

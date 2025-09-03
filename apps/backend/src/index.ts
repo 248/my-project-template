@@ -6,9 +6,9 @@ import { secureHeaders } from 'hono/secure-headers'
 import { timing } from 'hono/timing'
 import { swaggerUI } from '@hono/swagger-ui'
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
-import { z } from 'zod'
-
 import { createLogger } from '@/utils/logger'
+// API契約パッケージからOpenAPI生成型を使用
+import { HealthCheckSchema } from '@template/api-contracts-ts'
 
 // ロガー設定
 const log = createLogger('server')
@@ -35,13 +35,7 @@ app.use(
   })
 )
 
-// ヘルスチェックルート
-const healthCheckSchema = z.object({
-  message: z.string(),
-  version: z.string(),
-  status: z.string(),
-  timestamp: z.string(),
-})
+// 共有されたヘルスチェックスキーマを使用
 
 const healthCheckRoute = createRoute({
   method: 'get',
@@ -52,7 +46,7 @@ const healthCheckRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: healthCheckSchema,
+          schema: HealthCheckSchema,
         },
       },
       description: 'サーバー正常',

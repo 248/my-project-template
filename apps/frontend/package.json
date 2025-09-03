@@ -21,7 +21,7 @@
     "postinstall": "echo 'Frontend setup completed'"
   },
   "dependencies": {
-    "@template/api-client": "workspace:*",
+    "@template/api-contracts-ts": "workspace:*",
     "@template/shared": "workspace:*",
     "@template/ui": "workspace:*",
     "@clerk/nextjs": "^6.31.5",
@@ -29,7 +29,6 @@
     "@prisma/client": "^6.15.0",
     "date-fns": "^4.1.0",
     "next": "15.5.2",
-    "openapi-fetch": "^0.12.2",
     "pino": "^9.9.0",
     "pino-pretty": "^13.1.1",
     "prisma": "^6.15.0",
@@ -37,8 +36,7 @@
     "react-dom": "^19.0.0",
     "svix": "^1.75.0",
     "swagger-ui-react": "^5.27.1",
-    "typescript": "^5.6.3",
-    "zod": "^3.23.8"
+    "typescript": "^5.6.3"
   },
   "devDependencies": {
     "@template/config": "workspace:*",
