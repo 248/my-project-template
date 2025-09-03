@@ -45,7 +45,7 @@ repo/
 ├─ infra/
 │  ├─ docker/                   # Dockerfile群（fe/be）
 │  ├─ k8s/                      # (任意) マニフェスト
-│  └─ compose.yaml              # FE/BE/DB/Redis まとめ起動
+│  └─ docker-compose.yml        # FE/BE/DB/Redis まとめ起動
 ├─ .devcontainer/               # VS Code/Devcontainers（FE/BE両方入る）
 ├─ .github/workflows/           # CI（パスベースで分離デプロイ）
 └─ CODEOWNERS

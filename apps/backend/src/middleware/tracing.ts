@@ -1,5 +1,13 @@
 import { Context, Next } from 'hono'
-import { trace } from '@opentelemetry/api'
+import { trace, SpanKind, SpanStatusCode } from '@opentelemetry/api'
+import {
+  ATTR_HTTP_REQUEST_METHOD,
+  ATTR_URL_FULL,
+  ATTR_HTTP_ROUTE,
+  ATTR_USER_AGENT_ORIGINAL,
+  ATTR_URL_SCHEME,
+  ATTR_HTTP_RESPONSE_STATUS_CODE,
+} from '@opentelemetry/semantic-conventions'
 
 /**
  * OpenTelemetryトレースミドルウェア
@@ -15,13 +23,13 @@ export function tracingMiddleware() {
     await tracer.startActiveSpan(
       spanName,
       {
-        kind: 1, // SpanKind.SERVER
+        kind: SpanKind.SERVER,
         attributes: {
-          'http.method': c.req.method,
-          'http.url': c.req.url,
-          'http.route': c.req.path,
-          'http.user_agent': c.req.header('user-agent') || '',
-          'http.scheme': new URL(c.req.url).protocol.slice(0, -1),
+          [ATTR_HTTP_REQUEST_METHOD]: c.req.method,
+          [ATTR_URL_FULL]: c.req.url,
+          [ATTR_HTTP_ROUTE]: c.req.path,
+          [ATTR_USER_AGENT_ORIGINAL]: c.req.header('user-agent') || '',
+          [ATTR_URL_SCHEME]: new URL(c.req.url).protocol.slice(0, -1),
         },
       },
       async span => {
@@ -30,15 +38,16 @@ export function tracingMiddleware() {
 
           // レスポンス情報を記録
           span.setAttributes({
-            'http.status_code': c.res.status,
-            'http.response.size': c.res.headers.get('content-length') || 0,
+            [ATTR_HTTP_RESPONSE_STATUS_CODE]: c.res.status,
+            'http.response.size':
+              Number(c.res.headers.get('content-length')) || 0,
           })
 
           // ステータスコードに基づいてスパンのステータスを設定
           if (c.res.status >= 400) {
             span.recordException(new Error(`HTTP ${c.res.status}`))
             span.setStatus({
-              code: 2, // SpanStatusCode.ERROR
+              code: SpanStatusCode.ERROR,
               message: `HTTP ${c.res.status}`,
             })
           }
@@ -48,7 +57,7 @@ export function tracingMiddleware() {
             error instanceof Error ? error : new Error(String(error))
           )
           span.setStatus({
-            code: 2, // SpanStatusCode.ERROR
+            code: SpanStatusCode.ERROR,
             message: error instanceof Error ? error.message : String(error),
           })
           throw error
