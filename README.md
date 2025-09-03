@@ -91,7 +91,7 @@ my-project-template/
 
 ### 開発用
 
-- `pnpm dev` - フロントエンド開発サーバー起動 (localhost:3005)
+- `pnpm dev` - フロントエンド開発サーバー起動 (localhost:3000)
 - `pnpm dev:api` - バックエンド開発サーバー起動 (localhost:8000)
 - `pnpm dev:fullstack` - フロント・バックエンド同時起動
 
@@ -113,7 +113,7 @@ my-project-template/
 ### ユーティリティ
 
 - `pnpm clean` - ビルド成果物削除
-- `pnpm codegen` - OpenAPI からの型生成（今後実装予定）
+- `pnpm codegen` - OpenAPI からの型生成
 
 ---
 

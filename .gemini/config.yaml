@@ -1,0 +1,6 @@
+code_review:
+  pull_request_opened:
+    summary: true
+    code_review: true # PR作成時に自動レビュー
+  comment_severity_threshold: MEDIUM
+  max_review_comments: 10

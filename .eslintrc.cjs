@@ -14,12 +14,7 @@ module.exports = {
     '**/next-env.d.ts',
     '**/prisma/seed.ts',
     // 生成物はここで全体除外
-    'apps/**/src/generated/**',
-    'apps/**/src/server/generated/**',
-    'packages/**/src/generated/**',
     '**/generated/**',
-    'apps/frontend/generated/**',
-    'apps/frontend/prisma/seed.ts',
   ],
 
   // デフォルトパーサー設定

@@ -83,9 +83,9 @@ app.get('/api/docs', swaggerUI({ url: '/api/openapi.json' }))
 
 // サーバー起動
 const port = Number(process.env['PORT']) || 8000
-console.log(`🚀 Server is running on port ${port}`)
-console.log(`📖 API Docs: http://localhost:${port}/api/docs`)
-console.log(`🔍 OpenAPI Spec: http://localhost:${port}/api/openapi.json`)
+log.info(`🚀 Server is running on port ${port}`)
+log.info(`📖 API Docs: http://localhost:${port}/api/docs`)
+log.info(`🔍 OpenAPI Spec: http://localhost:${port}/api/openapi.json`)
 
 log.info(`Server starting on http://localhost:${port}`)
 
