@@ -204,7 +204,7 @@ module.exports = {
         project: [
           'packages/shared/tsconfig.json',
           'packages/ui/tsconfig.json',
-          'packages/api-client/tsconfig.json',
+          'packages/api-contracts/codegen/ts/tsconfig.json',
           'packages/config/tsconfig.json',
         ],
         tsconfigRootDir: __dirname,

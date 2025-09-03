@@ -11,7 +11,7 @@
 - **品質チェック**: `pnpm codegen && pnpm type-check && pnpm lint` を必ず通す
 - **型安全性**: 手動型定義禁止、OpenAPI仕様更新→決定的生成の流れを厳守
 - **秘密は触らない**: `.env*` や APIキーは読み書き禁止
-- **自動生成ファイルは手動編集禁止**: `packages/shared/api-client/src/generated/**`
+- **自動生成ファイルは手動編集禁止**: `packages/api-contracts/codegen/ts/src/generated/**`
 - **Conventional Commits + PR テンプレ順守**
 
 ---
@@ -44,7 +44,7 @@
 ### 📋 プロジェクト仕様
 
 - **[プロジェクト要件](./.kiro/specs/project-template/requirements.md)** - テンプレート要件定義
-- **[API仕様](./contracts/openapi.yaml)** - OpenAPI 3.0仕様（作成予定）
+- **[API仕様](./packages/api-contracts/openapi.yaml)** - OpenAPI 3.0仕様
 
 ### 🔍 メタ・ガイドライン
 
