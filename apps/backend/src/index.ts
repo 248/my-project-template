@@ -13,6 +13,7 @@ import { createLogger } from '@/utils/logger'
 import { tracingMiddleware } from '@/middleware/tracing'
 // API契約パッケージからOpenAPI生成型を使用
 import { HealthCheckSchema } from '@template/api-contracts-ts'
+import { healthApp } from '@/routes/health'
 
 // ロガー設定
 const log = createLogger('server')
@@ -67,6 +68,9 @@ app.openapi(healthCheckRoute, c => {
     timestamp: new Date().toISOString(),
   })
 })
+
+// ヘルスチェックルートをマウント
+app.route('/', healthApp)
 
 // OpenAPI documentation
 app.doc('/api/openapi.json', {
