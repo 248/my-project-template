@@ -1,5 +1,5 @@
 // Auto-generated Zod schemas from OpenAPI spec
-// Generated at: 2025-09-04T00:02:59.692Z
+// Generated at: 2025-09-04T01:25:19.452Z
 
 import { z } from 'zod'
 

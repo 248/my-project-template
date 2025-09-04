@@ -101,7 +101,7 @@ export function HealthCheckButton() {
           HTTPステータス: {error.statusCode}
         </p>
       )}
-      {process.env['NODE_ENV'] === 'development' && error.details && (
+      {process.env['NODE_ENV'] === 'development' && error.details ? (
         <details className="mt-2">
           <summary className="text-red-600 text-sm cursor-pointer">
             詳細情報（開発用）
@@ -112,7 +112,7 @@ export function HealthCheckButton() {
               : JSON.stringify(error.details, null, 2)}
           </pre>
         </details>
-      )}
+      ) : null}
     </div>
   )
 
