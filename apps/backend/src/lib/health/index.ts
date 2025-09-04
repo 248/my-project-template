@@ -23,13 +23,12 @@ export {
   createDatabaseHealthService,
   createRedisHealthService,
   createDefaultHealthServices,
-  defaultHealthServices,
 } from './services'
 
 // ユーティリティ関数
 import { HealthCheckManager } from './manager'
 import { createHealthCheckConfig, validateHealthCheckConfig } from './config'
-import { defaultHealthServices } from './services'
+import { createDefaultHealthServices } from './services'
 
 /**
  * デフォルト設定でヘルスチェックマネージャーを作成
@@ -54,7 +53,7 @@ export function createDefaultHealthManager(
   const manager = new HealthCheckManager(config, logger, cache)
 
   // デフォルトサービスを登録
-  manager.registerServices(defaultHealthServices)
+  manager.registerServices(createDefaultHealthServices())
 
   return manager
 }

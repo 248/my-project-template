@@ -6,12 +6,11 @@ import type {
   LoggerService,
   LogLevel,
 } from '@/interfaces'
-import { SERVICE_TOKENS } from '@/interfaces'
+import { SERVICE_TOKENS, LOGGER_CONFIG_TOKEN } from '@/interfaces'
 import {
   PrismaDatabaseService,
   RedisService,
   PinoLoggerService,
-  LOGGER_CONFIG_TOKEN,
 } from '@/services'
 
 /**

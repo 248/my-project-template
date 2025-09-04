@@ -1,9 +1,17 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
-import { createLogger } from '@/utils/logger'
 import { DetailedHealthCheckSchema } from '@template/api-contracts-ts'
 import { createDefaultHealthManager } from '@/lib/health'
+import { resolveLoggerService } from '@/container/container'
+import type { LoggerService } from '@/interfaces'
 
-const log = createLogger('health')
+// 遅延初期化: DIコンテナが初期化された後に取得する
+let log: LoggerService | null = null
+const getLogger = () => {
+  if (!log) {
+    log = resolveLoggerService().child({ name: 'health' })
+  }
+  return log
+}
 
 // ヘルスチェック用のHonoインスタンス
 export const healthApp = new OpenAPIHono()
@@ -45,9 +53,9 @@ const healthManager = createDefaultHealthManager(
     if (error) {
       const errorMessage =
         error instanceof Error ? error.message : JSON.stringify(error)
-      log.error(`${message}: ${errorMessage}`)
+      getLogger().error(`${message}: ${errorMessage}`)
     } else {
-      log.info(message)
+      getLogger().info(message)
     }
   },
   cache
@@ -94,7 +102,7 @@ healthApp.openapi(detailedHealthRoute, async c => {
 
     return c.json(result, statusCode)
   } catch (error) {
-    log.error(
+    getLogger().error(
       'Health check handler error: ' +
         (error instanceof Error ? error.message : String(error))
     )

@@ -9,7 +9,7 @@ import { secureHeaders } from 'hono/secure-headers'
 import { timing } from 'hono/timing'
 import { swaggerUI } from '@hono/swagger-ui'
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
-import { createLogger } from '@/utils/logger'
+import { resolveLoggerService } from '@/container/container'
 import { tracingMiddleware } from '@/middleware/tracing'
 // API契約パッケージからOpenAPI生成型を使用
 import { HealthCheckSchema } from '@template/api-contracts-ts'
@@ -18,8 +18,11 @@ import { disconnectDatabase } from '@/lib/db/prisma'
 import { disconnectRedis } from '@/lib/db/redis'
 import { setupContainer } from '@/container/container'
 
+// DIコンテナ初期化
+setupContainer()
+
 // ロガー設定
-const log = createLogger('server')
+const log = resolveLoggerService().child({ name: 'server' })
 
 // OpenAPI対応のHonoアプリを作成
 const app = new OpenAPIHono()
@@ -93,8 +96,6 @@ app.doc('/api/openapi.json', {
 
 app.get('/api/docs', swaggerUI({ url: '/api/openapi.json' }))
 
-// DIコンテナ初期化
-setupContainer()
 log.info('🧩 Dependency injection container initialized')
 
 // OpenTelemetryを開始

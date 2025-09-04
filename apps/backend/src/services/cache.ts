@@ -1,5 +1,10 @@
-import { injectable } from 'tsyringe'
-import type { CacheService, ConnectionResult } from '@/interfaces'
+import { injectable, inject } from 'tsyringe'
+import type {
+  CacheService,
+  ConnectionResult,
+  LoggerService,
+} from '@/interfaces'
+import { SERVICE_TOKENS } from '@/interfaces'
 import { testRedisConnection, getRedis, disconnectRedis } from '@/lib/db/redis'
 
 /**
@@ -7,6 +12,9 @@ import { testRedisConnection, getRedis, disconnectRedis } from '@/lib/db/redis'
  */
 @injectable()
 export class RedisService implements CacheService {
+  constructor(
+    @inject(SERVICE_TOKENS.LOGGER) private readonly logger: LoggerService
+  ) {}
   async get(key: string): Promise<unknown> {
     try {
       const redis = getRedis()
@@ -17,7 +25,7 @@ export class RedisService implements CacheService {
       const value = await redis.get(key)
       return value ? JSON.parse(value) : null
     } catch (error) {
-      console.error('Failed to get cache value:', error)
+      this.logger.error('Failed to get cache value', { error })
       throw error
     }
   }
@@ -32,7 +40,7 @@ export class RedisService implements CacheService {
       const serializedValue = JSON.stringify(value)
       await redis.setex(key, ttl, serializedValue)
     } catch (error) {
-      console.error('Failed to set cache value:', error)
+      this.logger.error('Failed to set cache value', { error })
       throw error
     }
   }
@@ -47,7 +55,7 @@ export class RedisService implements CacheService {
       const result = await redis.del(key)
       return result > 0
     } catch (error) {
-      console.error('Failed to delete cache value:', error)
+      this.logger.error('Failed to delete cache value', { error })
       throw error
     }
   }
@@ -61,7 +69,7 @@ export class RedisService implements CacheService {
 
       await redis.flushall()
     } catch (error) {
-      console.error('Failed to clear cache:', error)
+      this.logger.error('Failed to clear cache', { error })
       throw error
     }
   }
@@ -125,7 +133,7 @@ export class RedisService implements CacheService {
         keyspaceMisses: parseInt(statsData['keyspace_misses'] || '0', 10),
       }
     } catch (error) {
-      console.error('Failed to get connection metrics:', error)
+      this.logger.error('Failed to get connection metrics', { error })
       return {
         connectedClients: 0,
         usedMemory: 0,

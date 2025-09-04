@@ -1,15 +1,12 @@
 import { injectable, inject } from 'tsyringe'
 import pino, { type Logger } from 'pino'
-import type { LoggerService, LogLevel, LogMetadata } from '@/interfaces'
-
-// ロガー設定の型
-interface LoggerConfig {
-  level: LogLevel
-  development: boolean
-}
-
-// 設定トークン
-export const LOGGER_CONFIG_TOKEN = Symbol('LoggerConfig')
+import type {
+  LoggerService,
+  LogLevel,
+  LogMetadata,
+  LoggerConfig,
+} from '@/interfaces'
+import { LOGGER_CONFIG_TOKEN } from '@/interfaces'
 
 /**
  * Pinoを使用したロガーサービスの実装

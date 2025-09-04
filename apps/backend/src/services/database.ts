@@ -1,5 +1,10 @@
-import { injectable } from 'tsyringe'
-import type { DatabaseService, ConnectionResult } from '@/interfaces'
+import { injectable, inject } from 'tsyringe'
+import type {
+  DatabaseService,
+  ConnectionResult,
+  LoggerService,
+} from '@/interfaces'
+import { SERVICE_TOKENS } from '@/interfaces'
 import { testDatabaseConnection, getDb, disconnectDb } from '@/lib/db/prisma'
 
 /**
@@ -7,6 +12,9 @@ import { testDatabaseConnection, getDb, disconnectDb } from '@/lib/db/prisma'
  */
 @injectable()
 export class PrismaDatabaseService implements DatabaseService {
+  constructor(
+    @inject(SERVICE_TOKENS.LOGGER) private readonly logger: LoggerService
+  ) {}
   async testConnection(): Promise<ConnectionResult> {
     return await testDatabaseConnection()
   }
@@ -46,7 +54,7 @@ export class PrismaDatabaseService implements DatabaseService {
         queryCount: 0, // Prismaメトリクス拡張で実装予定
       }
     } catch (error) {
-      console.error('Failed to get connection metrics:', error)
+      this.logger.error('Failed to get connection metrics', { error })
       return {
         activeConnections: 0,
         maxConnections: 0,
