@@ -126,10 +126,87 @@ export class PinoLoggerService implements LoggerService {
 
   child(bindings: LogMetadata): LoggerService {
     const childLogger = this.logger.child(bindings)
-    const childService = new PinoLoggerService()
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    childService.logger = childLogger
-    return childService
+    return {
+      trace: (
+        messageOrMeta: string | LogMetadata,
+        metaOrMessage?: LogMetadata | string
+      ) => {
+        if (typeof messageOrMeta === 'string') {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.trace((metaOrMessage as LogMetadata) || {}, messageOrMeta)
+        } else {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.trace(messageOrMeta, metaOrMessage as string)
+        }
+      },
+      debug: (
+        messageOrMeta: string | LogMetadata,
+        metaOrMessage?: LogMetadata | string
+      ) => {
+        if (typeof messageOrMeta === 'string') {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.debug((metaOrMessage as LogMetadata) || {}, messageOrMeta)
+        } else {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.debug(messageOrMeta, metaOrMessage as string)
+        }
+      },
+      info: (
+        messageOrMeta: string | LogMetadata,
+        metaOrMessage?: LogMetadata | string
+      ) => {
+        if (typeof messageOrMeta === 'string') {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.info((metaOrMessage as LogMetadata) || {}, messageOrMeta)
+        } else {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.info(messageOrMeta, metaOrMessage as string)
+        }
+      },
+      warn: (
+        messageOrMeta: string | LogMetadata,
+        metaOrMessage?: LogMetadata | string
+      ) => {
+        if (typeof messageOrMeta === 'string') {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.warn((metaOrMessage as LogMetadata) || {}, messageOrMeta)
+        } else {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.warn(messageOrMeta, metaOrMessage as string)
+        }
+      },
+      error: (
+        messageOrMeta: string | LogMetadata,
+        metaOrMessage?: LogMetadata | string
+      ) => {
+        if (typeof messageOrMeta === 'string') {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.error((metaOrMessage as LogMetadata) || {}, messageOrMeta)
+        } else {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.error(messageOrMeta, metaOrMessage as string)
+        }
+      },
+      fatal: (
+        messageOrMeta: string | LogMetadata,
+        metaOrMessage?: LogMetadata | string
+      ) => {
+        if (typeof messageOrMeta === 'string') {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.fatal((metaOrMessage as LogMetadata) || {}, messageOrMeta)
+        } else {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          childLogger.fatal(messageOrMeta, metaOrMessage as string)
+        }
+      },
+      child: (childBindings: LogMetadata) =>
+        this.child({ ...bindings, ...childBindings }),
+      setLevel: (level: LogLevel) => {
+        childLogger.level = level
+      },
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      getLevel: () => childLogger.level as LogLevel,
+    }
   }
 
   setLevel(level: LogLevel): void {
