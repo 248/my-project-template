@@ -168,13 +168,3 @@ export const createDefaultHealthServices = (): HealthCheckService[] => [
   createDatabaseHealthService(),
   createRedisHealthService(),
 ]
-
-/**
- * 下位互換性のための関数（非推奨）
- * @deprecated createDefaultHealthServices()を使用してください
- */
-export const defaultHealthServices: HealthCheckService[] = [
-  apiHealthService,
-  createDatabaseHealthService(),
-  createRedisHealthService(),
-]

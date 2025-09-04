@@ -11,6 +11,14 @@ export interface LogMetadata {
 }
 
 /**
+ * ログ設定
+ */
+export interface LoggerConfig {
+  level: LogLevel
+  development: boolean
+}
+
+/**
  * ロガーサービスインターフェース
  * pino実装に依存しない抽象化レイヤー
  */

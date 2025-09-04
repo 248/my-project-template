@@ -1,8 +1,10 @@
 import Redis from 'ioredis'
-import { createLogger } from '@/utils/logger'
 import { createRedisConfig } from '@/config/redis'
+import { resolveLoggerService } from '@/container/container'
 
-const log = createLogger('redis')
+// Note: DIコンテナが初期化される前に使用される可能性があるため、
+// 遅延評価でLoggerServiceを取得
+const getLogger = () => resolveLoggerService().child({ name: 'redis' })
 
 /**
  * Redisクライアントのシングルトンインスタンス
@@ -29,25 +31,27 @@ function createRedisClient(): Redis {
 
   // イベントリスナーの設定
   redis.on('connect', () => {
-    log.info(`Redis client connecting to ${connection.host}:${connection.port}`)
+    getLogger().info(
+      `Redis client connecting to ${connection.host}:${connection.port}`
+    )
   })
 
   redis.on('ready', () => {
-    log.info(
+    getLogger().info(
       `Redis client ready - connected to ${connection.host}:${connection.port}`
     )
   })
 
   redis.on('error', error => {
-    log.error({ error: error.message }, 'Redis client error')
+    getLogger().error('Redis client error', { error: error.message })
   })
 
   redis.on('close', () => {
-    log.info('Redis client connection closed')
+    getLogger().info('Redis client connection closed')
   })
 
   redis.on('reconnecting', (ms: number) => {
-    log.info(`Redis client reconnecting in ${ms}ms`)
+    getLogger().info(`Redis client reconnecting in ${ms}ms`)
   })
 
   return redis
@@ -89,10 +93,10 @@ export async function testRedisConnection(): Promise<{
     const result = await redis.ping()
 
     if (result === 'PONG') {
-      log.info('Redis connection test successful')
+      getLogger().info('Redis connection test successful')
       return { success: true }
     } else {
-      log.error({ result }, 'Redis ping returned unexpected result')
+      getLogger().error('Redis ping returned unexpected result', { result })
       return {
         success: false,
         error: `Unexpected ping result: ${String(result)}`,
@@ -101,7 +105,7 @@ export async function testRedisConnection(): Promise<{
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown Redis error'
-    log.error({ error: errorMessage }, 'Redis connection test failed')
+    getLogger().error('Redis connection test failed', { error: errorMessage })
     return { success: false, error: errorMessage }
   }
 }
@@ -113,9 +117,9 @@ export async function disconnectRedis(): Promise<void> {
   try {
     if (redis.status === 'ready') {
       await redis.quit()
-      log.info('Redis client disconnected successfully')
+      getLogger().info('Redis client disconnected successfully')
     }
   } catch (error) {
-    log.error({ error }, 'Failed to disconnect from Redis')
+    getLogger().error('Failed to disconnect from Redis', { error })
   }
 }
