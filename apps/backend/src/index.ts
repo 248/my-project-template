@@ -13,7 +13,7 @@ import { createLogger } from '@/utils/logger'
 import { tracingMiddleware } from '@/middleware/tracing'
 // API契約パッケージからOpenAPI生成型を使用
 import { HealthCheckSchema } from '@template/api-contracts-ts'
-import { healthApp } from '@/routes/health'
+import { healthApp } from '@/routes/health-improved'
 import { disconnectDatabase } from '@/lib/db/prisma'
 import { disconnectRedis } from '@/lib/db/redis'
 import { setupContainer } from '@/container/container'

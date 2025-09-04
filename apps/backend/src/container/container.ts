@@ -1,11 +1,17 @@
 import 'reflect-metadata'
 import { container } from 'tsyringe'
-import type { DatabaseService, CacheService, LoggerService } from '@/interfaces'
+import type {
+  DatabaseService,
+  CacheService,
+  LoggerService,
+  LogLevel,
+} from '@/interfaces'
 import { SERVICE_TOKENS } from '@/interfaces'
 import {
   PrismaDatabaseService,
   RedisService,
   PinoLoggerService,
+  LOGGER_CONFIG_TOKEN,
 } from '@/services'
 
 /**
@@ -13,6 +19,16 @@ import {
  * アプリケーション起動時に一度だけ実行される
  */
 export function setupContainer(): void {
+  // ロガー設定を登録
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  container.register(LOGGER_CONFIG_TOKEN, {
+    useValue: {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      level: (process.env['LOG_LEVEL'] as LogLevel) || 'info',
+      development: process.env['NODE_ENV'] === 'development',
+    },
+  })
+
   // サービス実装をコンテナに登録
   container.register<DatabaseService>(SERVICE_TOKENS.DATABASE, {
     useClass: PrismaDatabaseService,
