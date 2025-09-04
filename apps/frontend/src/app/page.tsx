@@ -1,9 +1,11 @@
+import { HealthCheckButton } from '@/components/HealthCheckButton'
+
 export default function HomePage() {
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <div className="px-4 py-6 sm:px-0">
-        <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
-          <div className="text-center">
+        <div className="border-4 border-dashed border-gray-200 rounded-lg p-8">
+          <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               プロジェクトテンプレートへようこそ
             </h1>
@@ -29,6 +31,11 @@ export default function HomePage() {
                 フロントエンド環境が正常にセットアップされました
               </p>
             </div>
+          </div>
+
+          {/* ヘルスチェックボタンセクション */}
+          <div className="border-t pt-8">
+            <HealthCheckButton />
           </div>
         </div>
       </div>
