@@ -1,5 +1,6 @@
 import Redis from 'ioredis'
 import { createLogger } from '@/utils/logger'
+import { createRedisConfig } from '@/config/redis'
 
 const log = createLogger('redis')
 
@@ -12,72 +13,29 @@ declare global {
 }
 
 /**
- * Redis接続設定
- */
-interface RedisConfig {
-  host: string
-  port: number
-  password?: string
-  db: number
-  maxRetriesPerRequest: number
-  connectTimeout: number
-  commandTimeout: number
-}
-
-/**
- * 環境変数からRedis設定を作成
- */
-function createRedisConfig(): RedisConfig {
-  const redisUrl = process.env['REDIS_URL']
-
-  if (redisUrl) {
-    // Redis URLを解析
-    const url = new URL(redisUrl)
-    return {
-      host: url.hostname,
-      port: parseInt(url.port || '6379', 10),
-      password: url.password || undefined,
-      db: url.pathname ? parseInt(url.pathname.slice(1), 10) || 0 : 0,
-      maxRetriesPerRequest: 3,
-      connectTimeout: 10000,
-      commandTimeout: 5000,
-    }
-  }
-
-  // フォールバック設定
-  return {
-    host: process.env['REDIS_HOST'] || 'localhost',
-    port: parseInt(process.env['REDIS_PORT'] || '6379', 10),
-    password: process.env['REDIS_PASSWORD'],
-    db: parseInt(process.env['REDIS_DB'] || '0', 10),
-    maxRetriesPerRequest: 3,
-    connectTimeout: 10000,
-    commandTimeout: 5000,
-  }
-}
-
-/**
  * Redisクライアントを作成
  */
 function createRedisClient(): Redis {
-  const config = createRedisConfig()
+  const { connection } = createRedisConfig()
 
-  const redis = new Redis(config.port, config.host, {
-    password: config.password,
-    db: config.db,
-    maxRetriesPerRequest: config.maxRetriesPerRequest,
-    connectTimeout: config.connectTimeout,
-    commandTimeout: config.commandTimeout,
+  const redis = new Redis(connection.port, connection.host, {
+    password: connection.password,
+    db: connection.db,
+    maxRetriesPerRequest: connection.maxRetriesPerRequest,
+    connectTimeout: connection.connectTimeout,
+    commandTimeout: connection.commandTimeout,
     lazyConnect: true,
   })
 
   // イベントリスナーの設定
   redis.on('connect', () => {
-    log.info(`Redis client connecting to ${config.host}:${config.port}`)
+    log.info(`Redis client connecting to ${connection.host}:${connection.port}`)
   })
 
   redis.on('ready', () => {
-    log.info(`Redis client ready - connected to ${config.host}:${config.port}`)
+    log.info(
+      `Redis client ready - connected to ${connection.host}:${connection.port}`
+    )
   })
 
   redis.on('error', error => {

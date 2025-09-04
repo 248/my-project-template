@@ -1,6 +1,15 @@
-import { injectable } from 'tsyringe'
+import { injectable, inject } from 'tsyringe'
 import pino, { type Logger } from 'pino'
 import type { LoggerService, LogLevel, LogMetadata } from '@/interfaces'
+
+// ロガー設定の型
+interface LoggerConfig {
+  level: LogLevel
+  development: boolean
+}
+
+// 設定トークン
+export const LOGGER_CONFIG_TOKEN = Symbol('LoggerConfig')
 
 /**
  * Pinoを使用したロガーサービスの実装
@@ -9,20 +18,19 @@ import type { LoggerService, LogLevel, LogMetadata } from '@/interfaces'
 export class PinoLoggerService implements LoggerService {
   private logger: Logger
 
-  constructor() {
+  constructor(@inject(LOGGER_CONFIG_TOKEN) config: LoggerConfig) {
     this.logger = pino({
-      level: process.env['LOG_LEVEL'] || 'info',
-      transport:
-        process.env['NODE_ENV'] === 'development'
-          ? {
-              target: 'pino-pretty',
-              options: {
-                colorize: true,
-                translateTime: true,
-                ignore: 'pid,hostname',
-              },
-            }
-          : undefined,
+      level: config.level,
+      transport: config.development
+        ? {
+            target: 'pino-pretty',
+            options: {
+              colorize: true,
+              translateTime: true,
+              ignore: 'pid,hostname',
+            },
+          }
+        : undefined,
     })
   }
 
