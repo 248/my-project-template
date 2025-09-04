@@ -144,6 +144,20 @@ pnpm format              # Prettier整形
 pnpm build               # 本番ビルド
 ```
 
+### 停止コマンド
+
+```bash
+# 開発プロセス一括停止（Windows）
+./infra/scripts/stop-all.ps1
+
+# 開発プロセス一括停止（Linux/Mac）
+./infra/scripts/stop-all-safe.sh
+
+# Docker環境停止
+pnpm db:down
+pnpm docker:stop
+```
+
 ### 型・スキーマ生成
 
 ```bash
@@ -204,16 +218,78 @@ cd infra/docker && docker compose up -d postgres redis
 
 ---
 
+## 🧩 依存性注入（DI）アーキテクチャ
+
+### サービス作成の基本パターン
+
+#### 1. インターフェース定義
+
+- サービス契約の明確化
+- トークンシンボルの定義
+
+#### 2. 具象実装作成
+
+- `@injectable()` デコレータの付与
+- 依存サービスのコンストラクタ注入
+
+#### 3. DIコンテナ登録
+
+- `container.register()` での実装登録
+- サービストークンとクラスの紐付け
+
+#### 4. サービス利用
+
+- `container.resolve()` での取得（直接）
+- コンストラクタ注入（推奨）
+
+詳細は[依存性注入アーキテクチャガイド](../architecture/dependency-injection.md)を参照。
+
+### 設定管理パターン
+
+#### 1. Zodスキーマ定義
+
+- 環境変数の型安全な検証スキーマ作成
+- デフォルト値・制約の設定
+
+#### 2. 設定の注入
+
+- DIコンテナへの設定値登録
+- 専用トークンでの識別
+
+#### 3. サービスで設定受け取り
+
+- コンストラクタ注入による設定取得
+- 実行時変更不可の設計
+
+### テスト用モック作成
+
+#### 1. モック実装
+
+- インターフェース準拠のモッククラス作成
+- テスト用の固定レスポンス実装
+
+#### 2. テストでのDI差し替え
+
+- `beforeEach`でのコンテナ設定変更
+- テスト分離のための独立設定
+
+詳細は[設定管理ガイド](../architecture/configuration-management.md)と[DIアーキテクチャガイド](../architecture/dependency-injection.md)を参照。
+
+---
+
 ## 🛟 トラブルシューティング
 
 ### よくある問題と解決策
 
-| 問題              | 原因                | 解決策                                         |
-| ----------------- | ------------------- | ---------------------------------------------- |
-| 依存関係不一致    | pnpm バージョン違い | `pnpm install --force`                         |
-| 型生成が失敗      | OpenAPI 仕様エラー  | `pnpm codegen` を再実行                        |
-| CI/コンテナで遅い | キャッシュ未使用    | `pnpm fetch` → `pnpm install --offline` を検討 |
-| リンタが暴れる    | 設定競合            | `pnpm lint:fix` → 個別修正                     |
+| 問題                     | 原因                   | 解決策                                         |
+| ------------------------ | ---------------------- | ---------------------------------------------- |
+| 依存関係不一致           | pnpm バージョン違い    | `pnpm install --force`                         |
+| 型生成が失敗             | OpenAPI 仕様エラー     | `pnpm codegen` を再実行                        |
+| CI/コンテナで遅い        | キャッシュ未使用       | `pnpm fetch` → `pnpm install --offline` を検討 |
+| リンタが暴れる           | 設定競合               | `pnpm lint:fix` → 個別修正                     |
+| DI解決エラー             | トークン未登録         | `container/container.ts`でサービス登録確認     |
+| 設定バリデーションエラー | 環境変数不正・未設定   | `.env`ファイル確認、Zodスキーマエラー確認      |
+| モックが動作しない       | DIコンテナ差し替え失敗 | テスト前に`container.register`でモック登録     |
 
 ### デバッグ手順
 
@@ -227,9 +303,26 @@ pnpm lint --fix
 # Step 3: 自動生成更新
 pnpm codegen
 
-# Step 4: 最終確認
+# Step 4: DIコンテナ確認（必要に応じて）
+# apps/backend/src/container/container.ts でサービス登録確認
+
+# Step 5: 最終確認
 pnpm build
 ```
+
+### DI関連デバッグ
+
+#### 設定エラー診断
+
+- `container/container.ts` でサービス登録状況確認
+- Zodバリデーションエラーメッセージの確認
+- 環境変数の値と型の検証
+
+#### サービス解決エラー
+
+- トークン未登録の確認
+- 循環依存の検出
+- インターフェース実装の確認
 
 ---
 
@@ -274,6 +367,9 @@ pnpm build
 
 ## 🔗 関連ドキュメント
 
+- **[システム概要](../architecture/system-overview.md)** - ファイル所有権・設計指針
+- **[依存性注入アーキテクチャガイド](../architecture/dependency-injection.md)** - TSyringeを用いたDI設計・実装
+- **[設定管理ガイド](../architecture/configuration-management.md)** - Zodスキーマによる型安全な設定管理
+- **[ヘルスチェックAPI仕様](../api/health-check.md)** - システム監視・診断API完全仕様
 - **[コード規約](../styleguide/code-standards.md)** - 品質基準・型安全性
 - **[貢献ガイドライン](../contrib/contribution-guide.md)** - PR 規約・レビュー観点
-- **[システム概要](../architecture/system-overview.md)** - ファイル所有権・設計指針
