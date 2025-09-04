@@ -64,9 +64,13 @@ export class HealthCheckManager {
         timestamp: new Date().toISOString(),
         uptime: Math.floor((Date.now() - this.startTime) / 1000),
         services: {
-          api: result.services['api'],
-          database: result.services['database'],
-          redis: result.services['redis'],
+          api: result.services['api'] || {
+            status: 'healthy' as const,
+            message: 'API service is running',
+            responseTime: 0,
+          },
+          database: result.services['database'] || undefined,
+          redis: result.services['redis'] || undefined,
         },
         system: systemMetrics,
         version: process.env['npm_package_version'] || '0.1.0',
@@ -88,14 +92,55 @@ export class HealthCheckManager {
   }
 
   /**
+   * ServiceHealth型のタイプガード
+   */
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  private isServiceHealth(
+    value: unknown
+  ): value is import('@template/api-contracts-ts').ServiceHealth {
+    if (value === null || typeof value !== 'object') {
+      return false
+    }
+
+    if (!('status' in value)) {
+      return false
+    }
+
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const statusValue = (value as Record<string, unknown>)['status']
+    if (typeof statusValue !== 'string') {
+      return false
+    }
+
+    return ['healthy', 'degraded', 'unhealthy'].includes(statusValue)
+  }
+
+  /**
    * コンテキストを作成
    */
   private createContext(): HealthCheckContext {
     return {
       config: this.config,
       logger: this.logger,
-      getCache: this.cache?.get,
-      setCache: this.cache?.set,
+      getCache: this.cache?.get
+        ? async (key: string) => {
+            const result = await this.cache!.get(key)
+            // キャッシュから取得した値がServiceHealth形式か確認
+            if (this.isServiceHealth(result)) {
+              return result
+            }
+            return null
+          }
+        : undefined,
+      setCache: this.cache?.set
+        ? async (
+            key: string,
+            value: import('@template/api-contracts-ts').ServiceHealth,
+            ttl: number
+          ) => {
+            return this.cache!.set(key, value, ttl)
+          }
+        : undefined,
     }
   }
 
@@ -139,7 +184,7 @@ export class HealthCheckManager {
     const serviceResults = await Promise.all(servicePromises)
     // ServiceHealth型を明示的に定義
     type ServiceResult = {
-      status: string
+      status: 'healthy' | 'degraded' | 'unhealthy'
       message?: string
       responseTime?: number
     }
@@ -183,7 +228,11 @@ export class HealthCheckManager {
   private determineOverallStatus(
     services: Record<
       string,
-      { status: string; message?: string; responseTime?: number }
+      {
+        status: 'healthy' | 'degraded' | 'unhealthy'
+        message?: string
+        responseTime?: number
+      }
     >
   ): 'healthy' | 'degraded' | 'unhealthy' {
     const serviceEntries = Object.entries(services)

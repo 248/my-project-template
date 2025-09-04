@@ -14,6 +14,8 @@ import { tracingMiddleware } from '@/middleware/tracing'
 // API契約パッケージからOpenAPI生成型を使用
 import { HealthCheckSchema } from '@template/api-contracts-ts'
 import { healthApp } from '@/routes/health'
+import { disconnectDatabase } from '@/lib/db/prisma'
+import { disconnectRedis } from '@/lib/db/redis'
 
 // ロガー設定
 const log = createLogger('server')
@@ -105,4 +107,37 @@ log.info(`Server starting on http://localhost:${port}`)
 serve({
   fetch: app.fetch,
   port,
+})
+
+// アプリケーション終了時のクリーンアップ処理
+async function gracefulShutdown(signal: string) {
+  log.info(`🛑 Received ${signal}, shutting down gracefully...`)
+
+  try {
+    // OpenTelemetry SDK終了
+    await telemetrySDK.shutdown()
+    log.info('📊 OpenTelemetry shutdown complete')
+
+    // データベース接続終了
+    await disconnectDatabase()
+    log.info('🗄️ Database disconnected')
+
+    // Redis接続終了
+    await disconnectRedis()
+    log.info('🔴 Redis disconnected')
+
+    log.info('✅ Graceful shutdown complete')
+    process.exit(0)
+  } catch (error) {
+    log.error({ error }, '❌ Error during graceful shutdown')
+    process.exit(1)
+  }
+}
+
+// シグナルハンドラー設定
+process.on('SIGTERM', () => {
+  void gracefulShutdown('SIGTERM')
+})
+process.on('SIGINT', () => {
+  void gracefulShutdown('SIGINT')
 })
