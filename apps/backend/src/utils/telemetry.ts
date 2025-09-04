@@ -11,6 +11,11 @@ import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http'
 import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino'
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api'
+import { resolveLoggerService } from '@/container/container'
+
+// Note: DIコンテナが初期化される前に使用される可能性があるため、
+// 遅延評価でLoggerServiceを取得
+const getLogger = () => resolveLoggerService().child({ name: 'telemetry' })
 
 // デバッグモード設定（開発時のトラブルシューティング用）
 if (process.env['NODE_ENV'] !== 'production' && process.env['OTEL_DEBUG']) {
@@ -75,6 +80,6 @@ process.on('SIGTERM', () => {
   telemetrySDK
     .shutdown()
     .then(() => console.log('Telemetry terminated'))
-    .catch(error => console.error('Error terminating telemetry', error))
+    .catch(error => getLogger().error('Error terminating telemetry', { error }))
     .finally(() => process.exit(0))
 })

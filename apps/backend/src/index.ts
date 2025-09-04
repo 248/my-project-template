@@ -9,13 +9,20 @@ import { secureHeaders } from 'hono/secure-headers'
 import { timing } from 'hono/timing'
 import { swaggerUI } from '@hono/swagger-ui'
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
-import { createLogger } from '@/utils/logger'
+import { resolveLoggerService } from '@/container/container'
 import { tracingMiddleware } from '@/middleware/tracing'
 // API契約パッケージからOpenAPI生成型を使用
 import { HealthCheckSchema } from '@template/api-contracts-ts'
+import { healthApp } from '@/routes/health-improved'
+import { disconnectDatabase } from '@/lib/db/prisma'
+import { disconnectRedis } from '@/lib/db/redis'
+import { setupContainer } from '@/container/container'
+
+// DIコンテナ初期化
+setupContainer()
 
 // ロガー設定
-const log = createLogger('server')
+const log = resolveLoggerService().child({ name: 'server' })
 
 // OpenAPI対応のHonoアプリを作成
 const app = new OpenAPIHono()
@@ -68,6 +75,9 @@ app.openapi(healthCheckRoute, c => {
   })
 })
 
+// ヘルスチェックルートをマウント
+app.route('/', healthApp)
+
 // OpenAPI documentation
 app.doc('/api/openapi.json', {
   openapi: '3.0.3',
@@ -86,6 +96,8 @@ app.doc('/api/openapi.json', {
 
 app.get('/api/docs', swaggerUI({ url: '/api/openapi.json' }))
 
+log.info('🧩 Dependency injection container initialized')
+
 // OpenTelemetryを開始
 telemetrySDK.start()
 log.info('📊 OpenTelemetry telemetry started')
@@ -101,4 +113,37 @@ log.info(`Server starting on http://localhost:${port}`)
 serve({
   fetch: app.fetch,
   port,
+})
+
+// アプリケーション終了時のクリーンアップ処理
+async function gracefulShutdown(signal: string) {
+  log.info(`🛑 Received ${signal}, shutting down gracefully...`)
+
+  try {
+    // OpenTelemetry SDK終了
+    await telemetrySDK.shutdown()
+    log.info('📊 OpenTelemetry shutdown complete')
+
+    // データベース接続終了
+    await disconnectDatabase()
+    log.info('🗄️ Database disconnected')
+
+    // Redis接続終了
+    await disconnectRedis()
+    log.info('🔴 Redis disconnected')
+
+    log.info('✅ Graceful shutdown complete')
+    process.exit(0)
+  } catch (error) {
+    log.error({ error }, '❌ Error during graceful shutdown')
+    process.exit(1)
+  }
+}
+
+// シグナルハンドラー設定
+process.on('SIGTERM', () => {
+  void gracefulShutdown('SIGTERM')
+})
+process.on('SIGINT', () => {
+  void gracefulShutdown('SIGINT')
 })
