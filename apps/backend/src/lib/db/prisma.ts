@@ -83,6 +83,20 @@ if (process.env['NODE_ENV'] === 'development') {
 export { prisma }
 
 /**
+ * Prismaクライアントを取得（DIサービス用）
+ */
+export function getDb(): PrismaClient {
+  return prisma
+}
+
+/**
+ * データベースから切断（DIサービス用）
+ */
+export async function disconnectDb(): Promise<void> {
+  await disconnectDatabase()
+}
+
+/**
  * データベース接続をテスト
  */
 export async function testDatabaseConnection(): Promise<{
