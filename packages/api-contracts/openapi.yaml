@@ -32,6 +32,96 @@ components:
         - status
         - timestamp
 
+    # 詳細ヘルスチェック
+    DetailedHealthCheck:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ['healthy', 'degraded', 'unhealthy']
+          example: 'healthy'
+        timestamp:
+          type: string
+          format: date-time
+        uptime:
+          type: number
+          description: 'サーバー稼働時間（秒）'
+          example: 3600
+        services:
+          type: object
+          properties:
+            api:
+              $ref: '#/components/schemas/ServiceHealth'
+            database:
+              $ref: '#/components/schemas/ServiceHealth'
+            redis:
+              $ref: '#/components/schemas/ServiceHealth'
+          required:
+            - api
+        system:
+          type: object
+          properties:
+            memory:
+              type: object
+              properties:
+                rss:
+                  type: number
+                  description: 'メモリ使用量（MB）'
+                heapTotal:
+                  type: number
+                  description: 'ヒープ合計（MB）'
+                heapUsed:
+                  type: number
+                  description: 'ヒープ使用量（MB）'
+              required:
+                - rss
+                - heapTotal
+                - heapUsed
+            cpu:
+              type: object
+              properties:
+                user:
+                  type: number
+                  description: 'ユーザーCPU時間（ミリ秒）'
+                system:
+                  type: number
+                  description: 'システムCPU時間（ミリ秒）'
+              required:
+                - user
+                - system
+          required:
+            - memory
+            - cpu
+        version:
+          type: string
+          example: '0.1.0'
+        environment:
+          type: string
+          example: 'development'
+      required:
+        - status
+        - timestamp
+        - uptime
+        - services
+        - system
+        - version
+        - environment
+
+    # サービス個別ヘルス
+    ServiceHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ['healthy', 'degraded', 'unhealthy']
+        message:
+          type: string
+        responseTime:
+          type: number
+          description: '応答時間（ミリ秒）'
+      required:
+        - status
+
 paths:
   # ヘルスチェック
   /:
@@ -46,3 +136,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthCheck'
+
+  # 詳細ヘルスチェック
+  /api/health:
+    get:
+      operationId: getDetailedHealth
+      summary: 詳細ヘルスチェック
+      description: システム全体の詳細な健全性状態を取得
+      tags:
+        - System
+      responses:
+        '200':
+          description: システム正常
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthCheck'
+        '503':
+          description: サービス利用不可
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthCheck'

@@ -23,8 +23,10 @@ status: published
 
 1. **型安全性**: OpenAPI仕様から自動生成による型安全性
 2. **関心の分離**: フロントエンド・バックエンドの明確な分離
-3. **開発効率**: 自動化とツール活用による高速開発
-4. **拡張性**: スケーラブルな設計
+3. **依存性注入**: TSyringeによるサービス間の疎結合
+4. **設定管理**: Zodスキーマによる型安全な設定検証
+5. **開発効率**: 自動化とツール活用による高速開発
+6. **拡張性**: スケーラブルな設計
 
 ## 🏗️ プロジェクト構成
 
@@ -34,7 +36,14 @@ status: published
 .
 ├─ apps/
 │  ├─ frontend/                 # Next.js 15 アプリ
-│  └─ backend/                  # Hono バックエンド（オプション）
+│  └─ backend/                  # Hono バックエンド
+│     ├─ src/
+│     │  ├─ interfaces/         # サービスインターフェース
+│     │  ├─ services/           # 具象実装（Prisma, Redis, Pino等）
+│     │  ├─ container/          # DIコンテナ設定
+│     │  ├─ config/             # Zod設定スキーマ
+│     │  ├─ lib/                # ヘルスチェック・DB・Redis
+│     │  └─ routes/             # API ルート
 ├─ packages/
 │  ├─ ui/                       # 共有UIコンポーネント（React + Tailwind）
 │  ├─ shared/                   # 型定義・ユーティリティ
@@ -43,10 +52,13 @@ status: published
 ├─ contracts/                   # OpenAPI仕様（API契約）
 ├─ tools/
 │  └─ codegen/                  # コード生成スクリプト
-├─ scripts/                     # 開発・デプロイスクリプト
 ├─ infra/
-│  └─ docker/                   # Docker 環境設定
+│  ├─ docker/                   # Docker 環境設定
+│  └─ scripts/                  # 開発プロセス停止スクリプト
 ├─ docs/                        # プロジェクトドキュメント
+│  ├─ api/                      # API仕様
+│  ├─ architecture/             # アーキテクチャガイド
+│  └─ handbook/                 # 開発者ガイド
 └─ .kiro/                       # Kiro 設定
 ```
 
@@ -65,8 +77,11 @@ status: published
 - **Runtime**: Node.js / Bun
 - **Framework**: Hono
 - **Database**: PostgreSQL + Prisma
+- **Dependency Injection**: TSyringe
+- **Configuration**: Zod（型安全な設定検証）
 - **Authentication**: Clerk
 - **Cache**: Redis
+- **Logging**: Pino（構造化ログ）
 
 ### 開発ツール
 
@@ -81,9 +96,18 @@ status: published
 ```mermaid
 graph LR
     Frontend[Next.js Frontend] --> API[Hono API]
-    API --> DB[PostgreSQL]
-    API --> Cache[Redis Cache]
+
+    API --> DI[DI Container]
+    DI --> DatabaseService[Database Service]
+    DI --> CacheService[Cache Service]
+    DI --> LoggerService[Logger Service]
+
+    DatabaseService --> DB[PostgreSQL]
+    CacheService --> Cache[Redis Cache]
     API --> Auth[Clerk Auth]
+
+    Config[Zod Config] --> DI
+    Env[Environment Variables] --> Config
 
     Frontend --> CDN[Static Assets]
     OpenAPI[OpenAPI Spec] --> |generates| Types[TypeScript Types]
@@ -122,6 +146,7 @@ graph LR
 
 ## 📊 監視・ログ
 
+- **Health Checks**: `/health` および `/health/detailed` エンドポイント
 - **Error Tracking**: Sentry（推奨）
 - **Analytics**: Google Analytics / Vercel Analytics
 - **Logs**: 構造化ログ（Pino）
@@ -129,5 +154,9 @@ graph LR
 
 ## 🔗 関連ドキュメント
 
-- [要件定義](./requirements.md)
-- [API設計](./api-design.md)
+- [依存性注入アーキテクチャガイド](./dependency-injection.md) - TSyringeを用いたDI設計・実装
+- [設定管理ガイド](./configuration-management.md) - Zodスキーマによる型安全な設定管理
+- [ヘルスチェックAPI仕様](../api/health-check.md) - システム監視・診断API完全仕様
+- [開発者ガイド](../handbook/developer-guide.md) - 開発手順・コマンド・DI使用法
+- [要件定義](./requirements.md) - システム要件・仕様
+- [API設計](./api-design.md) - API設計指針

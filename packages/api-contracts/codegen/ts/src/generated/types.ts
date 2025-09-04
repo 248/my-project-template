@@ -24,6 +24,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/health': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * 詳細ヘルスチェック
+     * @description システム全体の詳細な健全性状態を取得
+     */
+    get: operations['getDetailedHealth']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -37,6 +57,52 @@ export interface components {
       status: string
       /** Format: date-time */
       timestamp: string
+    }
+    DetailedHealthCheck: {
+      /**
+       * @example healthy
+       * @enum {string}
+       */
+      status: 'healthy' | 'degraded' | 'unhealthy'
+      /** Format: date-time */
+      timestamp: string
+      /**
+       * @description サーバー稼働時間（秒）
+       * @example 3600
+       */
+      uptime: number
+      services: {
+        api: components['schemas']['ServiceHealth']
+        database?: components['schemas']['ServiceHealth']
+        redis?: components['schemas']['ServiceHealth']
+      }
+      system: {
+        memory: {
+          /** @description メモリ使用量（MB） */
+          rss: number
+          /** @description ヒープ合計（MB） */
+          heapTotal: number
+          /** @description ヒープ使用量（MB） */
+          heapUsed: number
+        }
+        cpu: {
+          /** @description ユーザーCPU時間（ミリ秒） */
+          user: number
+          /** @description システムCPU時間（ミリ秒） */
+          system: number
+        }
+      }
+      /** @example 0.1.0 */
+      version: string
+      /** @example development */
+      environment: string
+    }
+    ServiceHealth: {
+      /** @enum {string} */
+      status: 'healthy' | 'degraded' | 'unhealthy'
+      message?: string
+      /** @description 応答時間（ミリ秒） */
+      responseTime?: number
     }
   }
   responses: never
@@ -63,6 +129,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HealthCheck']
+        }
+      }
+    }
+  }
+  getDetailedHealth: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description システム正常 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DetailedHealthCheck']
+        }
+      }
+      /** @description サービス利用不可 */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DetailedHealthCheck']
         }
       }
     }

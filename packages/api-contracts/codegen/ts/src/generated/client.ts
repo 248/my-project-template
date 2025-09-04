@@ -1,5 +1,5 @@
 // Auto-generated type-safe API client from OpenAPI spec
-// Generated at: 2025-09-03T07:05:08.788Z
+// Generated at: 2025-09-04T01:25:19.453Z
 
 import createClient from 'openapi-fetch'
 import type { paths } from './types'
@@ -13,12 +13,19 @@ export const client = createClient<paths>({
 
 // Enhanced API client with validation and error handling
 export const api = {
-  async healthCheck(): Promise<schemas.HealthCheck> {
+  async healthCheck(): Promise<any> {
     const response = (await client.GET('/')) as any
     if (response.error) {
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
     }
-    return schemas.HealthCheckSchema.parse(response.data)
+    return response.data
+  },
+  async getDetailedHealth(): Promise<any> {
+    const response = (await client.GET('/api/health')) as any
+    if (response.error) {
+      throw new Error(`API Error: ${JSON.stringify(response.error)}`)
+    }
+    return response.data
   },
 }
 
