@@ -16,6 +16,7 @@ import { HealthCheckSchema } from '@template/api-contracts-ts'
 import { healthApp } from '@/routes/health'
 import { disconnectDatabase } from '@/lib/db/prisma'
 import { disconnectRedis } from '@/lib/db/redis'
+import { setupContainer } from '@/container/container'
 
 // ロガー設定
 const log = createLogger('server')
@@ -91,6 +92,10 @@ app.doc('/api/openapi.json', {
 })
 
 app.get('/api/docs', swaggerUI({ url: '/api/openapi.json' }))
+
+// DIコンテナ初期化
+setupContainer()
+log.info('🧩 Dependency injection container initialized')
 
 // OpenTelemetryを開始
 telemetrySDK.start()

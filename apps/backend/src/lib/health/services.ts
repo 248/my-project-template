@@ -1,7 +1,8 @@
 import type { ServiceHealth } from '@template/api-contracts-ts'
 import type { HealthCheckService, HealthCheckContext } from './types'
-import { testDatabaseConnection } from '@/lib/db/prisma'
-import { testRedisConnection } from '@/lib/db/redis'
+import type { DatabaseService, CacheService } from '@/interfaces'
+import { container } from '@/container/container'
+import { SERVICE_TOKENS } from '@/interfaces'
 
 /**
  * APIサービスのヘルスチェック
@@ -20,9 +21,9 @@ export const apiHealthService: HealthCheckService = {
 
 /**
  * データベース接続のヘルスチェック
- * 実際のPrismaクライアントを使用する想定
+ * DIコンテナから解決されるDatabaseServiceを使用
  */
-export const databaseHealthService: HealthCheckService = {
+export const createDatabaseHealthService = (): HealthCheckService => ({
   name: 'database',
   check: async (context: HealthCheckContext): Promise<ServiceHealth> => {
     const start = performance.now()
@@ -42,8 +43,11 @@ export const databaseHealthService: HealthCheckService = {
         }
       }
 
-      // 実際のPrismaクライアント接続テスト
-      const connectionTest = await testDatabaseConnection()
+      // DIコンテナからDatabaseServiceを解決
+      const databaseService = container.resolve<DatabaseService>(
+        SERVICE_TOKENS.DATABASE
+      )
+      const connectionTest = await databaseService.testConnection()
 
       const responseTime = Math.round((performance.now() - start) * 100) / 100
       const result: ServiceHealth = {
@@ -84,13 +88,13 @@ export const databaseHealthService: HealthCheckService = {
   },
   required: true,
   cacheKey: 'health:database',
-}
+})
 
 /**
  * Redis接続のヘルスチェック
- * 実際のRedisクライアントを使用する想定
+ * DIコンテナから解決されるCacheServiceを使用
  */
-export const redisHealthService: HealthCheckService = {
+export const createRedisHealthService = (): HealthCheckService => ({
   name: 'redis',
   check: async (context: HealthCheckContext): Promise<ServiceHealth> => {
     const start = performance.now()
@@ -110,8 +114,9 @@ export const redisHealthService: HealthCheckService = {
         }
       }
 
-      // 実際のRedisクライアント接続テスト
-      const connectionTest = await testRedisConnection()
+      // DIコンテナからCacheServiceを解決
+      const cacheService = container.resolve<CacheService>(SERVICE_TOKENS.CACHE)
+      const connectionTest = await cacheService.testConnection()
 
       const responseTime = Math.round((performance.now() - start) * 100) / 100
       const result: ServiceHealth = {
@@ -152,13 +157,24 @@ export const redisHealthService: HealthCheckService = {
   },
   required: false, // Redisはオプショナル
   cacheKey: 'health:redis',
-}
+})
 
 /**
- * デフォルトのヘルスチェックサービス一覧
+ * デフォルトのヘルスチェックサービス一覧を作成
+ * DIコンテナの初期化後に呼び出す必要がある
+ */
+export const createDefaultHealthServices = (): HealthCheckService[] => [
+  apiHealthService,
+  createDatabaseHealthService(),
+  createRedisHealthService(),
+]
+
+/**
+ * 下位互換性のための関数（非推奨）
+ * @deprecated createDefaultHealthServices()を使用してください
  */
 export const defaultHealthServices: HealthCheckService[] = [
   apiHealthService,
-  databaseHealthService,
-  redisHealthService,
+  createDatabaseHealthService(),
+  createRedisHealthService(),
 ]

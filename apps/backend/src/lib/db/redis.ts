@@ -108,6 +108,13 @@ if (process.env['NODE_ENV'] === 'development') {
 export { redis }
 
 /**
+ * Redisクライアントを取得（DIサービス用）
+ */
+export function getRedis(): Redis {
+  return redis
+}
+
+/**
  * Redis接続をテスト
  */
 export async function testRedisConnection(): Promise<{

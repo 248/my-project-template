@@ -20,8 +20,9 @@ export { HealthCheckManager } from './manager'
 // デフォルトサービスのエクスポート
 export {
   apiHealthService,
-  databaseHealthService,
-  redisHealthService,
+  createDatabaseHealthService,
+  createRedisHealthService,
+  createDefaultHealthServices,
   defaultHealthServices,
 } from './services'
 
