@@ -5,8 +5,8 @@ const clerkConfigSchema = z.object({
   // JWT発行者（Clerkドメイン）
   issuer: z.string().url('CLERK_JWT_ISSUER must be a valid URL'),
 
-  // JWT受信者（API識別子）
-  audience: z.string().min(1, 'CLERK_JWT_AUD must not be empty'),
+  // JWT受信者（API識別子）- optionalで設定
+  audience: z.string().min(1, 'CLERK_JWT_AUD must not be empty').optional(),
 
   // JWKSエンドポイントURL（自動生成される）
   jwksUrl: z.string().url().optional(),

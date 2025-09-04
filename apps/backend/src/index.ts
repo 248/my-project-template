@@ -36,11 +36,14 @@ app.use('*', timing())
 app.use('*', prettyJSON())
 app.use('*', secureHeaders())
 
-// CORS設定
+// CORS設定 - Docker環境とローカル開発環境の両方に対応
 app.use(
   '*',
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:3005'],
+    origin: [
+      'http://localhost:3000',
+      'http://frontend:3000', // Docker環境でのコンテナ間通信
+    ],
     allowHeaders: ['Content-Type', 'Authorization'],
     allowMethods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
     exposeHeaders: ['Content-Length'],
