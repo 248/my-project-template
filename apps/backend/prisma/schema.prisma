@@ -21,3 +21,16 @@ model HealthCheck {
 
   @@map("health_checks")
 }
+
+// User model for authentication with Clerk
+model User {
+  id          String   @id @db.VarChar(191) // ClerkのuserIdをそのまま使用
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  displayName String?  @map("display_name")
+  email       String?  @unique
+  avatarUrl   String?  @map("avatar_url")
+  locale      String?  @default("ja")
+
+  @@map("users")
+}

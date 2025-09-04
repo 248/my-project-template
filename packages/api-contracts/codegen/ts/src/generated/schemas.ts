@@ -1,5 +1,5 @@
 // Auto-generated Zod schemas from OpenAPI spec
-// Generated at: 2025-09-04T01:25:19.452Z
+// Generated at: 2025-09-04T06:58:53.747Z
 
 import { z } from 'zod'
 
@@ -56,7 +56,51 @@ export const ServiceHealthSchema = z.object({
   responseTime: z.number().optional(),
 })
 
+export const UserSchema = z.object({
+  id: z.string(),
+  displayName: z.string().nullable(),
+  email: z.string().email().nullable(),
+  avatarUrl: z.string().nullable(),
+  locale: z.string().nullable(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+})
+
+export const UserUpdateDataSchema = z.object({
+  displayName: z.string().optional(),
+  email: z.string().email().optional(),
+  avatarUrl: z.string().optional(),
+  locale: z.enum(['ja', 'en']).optional(),
+})
+
+export const ApiResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+  data: z.object({}).optional(),
+})
+
+export const UserResponseSchema = z.unknown()
+
+export const ErrorResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+  error: z.string().optional(),
+  errors: z
+    .array(
+      z.object({
+        field: z.string().optional(),
+        message: z.string().optional(),
+      })
+    )
+    .optional(),
+})
+
 // Export type definitions for enhanced type safety
 export type HealthCheck = z.infer<typeof HealthCheckSchema>
 export type DetailedHealthCheck = z.infer<typeof DetailedHealthCheckSchema>
 export type ServiceHealth = z.infer<typeof ServiceHealthSchema>
+export type User = z.infer<typeof UserSchema>
+export type UserUpdateData = z.infer<typeof UserUpdateDataSchema>
+export type ApiResponse = z.infer<typeof ApiResponseSchema>
+export type UserResponse = z.infer<typeof UserResponseSchema>
+export type ErrorResponse = z.infer<typeof ErrorResponseSchema>
