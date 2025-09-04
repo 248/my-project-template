@@ -11,7 +11,9 @@ import {
   PrismaDatabaseService,
   RedisService,
   PinoLoggerService,
+  UserService,
 } from '@/services'
+import { prisma } from '@/lib/db/prisma'
 
 /**
  * DIコンテナの初期化と設定
@@ -39,6 +41,16 @@ export function setupContainer(): void {
 
   container.register<LoggerService>(SERVICE_TOKENS.LOGGER, {
     useClass: PinoLoggerService,
+  })
+
+  // PrismaClientを登録
+  container.register('PrismaClient', {
+    useValue: prisma,
+  })
+
+  // UserServiceを登録
+  container.register(UserService, {
+    useClass: UserService,
   })
 }
 

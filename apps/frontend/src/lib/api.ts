@@ -6,7 +6,7 @@ import type { paths } from '@template/api-contracts-ts'
  * OpenAPI仕様から自動生成された型を使用
  */
 export const apiClient = createClient<paths>({
-  baseUrl: process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:8000',
+  baseUrl: process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',
   },

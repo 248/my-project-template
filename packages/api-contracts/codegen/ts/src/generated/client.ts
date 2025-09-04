@@ -1,5 +1,5 @@
 // Auto-generated type-safe API client from OpenAPI spec
-// Generated at: 2025-09-04T01:25:19.453Z
+// Generated at: 2025-09-04T06:58:53.748Z
 
 import createClient from 'openapi-fetch'
 import type { paths } from './types'
@@ -22,6 +22,30 @@ export const api = {
   },
   async getDetailedHealth(): Promise<any> {
     const response = (await client.GET('/api/health')) as any
+    if (response.error) {
+      throw new Error(`API Error: ${JSON.stringify(response.error)}`)
+    }
+    return response.data
+  },
+  async ensureUser(): Promise<any> {
+    const response = (await client.POST('/api/auth/users/ensure')) as any
+    if (response.error) {
+      throw new Error(`API Error: ${JSON.stringify(response.error)}`)
+    }
+    return response.data
+  },
+  async getUserProfile(): Promise<any> {
+    const response = (await client.GET('/api/users/me')) as any
+    if (response.error) {
+      throw new Error(`API Error: ${JSON.stringify(response.error)}`)
+    }
+    return response.data
+  },
+  async updateUserProfile(data: any): Promise<any> {
+    const validatedData = data
+    const response = (await client.PUT('/api/users/me', {
+      body: validatedData,
+    })) as any
     if (response.error) {
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
     }

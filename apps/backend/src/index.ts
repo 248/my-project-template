@@ -14,6 +14,8 @@ import { tracingMiddleware } from '@/middleware/tracing'
 // API契約パッケージからOpenAPI生成型を使用
 import { HealthCheckSchema } from '@template/api-contracts-ts'
 import { healthApp } from '@/routes/health-improved'
+import authRoutes from '@/routes/auth'
+import usersRoutes from '@/routes/users'
 import { disconnectDatabase } from '@/lib/db/prisma'
 import { disconnectRedis } from '@/lib/db/redis'
 import { setupContainer } from '@/container/container'
@@ -77,6 +79,10 @@ app.openapi(healthCheckRoute, c => {
 
 // ヘルスチェックルートをマウント
 app.route('/', healthApp)
+
+// 認証関連ルートをマウント
+app.route('/api/auth', authRoutes)
+app.route('/api/users', usersRoutes)
 
 // OpenAPI documentation
 app.doc('/api/openapi.json', {

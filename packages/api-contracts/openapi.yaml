@@ -9,6 +9,13 @@ servers:
     description: 開発環境
 
 components:
+  securitySchemes:
+    ClerkJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Clerk JWT認証トークン
+
   schemas:
     # ヘルスチェック
     HealthCheck:
@@ -122,6 +129,137 @@ components:
       required:
         - status
 
+    # ユーザー認証関連
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ClerkのユーザーID
+          example: 'user_2abcd1234efgh5678ijkl'
+        displayName:
+          type: string
+          nullable: true
+          description: 表示名
+          example: '田中太郎'
+        email:
+          type: string
+          nullable: true
+          format: email
+          description: メールアドレス
+          example: 'tanaka@example.com'
+        avatarUrl:
+          type: string
+          nullable: true
+          format: uri
+          description: アバターURL
+          example: 'https://img.clerk.com/avatar.jpg'
+        locale:
+          type: string
+          nullable: true
+          description: 言語設定
+          example: 'ja'
+        createdAt:
+          type: string
+          format: date-time
+          description: 作成日時
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新日時
+      required:
+        - id
+        - createdAt
+        - updatedAt
+
+    UserUpdateData:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: 表示名
+          example: '田中太郎'
+        email:
+          type: string
+          format: email
+          description: メールアドレス
+          example: 'tanaka@example.com'
+        avatarUrl:
+          type: string
+          format: uri
+          description: アバターURL
+          example: 'https://img.clerk.com/avatar.jpg'
+        locale:
+          type: string
+          enum: ['ja', 'en']
+          description: 言語設定
+          example: 'ja'
+
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 処理成功フラグ
+          example: true
+        message:
+          type: string
+          description: メッセージ
+          example: 'User ensured successfully'
+        data:
+          type: object
+          description: レスポンスデータ
+      required:
+        - success
+        - message
+
+    UserResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                user:
+                  $ref: '#/components/schemas/User'
+              required:
+                - user
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          description: エラーメッセージ
+          example: 'User not found'
+        error:
+          type: string
+          description: エラー詳細
+          example: 'User not found. Please sign in again.'
+        errors:
+          type: array
+          description: バリデーションエラー詳細
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: エラーフィールド
+                example: 'displayName'
+              message:
+                type: string
+                description: エラーメッセージ
+                example: 'String must contain at least 1 character(s)'
+      required:
+        - success
+        - message
+
 paths:
   # ヘルスチェック
   /:
@@ -158,3 +296,115 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DetailedHealthCheck'
+
+  # 認証関連エンドポイント
+  /api/auth/users/ensure:
+    post:
+      operationId: ensureUser
+      summary: ユーザー冪等作成/同期
+      description: 初回サインイン/アップ時にユーザーを冪等に作成・同期する
+      tags:
+        - Authentication
+      security:
+        - ClerkJWT: []
+      responses:
+        '200':
+          description: ユーザー作成/更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ユーザー管理エンドポイント
+  /api/users/me:
+    get:
+      operationId: getUserProfile
+      summary: プロフィール取得
+      description: 認証済みユーザーの自分のプロフィール情報を取得
+      tags:
+        - Users
+      security:
+        - ClerkJWT: []
+      responses:
+        '200':
+          description: プロフィール取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: ユーザーが見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      operationId: updateUserProfile
+      summary: プロフィール更新
+      description: 認証済みユーザーの自分のプロフィール情報を更新
+      tags:
+        - Users
+      security:
+        - ClerkJWT: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateData'
+      responses:
+        '200':
+          description: プロフィール更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: ユーザーが見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

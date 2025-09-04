@@ -97,3 +97,8 @@ jspm_packages/
 
 # Windows command output redirect artifacts
 nul
+
+# serena
+.serena
+
+tmp

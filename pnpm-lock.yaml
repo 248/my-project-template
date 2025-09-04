@@ -134,6 +134,9 @@ importers:
       ioredis:
         specifier: ^5.7.0
         version: 5.7.0
+      jose:
+        specifier: ^6.1.0
+        version: 6.1.0
       pino:
         specifier: ^9.9.0
         version: 9.9.0
@@ -7157,6 +7160,13 @@ packages:
         integrity: sha512-twQoecYPiVA5K/h6SxtORw/Bs3ar+mLUtoPSc7iMXzQzK8d7eJ/R09wmTwAjiamETn1cXYPGfNnu7DMoHgu12w==,
       }
     hasBin: true
+    dev: false
+
+  /jose@6.1.0:
+    resolution:
+      {
+        integrity: sha512-TTQJyoEoKcC1lscpVDCSsVgYzUDg/0Bt3WE//WiTPK6uOCQC2KZS4MpugbMWt/zyjkopgZoXhZuCi00gLudfUA==,
+      }
     dev: false
 
   /joycon@3.1.1:

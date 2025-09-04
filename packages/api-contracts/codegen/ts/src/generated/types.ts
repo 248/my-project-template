@@ -44,6 +44,50 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/auth/users/ensure': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * ユーザー冪等作成/同期
+     * @description 初回サインイン/アップ時にユーザーを冪等に作成・同期する
+     */
+    post: operations['ensureUser']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/users/me': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * プロフィール取得
+     * @description 認証済みユーザーの自分のプロフィール情報を取得
+     */
+    get: operations['getUserProfile']
+    /**
+     * プロフィール更新
+     * @description 認証済みユーザーの自分のプロフィール情報を更新
+     */
+    put: operations['updateUserProfile']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -104,6 +148,116 @@ export interface components {
       /** @description 応答時間（ミリ秒） */
       responseTime?: number
     }
+    User: {
+      /**
+       * @description ClerkのユーザーID
+       * @example user_2abcd1234efgh5678ijkl
+       */
+      id: string
+      /**
+       * @description 表示名
+       * @example 田中太郎
+       */
+      displayName?: string | null
+      /**
+       * Format: email
+       * @description メールアドレス
+       * @example tanaka@example.com
+       */
+      email?: string | null
+      /**
+       * Format: uri
+       * @description アバターURL
+       * @example https://img.clerk.com/avatar.jpg
+       */
+      avatarUrl?: string | null
+      /**
+       * @description 言語設定
+       * @example ja
+       */
+      locale?: string | null
+      /**
+       * Format: date-time
+       * @description 作成日時
+       */
+      createdAt: string
+      /**
+       * Format: date-time
+       * @description 更新日時
+       */
+      updatedAt: string
+    }
+    UserUpdateData: {
+      /**
+       * @description 表示名
+       * @example 田中太郎
+       */
+      displayName?: string
+      /**
+       * Format: email
+       * @description メールアドレス
+       * @example tanaka@example.com
+       */
+      email?: string
+      /**
+       * Format: uri
+       * @description アバターURL
+       * @example https://img.clerk.com/avatar.jpg
+       */
+      avatarUrl?: string
+      /**
+       * @description 言語設定
+       * @example ja
+       * @enum {string}
+       */
+      locale?: 'ja' | 'en'
+    }
+    ApiResponse: {
+      /**
+       * @description 処理成功フラグ
+       * @example true
+       */
+      success: boolean
+      /**
+       * @description メッセージ
+       * @example User ensured successfully
+       */
+      message: string
+      /** @description レスポンスデータ */
+      data?: Record<string, never>
+    }
+    UserResponse: components['schemas']['ApiResponse'] & {
+      data?: {
+        user: components['schemas']['User']
+      }
+    }
+    ErrorResponse: {
+      /** @example false */
+      success: boolean
+      /**
+       * @description エラーメッセージ
+       * @example User not found
+       */
+      message: string
+      /**
+       * @description エラー詳細
+       * @example User not found. Please sign in again.
+       */
+      error?: string
+      /** @description バリデーションエラー詳細 */
+      errors?: {
+        /**
+         * @description エラーフィールド
+         * @example displayName
+         */
+        field?: string
+        /**
+         * @description エラーメッセージ
+         * @example String must contain at least 1 character(s)
+         */
+        message?: string
+      }[]
+    }
   }
   responses: never
   parameters: never
@@ -158,6 +312,151 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DetailedHealthCheck']
+        }
+      }
+    }
+  }
+  ensureUser: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description ユーザー作成/更新成功 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UserResponse']
+        }
+      }
+      /** @description 認証エラー */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description サーバーエラー */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  getUserProfile: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description プロフィール取得成功 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UserResponse']
+        }
+      }
+      /** @description 認証エラー */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description ユーザーが見つからない */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description サーバーエラー */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  updateUserProfile: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UserUpdateData']
+      }
+    }
+    responses: {
+      /** @description プロフィール更新成功 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UserResponse']
+        }
+      }
+      /** @description バリデーションエラー */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description 認証エラー */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description ユーザーが見つからない */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description サーバーエラー */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
