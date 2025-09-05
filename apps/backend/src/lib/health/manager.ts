@@ -87,10 +87,7 @@ export class HealthCheckManager {
     } catch (error) {
       this.logger('Health check execution failed', error)
 
-      return this.createErrorResponse(
-        'error.health_check_failed',
-        error instanceof Error ? error.message : String(error)
-      )
+      return this.createErrorResponse(error)
     }
   }
 
