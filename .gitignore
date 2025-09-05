@@ -101,4 +101,15 @@ nul
 # serena
 .serena
 
+# Database & Migration Tools
+# Atlas local configuration and temporary files
+.atlas/
+atlas.sum.db
+*.atlas.lock
+
+# Keep atlas/migrations/ directory but exclude temporary files
+atlas/migrations/*.tmp
+atlas/migrations/*.lock
+
 tmp
+html/
