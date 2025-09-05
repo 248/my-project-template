@@ -12,9 +12,10 @@ services:
       - ../../contracts:/app/contracts
       - /app/node_modules
       - /app/apps/frontend/node_modules
+    env_file:
+      - ../../.env
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
       - backend
     networks:
@@ -26,7 +27,7 @@ services:
       context: ../../
       dockerfile: ./infra/docker/Dockerfile.backend
     ports:
-      - '8000:8000'
+      - '8080:8080'
     volumes:
       - ../../apps/backend:/app/apps/backend
       - ../../packages:/app/packages
@@ -34,9 +35,11 @@ services:
       - ../../contracts:/app/contracts
       - /app/node_modules
       - /app/apps/backend/node_modules
+    env_file:
+      - ../../.env
     environment:
       - NODE_ENV=development
-      - PORT=8000
+      - PORT=8080
       - DATABASE_URL=postgresql://template_user:template_pass@postgres:5432/template_db
       - REDIS_URL=redis://redis:6379
     depends_on:
@@ -51,10 +54,8 @@ services:
     restart: always
     ports:
       - '5432:5432'
-    environment:
-      - POSTGRES_DB=template_db
-      - POSTGRES_USER=template_user
-      - POSTGRES_PASSWORD=template_pass
+    env_file:
+      - ../../.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -65,6 +66,8 @@ services:
     restart: always
     ports:
       - '6379:6379'
+    env_file:
+      - ../../.env
     volumes:
       - redis_data:/data
     networks:
@@ -75,11 +78,8 @@ services:
     restart: always
     ports:
       - '5050:80'
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@example.com
-      - PGADMIN_DEFAULT_PASSWORD=admin
-      - PGADMIN_CONFIG_SERVER_MODE=False
-      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    env_file:
+      - ../../.env
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:

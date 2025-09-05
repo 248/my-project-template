@@ -1,6 +1,7 @@
 import { createDatabaseConfig, type DatabaseConfig } from './database'
 import { createRedisConfig, type RedisConfig } from './redis'
 import { createServerConfig, type ServerConfig } from './server'
+import { createClerkConfig, type ClerkConfig } from './clerk'
 
 /**
  * アプリケーション設定の統合型
@@ -9,6 +10,7 @@ export interface AppConfig {
   database: DatabaseConfig
   redis: RedisConfig
   server: ServerConfig
+  clerk: ClerkConfig
 }
 
 /**
@@ -30,11 +32,13 @@ class ConfigManager {
       const database = createDatabaseConfig()
       const redis = createRedisConfig()
       const server = createServerConfig()
+      const clerk = createClerkConfig()
 
       this._config = {
         database,
         redis: redis.raw,
         server,
+        clerk,
       }
 
       this._initialized = true
@@ -80,7 +84,7 @@ export function getConfig(): AppConfig {
 }
 
 // 型とユーティリティのre-export
-export type { DatabaseConfig, RedisConfig, ServerConfig }
+export type { DatabaseConfig, RedisConfig, ServerConfig, ClerkConfig }
 export { createDatabaseConfig } from './database'
 export { createRedisConfig } from './redis'
 export {
@@ -89,3 +93,4 @@ export {
   isProduction,
   isTest,
 } from './server'
+export { createClerkConfig } from './clerk'
