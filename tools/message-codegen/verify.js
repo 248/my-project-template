@@ -358,14 +358,15 @@ function verifyOpenAPIIntegration(registryKeys, results) {
     .filter(
       k =>
         k.apiUsage &&
-        (k.namespace === 'error' ||
-          k.namespace === 'auth' ||
-          k.namespace === 'validation')
+        (k.category === 'error' ||
+          k.category === 'client_error' ||
+          k.category === 'server_error')
     )
     .map(k => k.key)
 
+  const registryErrorKeySet = new Set(registryErrorKeys)
   const missingInSchema = registryErrorKeys.filter(k => !schemaKeys.has(k))
-  const extraInSchema = enumNode.filter(k => !registryErrorKeys.includes(k))
+  const extraInSchema = enumNode.filter(k => !registryErrorKeySet.has(k))
 
   if (missingInSchema.length > 0) {
     results.addError('OpenAPI schema missing message keys', {
