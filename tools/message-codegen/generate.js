@@ -113,7 +113,7 @@ function updateOpenAPISchema(registry) {
 /**
  * Main orchestration function
  */
-async function generateAll() {
+async function generateAll(options = {}) {
   console.log('🚀 Starting multi-language message code generation...')
   console.log('='.repeat(60))
 
@@ -122,6 +122,41 @@ async function generateAll() {
     console.log('\n📋 Step 1: Verifying registry...')
     const registry = verifyRegistry()
     const stats = countMessages(registry)
+
+    if (options.dryRun) {
+      console.log('\n🧪 Dry run summary:')
+
+      const dryRunSteps = [
+        {
+          enabled: config.targets.typescript.enabled,
+          message: `Would generate TypeScript code at ${config.targets.typescript.output_path}`,
+        },
+        {
+          enabled: config.targets.go.enabled,
+          message: `Would generate Go code at ${config.targets.go.output_path}`,
+        },
+        {
+          enabled: true, // locale files are always processed
+          message: 'Would process locale files',
+        },
+        {
+          enabled: config.openapi_integration.enabled,
+          message: `Would update OpenAPI schema at ${config.openapi_integration.schema_path}`,
+        },
+      ]
+
+      for (const step of dryRunSteps) {
+        if (step.enabled) {
+          console.log(`   • ${step.message}`)
+        }
+      }
+
+      console.log('\n' + '='.repeat(60))
+      console.log(
+        `✨ Dry run completed for ${stats.totalMessages} messages across ${stats.namespaces.length} namespaces`
+      )
+      return
+    }
 
     // Step 2: Generate TypeScript
     console.log('\n🔷 Step 2: Generating TypeScript code...')
@@ -217,10 +252,9 @@ if (require.main === module) {
 
   if (options.dryRun) {
     console.log('🧪 Dry run mode: no files will be written')
-    // TODO: Implement dry run mode
   }
 
-  generateAll()
+  generateAll(options)
 }
 
 module.exports = { generateAll, verifyRegistry, countMessages }
