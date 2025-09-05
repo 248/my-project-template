@@ -54,16 +54,7 @@ export class UserService {
     try {
       const user = await this.prisma.user.upsert({
         where: { id: userId },
-        update: {
-          ...(userData?.displayName !== undefined && {
-            displayName: userData.displayName,
-          }),
-          ...(userData?.email !== undefined && { email: userData.email }),
-          ...(userData?.avatarUrl !== undefined && {
-            avatarUrl: userData.avatarUrl,
-          }),
-          ...(userData?.locale !== undefined && { locale: userData.locale }),
-        },
+        update: userData ?? {},
         create: {
           id: userId,
           displayName: userData?.displayName || null,

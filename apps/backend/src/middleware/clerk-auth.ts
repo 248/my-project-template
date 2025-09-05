@@ -25,7 +25,10 @@ let jwksCache: ReturnType<typeof createRemoteJWKSet> | null = null
 function getJWKS(): ReturnType<typeof createRemoteJWKSet> {
   if (!jwksCache) {
     const { clerk } = getConfig()
-    jwksCache = createRemoteJWKSet(new URL(clerk.jwksUrl!))
+    if (!clerk.jwksUrl) {
+      throw new Error('JWKS URL is not configured in Clerk settings.')
+    }
+    jwksCache = createRemoteJWKSet(new URL(clerk.jwksUrl))
   }
   return jwksCache
 }

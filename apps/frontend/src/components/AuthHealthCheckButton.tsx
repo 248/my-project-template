@@ -40,36 +40,32 @@ export function AuthHealthCheckButton() {
     }))
 
     try {
-      // 基本ヘルスチェック
       const healthResult = await api.healthCheck()
-
-      if (healthResult.success) {
-        // ユーザー作成/同期テスト
-        const ensureResult = await api.ensureUser()
-
-        if (ensureResult.success) {
-          // プロフィール取得テスト
-          const profileResult = await api.getProfile()
-
-          setState({
-            isLoading: false,
-            result: profileResult,
-            lastUpdated: new Date(),
-          })
-        } else {
-          setState({
-            isLoading: false,
-            result: ensureResult,
-            lastUpdated: new Date(),
-          })
-        }
-      } else {
+      if (!healthResult.success) {
         setState({
           isLoading: false,
           result: healthResult,
           lastUpdated: new Date(),
         })
+        return
       }
+
+      const ensureResult = await api.ensureUser()
+      if (!ensureResult.success) {
+        setState({
+          isLoading: false,
+          result: ensureResult,
+          lastUpdated: new Date(),
+        })
+        return
+      }
+
+      const profileResult = await api.getProfile()
+      setState({
+        isLoading: false,
+        result: profileResult,
+        lastUpdated: new Date(),
+      })
     } catch (error) {
       setState({
         isLoading: false,
