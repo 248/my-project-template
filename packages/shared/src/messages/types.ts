@@ -1,0 +1,67 @@
+import type { MessageKey } from './keys'
+
+/**
+ * Message parameters type definitions (auto-generated)
+ *
+ * Generated from: contracts/messages/registry.yaml
+ * Version: 1.0.0
+ * Generated at: 2025-09-05T05:12:49.394Z
+ */
+export interface MessageParameters {
+  'error.unknown_error': { details: string }
+  'validation.field_required': { field: string }
+  'validation.invalid_email': { email: string }
+  'validation.invalid_url': { url: string }
+  'validation.string_too_short': { field: string; minLength: number }
+  'validation.string_too_long': { field: string; maxLength: number }
+}
+
+/**
+ * Message key categories (auto-generated)
+ */
+export type MessageKeyWithParams = keyof MessageParameters
+export type MessageKeyWithoutParams = Exclude<MessageKey, MessageKeyWithParams>
+
+/**
+ * Parameter type extraction utility
+ */
+export type MessageParamsFor<K extends MessageKey> =
+  K extends MessageKeyWithParams ? MessageParameters[K] : never
+
+/**
+ * Supported locales (from registry)
+ */
+export type SupportedLocale = 'ja' | 'en' | 'pseudo'
+
+/**
+ * Locale messages type
+ */
+export type LocaleMessages = Record<MessageKey, string>
+
+/**
+ * Message getter function types
+ */
+export interface MessageGetter {
+  <K extends MessageKeyWithoutParams>(key: K): string
+  <K extends MessageKeyWithParams>(key: K, params: MessageParameters[K]): string
+}
+
+/**
+ * API Response types - re-exported from api/types for compatibility
+ */
+export type {
+  ApiErrorResponse,
+  ApiSuccessResponse,
+  ValidationError,
+  ValidationErrorResponse,
+} from '../api/types'
+
+/**
+ * Message-specific API response type
+ */
+export interface ApiResponseWithCode {
+  success: boolean
+  code: MessageKey
+  message?: string // Optional for backward compatibility
+  data?: unknown
+}

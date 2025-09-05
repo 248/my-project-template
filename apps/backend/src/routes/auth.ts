@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { container } from 'tsyringe'
 import { UserService } from '../services/user'
 import { requireAuth, getAuth } from '../middleware/clerk-auth'
+import { createSuccessResponse, createErrorResponse } from '../lib/api-response'
 
 /**
  * 認証関連のAPIルート
@@ -30,28 +31,30 @@ auth.post('/users/ensure', async c => {
     // ユーザーを冪等に作成/更新
     const user = await userService.ensureUserFromAuth(authContext)
 
-    return c.json({
-      success: true,
-      message: 'User ensured successfully',
-      data: {
-        user: {
-          id: user.id,
-          displayName: user.displayName,
-          email: user.email,
-          avatarUrl: user.avatarUrl,
-          locale: user.locale,
-          createdAt: user.createdAt.toISOString(),
-          updatedAt: user.updatedAt.toISOString(),
+    return c.json(
+      createSuccessResponse(
+        {
+          user: {
+            id: user.id,
+            displayName: user.displayName,
+            email: user.email,
+            avatarUrl: user.avatarUrl,
+            locale: user.locale,
+            createdAt: user.createdAt.toISOString(),
+            updatedAt: user.updatedAt.toISOString(),
+          },
         },
-      },
-    })
+        'success.user_ensured'
+      )
+    )
   } catch (error) {
     return c.json(
-      {
-        success: false,
-        message: 'Failed to ensure user',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
+      createErrorResponse(
+        'auth.ensure_failed',
+        error instanceof Error ? error.message : 'Unknown error',
+        500,
+        'Failed to ensure user' // 段階移行期用フォールバック
+      ),
       500
     )
   }

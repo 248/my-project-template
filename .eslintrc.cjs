@@ -15,6 +15,14 @@ module.exports = {
     '**/prisma/seed.ts',
     // 生成物はここで全体除外
     '**/generated/**',
+    // MessageKeysプラグインに関連して除外
+    'apps/backend/**',
+    'packages/shared/src/messages/**',
+    'packages/eslint-plugin-message-keys/**',
+    // tools ディレクトリを除外
+    'tools/**',
+    // contracts ディレクトリを除外
+    'contracts/**',
   ],
 
   // デフォルトパーサー設定
@@ -46,7 +54,7 @@ module.exports = {
       files: ['apps/frontend/**/*.{ts,tsx}', '!apps/frontend/next-env.d.ts'],
       parser: '@typescript-eslint/parser',
       parserOptions: {
-        project: './apps/frontend/tsconfig.json',
+        project: ['./apps/frontend/tsconfig.json'],
         tsconfigRootDir: __dirname,
         ecmaVersion: 2022,
         sourceType: 'module',
@@ -59,12 +67,13 @@ module.exports = {
         es2022: true,
         node: true,
       },
-      plugins: ['@typescript-eslint'],
+      plugins: ['@typescript-eslint', '@template/message-keys'],
       extends: [
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',
         'plugin:@typescript-eslint/recommended-requiring-type-checking',
         'next/core-web-vitals',
+        'plugin:@template/message-keys/recommended',
       ],
       rules: {
         // ベース
@@ -191,9 +200,16 @@ module.exports = {
       },
     },
 
-    // packages ディレクトリ（TypeScript ファイル）
+    // packages ディレクトリ（TypeScript ファイル） - messages関連は除外
     {
-      files: ['packages/**/*.{ts,tsx}'],
+      files: [
+        'packages/**/*.{ts,tsx}', 
+        '!packages/shared/src/messages/**/*',
+        '!packages/eslint-plugin-message-keys/**/*',
+        '!apps/**/*', // フロントエンド・バックエンドを明示的に除外
+        '!tools/**/*',
+        '!contracts/**/*'
+      ],
       parser: '@typescript-eslint/parser',
       parserOptions: {
         project: [

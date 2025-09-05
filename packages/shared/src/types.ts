@@ -9,28 +9,13 @@ export interface User {
   updatedAt: Date
 }
 
-// API レスポンス型
-export interface ApiResponse<T = unknown> {
-  success: boolean
-  data?: T
-  error?: string
-  message?: string
-}
-
 // ページネーション
 export interface PaginationParams {
   page?: number
   limit?: number
 }
 
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  pagination?: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
-}
+// NOTE: LegacyApiResponse と関連型は api/types.ts に移動されました
 
 // Zodスキーマ例
 export const UserSchema = z.object({
