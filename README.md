@@ -24,42 +24,51 @@
 
 ## 🚀 クイックスタート
 
-### ネイティブ環境（推奨）
+### 環境構築
 
 ```bash
-# 環境構築
+# 依存関係インストール
 pnpm install
 
-# データベース起動（PostgreSQL + Redis）
-pnpm db:up
-
-# 開発開始（フロントエンド）
-pnpm dev
-
-# バックエンド起動
-pnpm dev:api
-
-# フルスタック開発（両方同時起動）
-pnpm dev:fullstack
+# 環境変数設定
+cp .env.example .env
 ```
 
-### Docker環境
+### 開発開始（Docker推奨）
 
 ```bash
-# Docker環境で開発開始（フロント・バック同時起動）
-pnpm dev:docker
+# フルスタック開発（フロント・バック・DB同時起動）
+pnpm dev:fullstack
 
-# バックグラウンドで起動
-pnpm dev:docker:detached
+# またはバックグラウンドで起動
+pnpm docker:up
+```
+
+### 個別開発
+
+```bash
+# フロントエンドのみ
+pnpm dev
+
+# バックエンドのみ
+pnpm dev:api
+
+# データベースのみ
+pnpm db:up
+```
+
+### 管理コマンド
+
+```bash
+# サービス停止
+pnpm docker:down
 
 # ログ確認
 pnpm docker:logs
 
-# 停止
-pnpm docker:stop
-
-# 完全クリーンアップ
-pnpm docker:clean
+# データベース管理
+pnpm db:down  # DB停止
+pnpm db:logs  # DBログ確認
 ```
 
 ### 品質チェック
@@ -82,7 +91,8 @@ pnpm quality-fix
 
 ## 📚 ドキュメント
 
-- [📖 開発者ガイド](docs/handbook/developer-guide.md) - セットアップ・コマンド・トラブルシューティング
+- [📖 開発者ガイド](docs/handbook/developer-guide.md) - セットアップ・コマンド・基本開発手順
+- [🛠️ トラブルシューティング](docs/handbook/troubleshooting-guide.md) - ポート競合・プロセス問題の解決
 - [🏗️ システム設計](docs/architecture/system-overview.md) - アーキテクチャ・技術選定理由
 - [📐 コーディング規約](docs/styleguide/code-standards.md) - 型安全性・品質基準
 - [🤝 コントリビューション](docs/contrib/contribution-guide.md) - PR規約・レビューガイドライン
@@ -118,7 +128,13 @@ my-project-template/
 
 ## 🛠️ 利用可能コマンド
 
-### 開発用
+### 🚀 開発用（推奨）
+
+- `pnpm dev:smart` - スマート開発開始（ポート競合自動回避）
+- `pnpm dev:doctor` - 環境診断・自動修復
+- `pnpm cleanup` - 開発プロセス強制停止・環境クリーンアップ
+
+### 従来開発用
 
 - `pnpm dev` - フロントエンド開発サーバー起動 (localhost:3000)
 - `pnpm dev:api` - バックエンド開発サーバー起動 (localhost:8000)

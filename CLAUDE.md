@@ -12,6 +12,7 @@
 - **型安全性**: 手動型定義禁止、OpenAPI仕様更新→決定的生成の流れを厳守
 - **秘密は触らない**: `.env*` や APIキーは読み書き禁止
 - **自動生成ファイルは手動編集禁止**: `packages/api-contracts/codegen/ts/src/generated/**`
+- **🚫 サーバー起動禁止**: Claude は一切のサーバー起動・再起動を行わない。必ずユーザーに依頼する
 - **Conventional Commits + PR テンプレ順守**
 
 ---
@@ -83,6 +84,24 @@ pnpm type-check && pnpm lint && pnpm build
 3. **実装**: 型→実装→テスト→ドキュメントの順で小さな差分
 4. **検証**: 品質チェックコマンドを実行してログ提示
 5. **PR作成**: [貢献ガイドライン](./docs/contrib/contribution-guide.md)のテンプレに沿って作成
+
+### 🚫 サーバー操作の禁止事項
+
+Claude は以下のサーバー関連操作を**一切実行してはならない**：
+
+- `pnpm dev`, `pnpm dev:api`, `pnpm dev:fullstack` の実行
+- `docker compose up`, `docker compose restart` の実行
+- `pnpm docker:up`, `pnpm docker:down` の実行
+- その他あらゆるサーバー起動・再起動・停止コマンド
+
+**理由**: ポート競合やプロセス残存によるシステム不安定化防止
+
+**対応方法**: サーバー操作が必要な場合は必ず以下のようにユーザーに依頼する：
+
+```
+サーバーの起動が必要です。以下のコマンドを実行してください：
+pnpm dev:fullstack
+```
 
 ---
 
