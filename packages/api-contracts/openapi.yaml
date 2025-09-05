@@ -204,29 +204,45 @@ components:
           type: boolean
           description: 処理成功フラグ
           example: true
+        code:
+          type: string
+          description: MessageKeyシステム用コード
+          example: 'success.user_ensured'
         message:
           type: string
-          description: メッセージ
+          description: デバッグ用メッセージ（開発環境のみ）
           example: 'User ensured successfully'
         data:
           type: object
           description: レスポンスデータ
       required:
         - success
-        - message
 
     UserResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 処理成功フラグ
+          example: true
+        code:
+          type: string
+          description: MessageKeyシステム用コード
+          example: 'success.user_ensured'
+        message:
+          type: string
+          description: デバッグ用メッセージ（開発環境のみ）
+          example: 'User ensured successfully'
+        data:
+          type: object
           properties:
-            data:
-              type: object
-              properties:
-                user:
-                  $ref: '#/components/schemas/User'
-              required:
-                - user
+            user:
+              $ref: '#/components/schemas/User'
+          required:
+            - user
+      required:
+        - success
+        - data
 
     ErrorResponse:
       type: object

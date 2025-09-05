@@ -19,7 +19,16 @@ status: published
 ✅ **決定的生成**: 固定バージョンで再現可能  
 ✅ **境界制御**: 型エラーを生成物に閉じ込め  
 ✅ **パッケージ化**: クリーンな依存関係  
-✅ **自動生成**: `postinstall`/`prebuild` で自動実行
+✅ **自動生成**: `postinstall`/`prebuild` で自動実行  
+✅ **MessageKey統合**: MessageKeyシステムに対応したレスポンス型生成
+
+### MessageKeyシステム統合
+
+生成されたAPIクライアントは、**[MessageKeyシステム](./message-system-guide.md)** と完全統合されています：
+
+- **レスポンス型**: `code` フィールドでMessageKey対応
+- **型ガード**: MessageKey形式のレスポンス検証
+- **統一エラー**: MessageKeyベースのエラーハンドリング
 
 ---
 
