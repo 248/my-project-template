@@ -87,8 +87,10 @@ export class HealthCheckManager {
     } catch (error) {
       this.logger('Health check execution failed', error)
 
-      // eslint-disable-next-line @template/message-keys/require-message-key
-      return this.createErrorResponse(error)
+      return this.createErrorResponse(
+        'error.health_check_failed',
+        error instanceof Error ? error.message : String(error)
+      )
     }
   }
 
