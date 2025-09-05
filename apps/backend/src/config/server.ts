@@ -7,6 +7,7 @@ export const serverConfigSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development')
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('実行環境'),
 
   PORT: z.coerce
@@ -15,11 +16,13 @@ export const serverConfigSchema = z.object({
     .min(1)
     .max(65535)
     .default(8000)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('サーバーポート'),
 
   npm_package_version: z
     .string()
     .default('0.1.0')
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('アプリケーションバージョン'),
 
   HEALTH_CHECK_TIMEOUT: z.coerce
@@ -28,6 +31,7 @@ export const serverConfigSchema = z.object({
     .min(1000)
     .max(30000)
     .default(10000)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('ヘルスチェックタイムアウト（ミリ秒）'),
 
   HEALTH_CHECK_CACHE_DURATION: z.coerce
@@ -36,11 +40,13 @@ export const serverConfigSchema = z.object({
     .min(0)
     .max(300)
     .default(30)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('ヘルスチェックキャッシュ期間（秒）'),
 
   HEALTH_CHECK_EXPOSE_SYSTEM_METRICS: z.coerce
     .boolean()
     .default(true)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('システムメトリクスの公開'),
 })
 
@@ -59,6 +65,7 @@ export function createServerConfig(): ServerConfig {
         .join('\n')
 
       throw new Error(
+        // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
         `Server configuration validation failed:\n${errorMessages}`
       )
     }

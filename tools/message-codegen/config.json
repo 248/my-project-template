@@ -1,0 +1,40 @@
+{
+  "registry": {
+    "path": "contracts/messages/registry.yaml",
+    "version": "1.0.0"
+  },
+  "targets": {
+    "typescript": {
+      "enabled": true,
+      "output_path": "packages/shared/src/messages/keys.ts",
+      "template": "tools/message-codegen/templates/typescript.hbs",
+      "imports": [
+        "// Generated from registry.yaml - DO NOT EDIT MANUALLY",
+        "// Run 'pnpm gen:messages' to regenerate"
+      ]
+    },
+    "go": {
+      "enabled": false,
+      "output_path": "apps/backend-go/internal/messages/keys_gen.go",
+      "template": "tools/message-codegen/templates/go.hbs",
+      "package_name": "messages",
+      "imports": []
+    }
+  },
+  "locales": {
+    "output_dir": "packages/shared/src/messages/locales",
+    "supported": ["ja", "en", "pseudo"],
+    "format": "typescript"
+  },
+  "validation": {
+    "strict_mode": true,
+    "check_completeness": true,
+    "check_consistency": true,
+    "allow_extra_keys": false
+  },
+  "openapi_integration": {
+    "enabled": true,
+    "schema_path": "packages/api-contracts/openapi.yaml",
+    "error_code_enum_path": "components.schemas.ApiError.properties.code.enum"
+  }
+}

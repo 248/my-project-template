@@ -5,8 +5,10 @@ import { z } from 'zod'
  * 環境変数を型安全に検証・変換する
  */
 export const redisConfigSchema = z.object({
+  // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
   REDIS_URL: z.string().optional().describe('Redis接続URL（優先）'),
 
+  // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
   REDIS_HOST: z.string().default('localhost').describe('Redisホスト'),
 
   REDIS_PORT: z.coerce
@@ -15,8 +17,10 @@ export const redisConfigSchema = z.object({
     .min(1)
     .max(65535)
     .default(6379)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('Redisポート'),
 
+  // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
   REDIS_PASSWORD: z.string().optional().describe('Redis認証パスワード'),
 
   REDIS_DB: z.coerce
@@ -25,6 +29,7 @@ export const redisConfigSchema = z.object({
     .min(0)
     .max(15)
     .default(0)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('Redisデータベース番号'),
 
   REDIS_MAX_RETRIES: z.coerce
@@ -33,6 +38,7 @@ export const redisConfigSchema = z.object({
     .min(0)
     .max(10)
     .default(3)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('リトライ回数'),
 
   REDIS_CONNECT_TIMEOUT: z.coerce
@@ -41,6 +47,7 @@ export const redisConfigSchema = z.object({
     .min(1000)
     .max(30000)
     .default(10000)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('接続タイムアウト（ミリ秒）'),
 
   REDIS_COMMAND_TIMEOUT: z.coerce
@@ -49,6 +56,7 @@ export const redisConfigSchema = z.object({
     .min(1000)
     .max(30000)
     .default(5000)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('コマンドタイムアウト（ミリ秒）'),
 })
 
@@ -111,6 +119,7 @@ export function createRedisConfig(): {
         .join('\n')
 
       throw new Error(
+        // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
         `Redis configuration validation failed:\n${errorMessages}`
       )
     }

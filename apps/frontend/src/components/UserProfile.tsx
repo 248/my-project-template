@@ -2,6 +2,8 @@
 
 import { useUser } from '@clerk/nextjs'
 import Image from 'next/image'
+import { useMessages } from '@/hooks/useMessages'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 /**
  * ユーザープロフィール表示コンポーネント
@@ -13,6 +15,7 @@ import Image from 'next/image'
  */
 export function UserProfile() {
   const { user, isLoaded, isSignedIn } = useUser()
+  const { tUI, tError } = useMessages()
 
   // ローディング状態
   if (!isLoaded) {
@@ -26,28 +29,29 @@ export function UserProfile() {
 
   // 未認証状態
   if (!isSignedIn || !user) {
-    return (
-      <div className="text-red-600">ユーザー情報を読み込めませんでした</div>
-    )
+    return <div className="text-red-600">{tError('error.user_not_found')}</div>
   }
 
   return (
     <div className="space-y-4">
+      {/* Language Switcher for testing */}
+      <LanguageSwitcher />
+
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          プロフィール情報
+          {tUI('ui.profile_info')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              ユーザーID
+              {tUI('ui.user_id')}
             </label>
             <p className="mt-1 text-sm text-gray-900 font-mono">{user.id}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              表示名
+              {tUI('ui.display_name')}
             </label>
             <p className="mt-1 text-sm text-gray-900">
               {user.firstName} {user.lastName}
@@ -57,38 +61,38 @@ export function UserProfile() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              メールアドレス
+              {tUI('ui.email_address')}
             </label>
             <p className="mt-1 text-sm text-gray-900">
-              {user.primaryEmailAddress?.emailAddress || '未設定'}
+              {user.primaryEmailAddress?.emailAddress || tUI('ui.not_set')}
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              作成日時
+              {tUI('ui.created_at')}
             </label>
             <p className="mt-1 text-sm text-gray-900">
               {user.createdAt
                 ? new Date(user.createdAt).toLocaleString('ja-JP')
-                : '不明'}
+                : tUI('ui.unknown')}
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              最終更新
+              {tUI('ui.updated_at')}
             </label>
             <p className="mt-1 text-sm text-gray-900">
               {user.updatedAt
                 ? new Date(user.updatedAt).toLocaleString('ja-JP')
-                : '不明'}
+                : tUI('ui.unknown')}
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              認証プロバイダー
+              {tUI('ui.auth_providers')}
             </label>
             <p className="mt-1 text-sm text-gray-900">
               {user.externalAccounts
@@ -103,7 +107,7 @@ export function UserProfile() {
       {user.imageUrl && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            アバター
+            {tUI('ui.avatar')}
           </label>
           <Image
             src={user.imageUrl}

@@ -41,7 +41,7 @@ type HealthCheck = components['schemas']['HealthCheck']
  * - 型ガード関数による安全な型変換
  */
 export function useApiClient() {
-  const { getToken } = useAuth()
+  const { getToken, isSignedIn } = useAuth()
 
   const client = createClient<paths>({
     baseUrl: API_BASE_URL,
@@ -61,15 +61,21 @@ export function useApiClient() {
    * 認証ヘッダーを取得
    */
   const getAuthHeaders = async (): Promise<Record<string, string>> => {
-    const token = await getToken()
+    // ClerkのJWTテンプレート'backend'を使用（"aud": "api"クレーム付き）
+    const token = await getToken({ template: 'backend' })
 
     if (!token) {
-      // 認証トークンが取得できない場合は空のヘッダーを返す
-      // 実際のエラーハンドリングは呼び出し側でHTTPステータスコードを確認
-      return {}
+      throw new Error('ユーザーがサインインしていません。認証が必要です。')
     }
 
     return { Authorization: `Bearer ${token}` }
+  }
+
+  /**
+   * 認証状態を確認
+   */
+  const checkAuthState = (): boolean => {
+    return isSignedIn || false
   }
 
   /**
@@ -80,12 +86,20 @@ export function useApiClient() {
       return false
     }
 
-    return (
-      'success' in data &&
-      typeof Reflect.get(data, 'success') === 'boolean' &&
-      'message' in data &&
-      typeof Reflect.get(data, 'message') === 'string'
-    )
+    if (!('success' in data) || typeof data.success !== 'boolean') {
+      return false
+    }
+
+    if (
+      !('data' in data) ||
+      data.data === null ||
+      typeof data.data !== 'object'
+    ) {
+      return false
+    }
+
+    const dataObj = data.data
+    return 'user' in dataObj
   }
 
   /**
@@ -314,5 +328,6 @@ export function useApiClient() {
     getProfile,
     updateProfile,
     healthCheck,
+    checkAuthState,
   }
 }

@@ -3,6 +3,12 @@ import { z } from 'zod'
 import { container } from 'tsyringe'
 import { UserService } from '../services/user'
 import { requireAuth, getAuth } from '../middleware/clerk-auth'
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  createValidationErrorResponse,
+  type ValidationMessageKey,
+} from '../lib/api-response'
 
 /**
  * ユーザー管理APIルート
@@ -15,6 +21,27 @@ const users = new Hono()
 
 // 全ユーザールートに認証ミドルウェアを適用
 users.use('/*', requireAuth)
+
+/**
+ * ZodエラーコードをValidationMessageKeyにマッピング
+ */
+function mapZodErrorToValidationCode(
+  zodErrorCode: string
+): ValidationMessageKey {
+  switch (zodErrorCode) {
+    case 'invalid_type':
+    case 'required':
+      return 'validation.field_required'
+    case 'invalid_string':
+      return 'validation.invalid_email' // 多くの場合emailバリデーション
+    case 'too_small':
+      return 'validation.string_too_short'
+    case 'too_big':
+      return 'validation.string_too_long'
+    default:
+      return 'validation.field_required' // フォールバック
+  }
+}
 
 // プロフィール更新のバリデーションスキーマ
 const updateProfileSchema = z.object({
@@ -41,36 +68,40 @@ users.get('/me', async c => {
 
     if (!user) {
       return c.json(
-        {
-          success: false,
-          message: 'User not found. Please sign in again.',
-        },
+        createErrorResponse(
+          'error.user_not_found',
+          undefined,
+          404,
+          'User not found. Please sign in again.'
+        ),
         404
       )
     }
 
-    return c.json({
-      success: true,
-      message: 'Profile retrieved successfully',
-      data: {
-        user: {
-          id: user.id,
-          displayName: user.displayName,
-          email: user.email,
-          avatarUrl: user.avatarUrl,
-          locale: user.locale,
-          createdAt: user.createdAt.toISOString(),
-          updatedAt: user.updatedAt.toISOString(),
+    return c.json(
+      createSuccessResponse(
+        {
+          user: {
+            id: user.id,
+            displayName: user.displayName,
+            email: user.email,
+            avatarUrl: user.avatarUrl,
+            locale: user.locale,
+            createdAt: user.createdAt.toISOString(),
+            updatedAt: user.updatedAt.toISOString(),
+          },
         },
-      },
-    })
+        'success.profile_retrieved'
+      )
+    )
   } catch (error) {
     return c.json(
-      {
-        success: false,
-        message: 'Failed to retrieve profile',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
+      createErrorResponse(
+        'error.profile_retrieval_failed',
+        error instanceof Error ? error.message : 'Unknown error',
+        500,
+        'Failed to retrieve profile'
+      ),
       500
     )
   }
@@ -96,55 +127,60 @@ users.put('/me', async c => {
     // ユーザー情報を更新
     const user = await userService.updateUser(authContext.userId, validatedData)
 
-    return c.json({
-      success: true,
-      message: 'Profile updated successfully',
-      data: {
-        user: {
-          id: user.id,
-          displayName: user.displayName,
-          email: user.email,
-          avatarUrl: user.avatarUrl,
-          locale: user.locale,
-          createdAt: user.createdAt.toISOString(),
-          updatedAt: user.updatedAt.toISOString(),
+    return c.json(
+      createSuccessResponse(
+        {
+          user: {
+            id: user.id,
+            displayName: user.displayName,
+            email: user.email,
+            avatarUrl: user.avatarUrl,
+            locale: user.locale,
+            createdAt: user.createdAt.toISOString(),
+            updatedAt: user.updatedAt.toISOString(),
+          },
         },
-      },
-    })
+        'success.profile_updated'
+      )
+    )
   } catch (error) {
     // バリデーションエラーの場合
     if (error instanceof z.ZodError) {
-      return c.json(
-        {
-          success: false,
-          message: 'Validation failed',
-          errors: error.errors.map(e => ({
-            field: e.path.join('.'),
-            message: e.message,
-          })),
+      const validationErrors = error.errors.map(e => ({
+        field: e.path.join('.'),
+        code: mapZodErrorToValidationCode(e.code),
+        message: e.message,
+        value: 'input' in e ? e.input : undefined, // inputが存在する場合のみ取得
+        constraints: {
+          zodCode: e.code,
+          zodMessage: e.message,
         },
-        400
-      )
+      }))
+
+      return c.json(createValidationErrorResponse(validationErrors), 400)
     }
 
     // ユーザーが見つからない場合
     if (error instanceof Error && error.message === 'User not found') {
       return c.json(
-        {
-          success: false,
-          message: 'User not found. Please sign in again.',
-        },
+        createErrorResponse(
+          'error.user_not_found',
+          undefined,
+          404,
+          'User not found. Please sign in again.'
+        ),
         404
       )
     }
 
     // その他のエラー
     return c.json(
-      {
-        success: false,
-        message: 'Failed to update profile',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
+      createErrorResponse(
+        'error.profile_update_failed',
+        error instanceof Error ? error.message : 'Unknown error',
+        500,
+        'Failed to update profile'
+      ),
       500
     )
   }

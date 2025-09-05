@@ -1,1 +1,3 @@
+# 高速・最小限の品質チェック（変更ファイル + 型チェック全体）
 pnpm lint-staged
+pnpm type-check
