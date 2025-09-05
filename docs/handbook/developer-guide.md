@@ -191,6 +191,36 @@ pnpm quality-check       # 型チェック→Lint一括実行
 pnpm dev                 # 開発サーバー起動
 ```
 
+### メッセージキー生成
+
+```bash
+# メッセージレジストリの検証
+pnpm verify:messages
+
+# メッセージキーの生成（TypeScript型定義生成）
+node tools/message-codegen/generate.js
+
+# ドライラン実行（ファイルを変更せず動作確認）
+node tools/message-codegen/generate.js --dry-run
+```
+
+**dry-runモードの使用場面:**
+
+- `contracts/messages/registry.yaml`編集後の影響確認
+- CI/CDパイプラインでの動作検証
+- 生成される内容の事前確認
+- 書き込み権限がない環境での動作テスト
+
+**出力例:**
+
+```
+🧪 Dry run summary:
+   • Would generate TypeScript code at packages/shared/src/messages/keys.ts
+   • Would process locale files
+   • Would update OpenAPI schema at packages/api-contracts/openapi.yaml
+✨ Dry run completed for 38 messages across 6 namespaces
+```
+
 ### Docker環境
 
 ```bash
