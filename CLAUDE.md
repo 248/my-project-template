@@ -35,6 +35,7 @@
 - **[システム概要](./docs/architecture/system-overview.md)** - アーキテクチャ・技術スタック
 - **[要件定義](./docs/architecture/requirements.md)** - プロジェクト要件テンプレート
 - **[API設計](./docs/architecture/api-design.md)** - OpenAPI仕様・エンドポイント設計
+- **[JWT認証ガイド](./docs/architecture/jwt-authentication-guide.md)** - Clerk JWT認証実装詳細・トラブルシューティング
 - **[移行戦略](./docs/architecture/migration-strategy.md)** - スケーリング・移行計画
 
 ### 🔧 貢献・レビュー

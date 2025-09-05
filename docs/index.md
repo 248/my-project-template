@@ -40,6 +40,7 @@ status: published
 - **[システムアーキテクチャ](./architecture/system-overview.md)** - 全体設計・技術選択
 - **[要件定義](./architecture/requirements.md)** - プロジェクト要件・受け入れ基準
 - **[API設計](./architecture/api-design.md)** - エンドポイント設計・認証パターン
+- **[JWT認証ガイド](./architecture/jwt-authentication-guide.md)** - Clerk JWT認証の詳細実装
 - **[移行戦略](./architecture/migration-strategy.md)** - スケーリング戦略・移行計画
 
 ### 🛠️ 実装・品質
