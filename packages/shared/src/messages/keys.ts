@@ -3,7 +3,7 @@
  *
  * Generated from: contracts/messages/registry.yaml
  * Version: 1.0.0
- * Generated at: 2025-09-05T05:12:49.393Z
+ * Generated at: 2025-09-05T13:42:23.277Z
  *
  * Run 'pnpm gen:messages' to regenerate this file
  */
@@ -72,23 +72,23 @@ export const ALL_MESSAGE_KEYS = Object.keys(MESSAGE_KEYS) as MessageKey[]
 /**
  * Namespace-specific key arrays
  */
-export const AUTH_KEYS = ALL_MESSAGE_KEYS.filter(k =>
-  k.startsWith('auth.')
+export const AUTH_KEYS = ALL_MESSAGE_KEYS.filter(
+  k => k && k.startsWith('auth.')
 ) as AuthMessageKey[]
-export const ERROR_KEYS = ALL_MESSAGE_KEYS.filter(k =>
-  k.startsWith('error.')
+export const ERROR_KEYS = ALL_MESSAGE_KEYS.filter(
+  k => k && k.startsWith('error.')
 ) as ErrorMessageKey[]
-export const SUCCESS_KEYS = ALL_MESSAGE_KEYS.filter(k =>
-  k.startsWith('success.')
+export const SUCCESS_KEYS = ALL_MESSAGE_KEYS.filter(
+  k => k && k.startsWith('success.')
 ) as SuccessMessageKey[]
-export const UI_KEYS = ALL_MESSAGE_KEYS.filter(k =>
-  k.startsWith('ui.')
+export const UI_KEYS = ALL_MESSAGE_KEYS.filter(
+  k => k && k.startsWith('ui.')
 ) as UiMessageKey[]
-export const ACTION_KEYS = ALL_MESSAGE_KEYS.filter(k =>
-  k.startsWith('action.')
+export const ACTION_KEYS = ALL_MESSAGE_KEYS.filter(
+  k => k && k.startsWith('action.')
 ) as ActionMessageKey[]
-export const VALIDATION_KEYS = ALL_MESSAGE_KEYS.filter(k =>
-  k.startsWith('validation.')
+export const VALIDATION_KEYS = ALL_MESSAGE_KEYS.filter(
+  k => k && k.startsWith('validation.')
 ) as ValidationMessageKey[]
 
 /**
