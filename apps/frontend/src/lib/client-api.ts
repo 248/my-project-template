@@ -64,10 +64,12 @@ export function useApiClient() {
     const token = await getToken()
 
     if (!token) {
-      console.error('Clerk token is missing')
+      // 認証トークンが取得できない場合は空のヘッダーを返す
+      // 実際のエラーハンドリングは呼び出し側でHTTPステータスコードを確認
+      return {}
     }
 
-    return token ? { Authorization: `Bearer ${token}` } : {}
+    return { Authorization: `Bearer ${token}` }
   }
 
   /**

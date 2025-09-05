@@ -50,7 +50,7 @@ export default async function HomePage() {
           <div className="border-t pt-8 text-center">
             <div className="space-y-4">
               <Link
-                href="/sign-in"
+                href={{ pathname: '/sign-in' }}
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 サインイン
@@ -58,7 +58,7 @@ export default async function HomePage() {
               <div className="text-sm text-gray-500">
                 まだアカウントをお持ちでない場合は{' '}
                 <Link
-                  href="/sign-up"
+                  href={{ pathname: '/sign-up' }}
                   className="text-blue-600 hover:text-blue-500"
                 >
                   サインアップ
