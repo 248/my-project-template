@@ -271,9 +271,9 @@ export interface LegacyApiResponse<T = unknown> {
  * 既存レスポンスから新形式への変換（段階移行用）
  * @deprecated Phase 4移行完了後に削除予定
  */
+// eslint-disable-next-line @template/message-keys/require-message-key
 export function convertLegacyResponse<T>(
   legacy: LegacyApiResponse<T>,
-  // eslint-disable-next-line @template/message-keys/require-message-key
   errorCode?: MessageKey
 ): ApiResponse<T> {
   if (legacy.success && legacy.data !== undefined) {
