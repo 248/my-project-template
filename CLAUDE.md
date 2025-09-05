@@ -6,6 +6,7 @@
 
 ## 🎯 最重要ルール（Mini Rules）
 
+- **🇯🇵 日本語優先**: コミットメッセージ・PR説明・コメント・Issue報告は**必ず日本語**で記述
 - **日本語で説明、英語で識別子**
 - **まず計画→小さなPR** - いきなり書き換えない
 - **品質チェック**: `pnpm codegen && pnpm type-check && pnpm lint` を必ず通す
@@ -57,27 +58,6 @@
 
 ---
 
-## ⚡ クイックスタート
-
-```bash
-# 1. セットアップ
-pnpm install
-cp .env.example .env  # 環境変数を設定
-(cd infra/docker && docker compose up -d)
-
-# 2. 型生成とDB設定（実装後）
-# pnpm codegen
-# pnpm db:generate && pnpm db:push
-
-# 3. 開発開始
-pnpm dev
-
-# 4. PR前チェック
-pnpm type-check && pnpm lint && pnpm build
-```
-
----
-
 ## 🤖 Claude向け実行指針
 
 1. **理解**: タスクを分析し、曖昧さがあれば質問
@@ -85,6 +65,35 @@ pnpm type-check && pnpm lint && pnpm build
 3. **実装**: 型→実装→テスト→ドキュメントの順で小さな差分
 4. **検証**: 品質チェックコマンドを実行してログ提示
 5. **PR作成**: [貢献ガイドライン](./docs/contrib/contribution-guide.md)のテンプレに沿って作成
+
+### 🇯🇵 日本語コミュニケーション規約
+
+Claude は以下の文書作成時に**必ず日本語を使用**すること：
+
+#### ✅ 必須日本語項目
+
+- **gitコミットメッセージ**: タイトル・本文ともに日本語
+- **PR/Issue説明**: タイトル・説明文・コメント全て日本語
+- **GitHubコメント**: レビューコメント・対応報告・議論全て日本語
+- **コード内コメント**: 日本語でロジック説明
+- **ドキュメント**: README以外は基本日本語
+
+#### 🚫 例外（英語可）
+
+- **変数・関数名**: `getUserProfile`, `API_BASE_URL` など識別子
+- **技術用語**: `React`, `TypeScript`, `API` など固有名詞
+- **ログメッセージ**: システムログは英語可
+- **外部ライブラリ準拠**: 外部標準に合わせる場合
+
+#### 💡 推奨パターン
+
+```bash
+# ❌ 英語コミット
+git commit -m "fix: resolve health check bug"
+
+# ✅ 日本語コミット
+git commit -m "fix: ヘルスチェックのバグを修正"
+```
 
 ### 🚫 禁止事項・要確認事項
 
