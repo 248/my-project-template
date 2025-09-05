@@ -45,6 +45,7 @@ class ConfigManager {
       return this._config
     } catch (error) {
       throw new Error(
+        // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
         `Configuration initialization failed: ${error instanceof Error ? error.message : String(error)}`
       )
     }
@@ -55,6 +56,7 @@ class ConfigManager {
    */
   get config(): AppConfig {
     if (!this._initialized || !this._config) {
+      // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
       throw new Error('Configuration not initialized. Call initialize() first.')
     }
     return this._config

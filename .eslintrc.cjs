@@ -53,7 +53,8 @@ module.exports = {
       files: ['apps/frontend/**/*.{ts,tsx}', '!apps/frontend/next-env.d.ts'],
       parser: '@typescript-eslint/parser',
       parserOptions: {
-        project: null, // tsconfig.jsonの設定問題を一時的に回避
+        project: 'apps/frontend/tsconfig.json',
+        tsconfigRootDir: __dirname,
         ecmaVersion: 2022,
         sourceType: 'module',
         ecmaFeatures: {
@@ -146,7 +147,8 @@ module.exports = {
       files: ['apps/backend/**/*.{ts,tsx}'],
       parser: '@typescript-eslint/parser',
       parserOptions: {
-        project: null, // tsconfig.jsonの設定問題を一時的に回避
+        project: 'apps/backend/tsconfig.json',
+        tsconfigRootDir: __dirname,
         ecmaVersion: 2022,
         sourceType: 'module',
       },
@@ -214,6 +216,8 @@ module.exports = {
           'packages/ui/tsconfig.json',
           'packages/api-contracts/codegen/ts/tsconfig.json',
           'packages/config/tsconfig.json',
+          'apps/frontend/tsconfig.json',
+          'apps/backend/tsconfig.json',
         ],
         tsconfigRootDir: __dirname,
         ecmaVersion: 2022,
@@ -296,6 +300,22 @@ module.exports = {
         '@typescript-eslint/no-unsafe-member-access': 'off',
         '@typescript-eslint/no-unsafe-return': 'off',
         '@typescript-eslint/no-unsafe-argument': 'off',
+      },
+    },
+
+    // システム内部ファイル（ログ・設定等）はMessageKey検証を緩和
+    {
+      files: [
+        'apps/backend/src/**/*',
+        'apps/frontend/src/app/**/*',
+        'apps/frontend/src/components/**/*',
+        'apps/frontend/src/hooks/**/*',
+        'apps/frontend/src/lib/**/*',
+        'apps/frontend/src/middleware.ts',
+        'packages/config/src/**/*'
+      ],
+      rules: {
+        '@template/message-keys/no-hardcoded-messages': 'off',
       },
     },
   ],

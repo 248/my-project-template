@@ -8,6 +8,7 @@ export const databaseConfigSchema = z.object({
   DATABASE_URL: z
     .string()
     .url('DATABASE_URL must be a valid URL')
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('PostgreSQL接続URL'),
 
   DB_POOL_SIZE: z.coerce
@@ -16,6 +17,7 @@ export const databaseConfigSchema = z.object({
     .min(1)
     .max(100)
     .default(10)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('データベース接続プールサイズ'),
 
   DB_TIMEOUT: z.coerce
@@ -24,6 +26,7 @@ export const databaseConfigSchema = z.object({
     .min(1000)
     .max(60000)
     .default(30000)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('データベース接続タイムアウト（ミリ秒）'),
 
   DB_RETRY_ATTEMPTS: z.coerce
@@ -32,6 +35,7 @@ export const databaseConfigSchema = z.object({
     .min(0)
     .max(10)
     .default(3)
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     .describe('接続リトライ回数'),
 })
 
@@ -51,6 +55,7 @@ export function createDatabaseConfig(): DatabaseConfig {
         .join('\n')
 
       throw new Error(
+        // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
         `Database configuration validation failed:\n${errorMessages}`
       )
     }

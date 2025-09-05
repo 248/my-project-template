@@ -86,18 +86,20 @@ export function useApiClient() {
       return false
     }
 
-    const obj = data as Record<string, unknown>
+    if (!('success' in data) || typeof data.success !== 'boolean') {
+      return false
+    }
 
-    // 新しいMessageKeyシステム対応の型ガード
-    return (
-      'success' in obj &&
-      typeof obj['success'] === 'boolean' &&
-      'data' in obj &&
-      obj['data'] !== null &&
-      typeof obj['data'] === 'object' &&
-      obj['data'] !== null &&
-      'user' in (obj['data'] as Record<string, unknown>)
-    )
+    if (
+      !('data' in data) ||
+      data.data === null ||
+      typeof data.data !== 'object'
+    ) {
+      return false
+    }
+
+    const dataObj = data.data
+    return 'user' in dataObj
   }
 
   /**
