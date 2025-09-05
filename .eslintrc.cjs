@@ -303,19 +303,26 @@ module.exports = {
       },
     },
 
-    // システム内部ファイル（ログ・設定等）はMessageKey検証を緩和
+    // システム内部ファイル（設定・ログ・インフラ・API実装）はMessageKey検証を緩和
     {
       files: [
-        'apps/backend/src/**/*',
-        'apps/frontend/src/app/**/*',
-        'apps/frontend/src/components/**/*',
-        'apps/frontend/src/hooks/**/*',
-        'apps/frontend/src/lib/**/*',
+        'apps/backend/src/**/*', // バックエンド全体（API実装段階では除外）
         'apps/frontend/src/middleware.ts',
         'packages/config/src/**/*'
       ],
       rules: {
         '@template/message-keys/no-hardcoded-messages': 'off',
+      },
+    },
+
+    // フロントエンドUIコンポーネントではMessageKey検証を厳密に実施
+    {
+      files: [
+        'apps/frontend/src/components/**/*',
+        'apps/frontend/src/app/**/*',
+      ],
+      rules: {
+        '@template/message-keys/no-hardcoded-messages': 'error',
       },
     },
   ],
