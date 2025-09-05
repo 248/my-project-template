@@ -40,6 +40,23 @@ export function AuthHealthCheckButton() {
     }))
 
     try {
+      // 認証状態を確認
+      if (!api.checkAuthState()) {
+        setState({
+          isLoading: false,
+          result: {
+            success: false,
+            data: null,
+            error: {
+              message: 'ユーザーがサインインしていません。認証が必要です。',
+              status: 401,
+            },
+          },
+          lastUpdated: new Date(),
+        })
+        return
+      }
+
       const healthResult = await api.healthCheck()
       if (!healthResult.success) {
         setState({

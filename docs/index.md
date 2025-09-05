@@ -32,7 +32,8 @@ status: published
 
 ### 🚀 はじめての方
 
-- **[開発者ハンドブック](./handbook/developer-guide.md)** - セットアップ手順・開発の流れ
+- **[開発者ハンドブック](./handbook/developer-guide.md)** - セットアップ手順・基本開発の流れ
+- **[環境トラブルシューティング](./handbook/environment-troubleshooting.md)** - ポート競合・プロセス問題解決
 - **[プロジェクト概要](../README.md)** - 技術スタック・アーキテクチャ概要
 
 ### 🏗️ アーキテクチャ・設計
