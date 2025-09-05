@@ -125,22 +125,32 @@ async function generateAll(options = {}) {
 
     if (options.dryRun) {
       console.log('\n🧪 Dry run summary:')
-      if (config.targets.typescript.enabled) {
-        console.log(
-          `   • Would generate TypeScript code at ${config.targets.typescript.output_path}`
-        )
+
+      const dryRunSteps = [
+        {
+          enabled: config.targets.typescript.enabled,
+          message: `Would generate TypeScript code at ${config.targets.typescript.output_path}`,
+        },
+        {
+          enabled: config.targets.go.enabled,
+          message: `Would generate Go code at ${config.targets.go.output_path}`,
+        },
+        {
+          enabled: true, // locale files are always processed
+          message: 'Would process locale files',
+        },
+        {
+          enabled: config.openapi_integration.enabled,
+          message: `Would update OpenAPI schema at ${config.openapi_integration.schema_path}`,
+        },
+      ]
+
+      for (const step of dryRunSteps) {
+        if (step.enabled) {
+          console.log(`   • ${step.message}`)
+        }
       }
-      if (config.targets.go.enabled) {
-        console.log(
-          `   • Would generate Go code at ${config.targets.go.output_path}`
-        )
-      }
-      console.log('   • Would process locale files')
-      if (config.openapi_integration.enabled) {
-        console.log(
-          `   • Would update OpenAPI schema at ${config.openapi_integration.schema_path}`
-        )
-      }
+
       console.log('\n' + '='.repeat(60))
       console.log(
         `✨ Dry run completed for ${stats.totalMessages} messages across ${stats.namespaces.length} namespaces`

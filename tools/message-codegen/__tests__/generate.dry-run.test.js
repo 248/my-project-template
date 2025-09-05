@@ -5,9 +5,11 @@ const path = require('path')
 const { execSync } = require('child_process')
 
 test('dry run skips file generation and logs summary', () => {
+  const config = require('../config.json')
   const keysPath = path.resolve(
     __dirname,
-    '../../../packages/shared/src/messages/keys.ts'
+    '../../../',
+    config.targets.typescript.output_path
   )
 
   const before = fs.readFileSync(keysPath, 'utf8')
