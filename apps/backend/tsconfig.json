@@ -12,7 +12,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@template/shared": ["../../packages/shared/src"],
+      "@template/shared": ["../../packages/shared/src/index.ts"],
       "@template/config": ["../../packages/config/src"],
       "@template/api-contracts-ts": [
         "../../packages/api-contracts/codegen/ts/src"

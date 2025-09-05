@@ -30,6 +30,14 @@ status: published
 - **認可制御**: リソースレベルでの権限チェック
 - **セキュリティ**: 適切な入力検証とサニタイゼーション
 
+### 4. **MessageKeyシステム統合**
+
+- **統一メッセージ**: ハードコードメッセージ完全排除
+- **多言語対応**: 日本語・英語・Pseudo言語対応
+- **型安全**: MessageKey存在をコンパイル時検証
+
+詳細は **[MessageKeyシステムガイド](../handbook/message-system-guide.md)** を参照
+
 ## 📋 APIエンドポイント構成例
 
 ### 🔐 Authentication（認証）
@@ -130,22 +138,26 @@ status: published
 
 ### レスポンス形式
 
+**MessageKeyシステム対応**の統一レスポンス形式：
+
 ```typescript
 // 成功レスポンス
 interface SuccessResponse<T> {
   success: true
   data: T
-  message?: string
+  code?: string // MessageKey対応：success.user_created 等
+  message?: string // 開発環境でのデバッグ用（本番では省略可）
 }
 
 // エラーレスポンス
 interface ErrorResponse {
   success: false
-  error: {
-    code: string
-    message: string
-    details?: any
-  }
+  message: string
+  error?: string
+  errors?: Array<{
+    field?: string
+    message?: string
+  }>
 }
 
 // ページネーション
@@ -158,6 +170,7 @@ interface PaginatedResponse<T> {
     total: number
     totalPages: number
   }
+  code?: string
 }
 ```
 

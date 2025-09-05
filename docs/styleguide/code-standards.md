@@ -23,6 +23,14 @@ status: published
 - **API型 ↔ DB型 ↔ UI型**を**層で分離**し、変換関数を1箇所に集約
 - **境界層での適切な制約** - アーキテクチャ層ごとの型制約設定
 
+### MessageKeyシステム統合
+
+- **ハードコード禁止**: 全てのユーザー向けメッセージはMessageKey使用必須
+- **型安全MessageKey**: 存在しないキーはコンパイル時エラー
+- **統一API**: レスポンスに `code` フィールドでMessageKey情報を含める
+
+詳細は **[MessageKeyシステムガイド](../handbook/message-system-guide.md)** を参照
+
 ---
 
 ## 🔧 実装パターン
