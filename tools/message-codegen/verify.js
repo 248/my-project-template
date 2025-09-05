@@ -316,12 +316,74 @@ function verifyOpenAPIIntegration(registryKeys, results) {
   const schemaPath = path.resolve(config.openapi_integration.schema_path)
 
   if (!fs.existsSync(schemaPath)) {
-    results.addWarning('OpenAPI schema not found', { path: schemaPath })
+    results.addWarning('OpenAPI schema not found - skipping', {
+      path: schemaPath,
+    })
     return
   }
 
-  // TODO: Implement OpenAPI enum verification
-  results.addInfo('OpenAPI verification: placeholder (to be implemented)')
+  let schema
+  try {
+    schema = yaml.load(fs.readFileSync(schemaPath, 'utf8'))
+  } catch (error) {
+    results.addError('Failed to parse OpenAPI schema', {
+      path: schemaPath,
+      error: error.message,
+    })
+    return
+  }
+
+  const pathParts = config.openapi_integration.error_code_enum_path.split('.')
+  let enumNode = schema
+  for (const part of pathParts) {
+    if (enumNode && Object.prototype.hasOwnProperty.call(enumNode, part)) {
+      enumNode = enumNode[part]
+    } else {
+      results.addWarning('Error code enum path not found in OpenAPI schema', {
+        path: config.openapi_integration.error_code_enum_path,
+      })
+      return
+    }
+  }
+
+  if (!Array.isArray(enumNode)) {
+    results.addWarning('OpenAPI error code enum is not an array', {
+      path: config.openapi_integration.error_code_enum_path,
+    })
+    return
+  }
+
+  const schemaKeys = new Set(enumNode)
+  const registryErrorKeys = registryKeys
+    .filter(
+      k =>
+        k.apiUsage &&
+        (k.category === 'error' ||
+          k.category === 'client_error' ||
+          k.category === 'server_error')
+    )
+    .map(k => k.key)
+
+  const registryErrorKeySet = new Set(registryErrorKeys)
+  const missingInSchema = registryErrorKeys.filter(k => !schemaKeys.has(k))
+  const extraInSchema = enumNode.filter(k => !registryErrorKeySet.has(k))
+
+  if (missingInSchema.length > 0) {
+    results.addError('OpenAPI schema missing message keys', {
+      keys: missingInSchema,
+    })
+  }
+  if (extraInSchema.length > 0) {
+    results.addError('OpenAPI schema has unknown message keys', {
+      keys: extraInSchema,
+    })
+  }
+
+  results.addInfo(
+    `OpenAPI verification: ${
+      registryErrorKeys.length - missingInSchema.length
+    }/${registryErrorKeys.length} error keys match`
+  )
 }
 
 /**
