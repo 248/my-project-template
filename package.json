@@ -27,9 +27,13 @@
     "type-check": "pnpm -r type-check",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "quality-check": "pnpm codegen && pnpm type-check && pnpm lint",
+    "quality-check": "pnpm codegen && pnpm gen:messages && pnpm type-check && pnpm lint",
     "quality-fix": "pnpm lint:fix && pnpm format",
     "codegen": "node tools/codegen/generate-ts-client.mjs",
+    "gen:messages": "node tools/message-codegen/generate.js",
+    "verify:messages": "node tools/message-codegen/verify.js",
+    "ci:verify:messages": "node tools/message-codegen/ci-verify.js",
+    "msg:add": "node tools/message-codegen/add-message.js",
     "db:generate": "pnpm --filter @template/backend exec prisma generate",
     "postinstall": "echo 'Setup completed'",
     "prebuild": "pnpm codegen && pnpm db:generate",
@@ -46,6 +50,7 @@
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
+    "@template/eslint-plugin-message-keys": "workspace:*",
     "@types/node": "^22.8.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
@@ -60,15 +65,42 @@
     "openapi-typescript": "^7.4.2",
     "postcss": "^8.4.49",
     "prettier": "^3.3.3",
+    "size-limit": "^11.1.6",
+    "@size-limit/preset-small-lib": "^11.1.6",
     "tailwindcss": "^3.4.14"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix --cache",
       "prettier --write"
     ],
     "*.{json,md,yaml,yml}": [
       "prettier --write"
     ]
-  }
+  },
+  "size-limit": [
+    {
+      "name": "Messages core (keys + types)",
+      "path": "packages/shared/src/messages/index.ts",
+      "limit": "5 KB",
+      "webpack": false
+    },
+    {
+      "name": "Messages utils",
+      "path": "packages/shared/src/messages/utils.ts",
+      "limit": "3 KB",
+      "webpack": false
+    },
+    {
+      "name": "Messages locales (Japanese)",
+      "path": "packages/shared/src/messages/locales/ja.ts",
+      "limit": "8 KB",
+      "webpack": false
+    },
+    {
+      "name": "Messages locales (English)",
+      "path": "packages/shared/src/messages/locales/en.ts",
+      "limit": "8 KB",
+      "webpack": false
+    }
+  ]
 }

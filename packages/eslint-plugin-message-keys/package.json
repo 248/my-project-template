@@ -1,0 +1,27 @@
+{
+  "name": "@template/eslint-plugin-message-keys",
+  "version": "0.1.0",
+  "description": "ESLint plugin to enforce MessageKey usage and prevent hardcoded messages",
+  "main": "src/index.js",
+  "keywords": [
+    "eslint",
+    "plugin",
+    "message",
+    "i18n",
+    "typescript"
+  ],
+  "author": "Template Project",
+  "license": "MIT",
+  "files": [
+    "src/"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "peerDependencies": {
+    "eslint": "^8.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0"
+  }
+}
