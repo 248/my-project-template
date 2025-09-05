@@ -38,7 +38,8 @@
     "postinstall": "echo 'Setup completed'",
     "prebuild": "pnpm codegen && pnpm db:generate",
     "prepare": "husky",
-    "clean": "pnpm -r clean"
+    "clean": "pnpm -r clean",
+    "test": "node --test --test-concurrency=1"
   },
   "dependencies": {
     "next": "15.5.2",
