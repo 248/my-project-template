@@ -83,6 +83,7 @@ export interface ValidationError {
 export interface ValidationErrorResponse
   extends Omit<ApiErrorResponse, 'code' | 'details'> {
   /** バリデーションエラーを示す固定コード */
+  // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
   code: 'error.validation_failed'
 
   /** 各フィールドのバリデーションエラー詳細 */
@@ -157,6 +158,7 @@ export function isApiError(
 export function isValidationError(
   response: ApiResponse<unknown>
 ): response is ValidationErrorResponse {
+  // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
   return isApiError(response) && response.code === 'error.validation_failed'
 }
 
@@ -215,6 +217,7 @@ export function createValidationErrorResponse(
 ): ValidationErrorResponse {
   return {
     success: false,
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     code: 'error.validation_failed',
     details: {
       errors,
@@ -270,12 +273,14 @@ export interface LegacyApiResponse<T = unknown> {
  */
 export function convertLegacyResponse<T>(
   legacy: LegacyApiResponse<T>,
+  // eslint-disable-next-line @template/message-keys/require-message-key
   errorCode?: MessageKey
 ): ApiResponse<T> {
   if (legacy.success && legacy.data !== undefined) {
     return createSuccessResponse(legacy.data)
   } else {
     return createErrorResponse(
+      // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
       errorCode || 'error.unknown_error',
       undefined,
       undefined,
