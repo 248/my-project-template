@@ -15,11 +15,14 @@ export function LanguageSwitcher() {
     { value: 'ja', label: '日本語' },
     { value: 'en', label: 'English' },
     { value: 'pseudo', label: '[!! Pseudo !!]' },
-  ] as const
+  ] as const satisfies ReadonlyArray<{ value: SupportedLocale; label: string }>
 
   const handleLocaleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newLocale = event.target.value as SupportedLocale
-    changeLocale(newLocale)
+    const newLocale = event.target.value
+    const validLocale = localeOptions.find(option => option.value === newLocale)
+    if (validLocale) {
+      changeLocale(validLocale.value)
+    }
   }
 
   return (

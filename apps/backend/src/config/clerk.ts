@@ -29,12 +29,14 @@ export function createClerkConfig(): ClerkConfig {
   const rawConfig = {
     issuer,
     ...(audience && { audience }),
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     jwksUrl: `${issuer}/.well-known/jwks.json`,
   }
 
   const result = clerkConfigSchema.safeParse(rawConfig)
 
   if (!result.success) {
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     throw new Error(`Invalid Clerk configuration: ${result.error.message}`)
   }
 

@@ -84,7 +84,10 @@ function initializeLocale(): SupportedLocale {
   try {
     // 1. LocalStorageから取得試行
     const stored = localStorage.getItem(LOCALE_STORAGE_KEY)
-    if (stored && ['ja', 'en', 'pseudo'].includes(stored)) {
+    const validLocales: SupportedLocale[] = ['ja', 'en', 'pseudo']
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    if (stored && validLocales.includes(stored as SupportedLocale)) {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       return stored as SupportedLocale
     }
 
@@ -248,7 +251,7 @@ export function useMessages(): MessageHookReturn {
     tAction,
     tValidation,
     changeLocale,
-    availableLocales: ['ja', 'en', 'pseudo'] as SupportedLocale[],
+    availableLocales: ['ja', 'en', 'pseudo'] as const,
   }
 }
 
@@ -274,6 +277,7 @@ export function useApiErrorTranslation() {
     (errorResponse: { code?: string; message?: string }): string => {
       // codeがあればMessageKeyとして翻訳試行
       if (errorResponse.code) {
+        // eslint-disable-next-line @template/message-keys/require-message-key, @typescript-eslint/consistent-type-assertions
         return tError(errorResponse.code as MessageKey, errorResponse.message)
       }
 

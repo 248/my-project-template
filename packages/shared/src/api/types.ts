@@ -280,7 +280,7 @@ export function convertLegacyResponse<T>(
     return createSuccessResponse(legacy.data)
   } else {
     return createErrorResponse(
-      // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
+      // eslint-disable-next-line @template/message-keys/require-message-key, @template/message-keys/no-hardcoded-messages
       errorCode || 'error.unknown_error',
       undefined,
       undefined,

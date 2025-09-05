@@ -26,6 +26,7 @@ export interface ValidationError {
 
 export interface ValidationErrorResponse
   extends Omit<ApiErrorResponse, 'details'> {
+  // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
   code: 'error.validation_failed'
   errors: ValidationError[]
 }
@@ -69,6 +70,7 @@ export function createValidationErrorResponse(
 ): ValidationErrorResponse {
   return {
     success: false,
+    // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
     code: 'error.validation_failed',
     errors,
     ...(message && { message }),
