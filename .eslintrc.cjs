@@ -16,7 +16,6 @@ module.exports = {
     // 生成物はここで全体除外
     '**/generated/**',
     // MessageKeysプラグインに関連して除外
-    'apps/backend/**',
     'packages/shared/src/messages/**',
     'packages/eslint-plugin-message-keys/**',
     // tools ディレクトリを除外
@@ -147,8 +146,7 @@ module.exports = {
       files: ['apps/backend/**/*.{ts,tsx}'],
       parser: '@typescript-eslint/parser',
       parserOptions: {
-        project: './apps/backend/tsconfig.json',
-        tsconfigRootDir: __dirname,
+        project: null, // tsconfig.jsonの設定問題を一時的に回避
         ecmaVersion: 2022,
         sourceType: 'module',
       },
