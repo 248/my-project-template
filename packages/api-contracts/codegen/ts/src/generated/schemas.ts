@@ -1,5 +1,5 @@
 // Auto-generated Zod schemas from OpenAPI spec
-// Generated at: 2025-09-05T05:12:17.856Z
+// Generated at: 2025-09-05T06:18:54.334Z
 
 import { z } from 'zod'
 
@@ -75,11 +75,27 @@ export const UserUpdateDataSchema = z.object({
 
 export const ApiResponseSchema = z.object({
   success: z.boolean(),
-  message: z.string(),
+  code: z.string().optional(),
+  message: z.string().optional(),
   data: z.object({}).optional(),
 })
 
-export const UserResponseSchema = z.unknown()
+export const UserResponseSchema = z.object({
+  success: z.boolean(),
+  code: z.string().optional(),
+  message: z.string().optional(),
+  data: z.object({
+    user: z.object({
+      id: z.string(),
+      displayName: z.string().nullable(),
+      email: z.string().email().nullable(),
+      avatarUrl: z.string().nullable(),
+      locale: z.string().nullable(),
+      createdAt: z.string().datetime(),
+      updatedAt: z.string().datetime(),
+    }),
+  }),
+})
 
 export const ErrorResponseSchema = z.object({
   success: z.boolean(),

@@ -86,11 +86,17 @@ export function useApiClient() {
       return false
     }
 
+    const obj = data as Record<string, unknown>
+
+    // 新しいMessageKeyシステム対応の型ガード
     return (
-      'success' in data &&
-      typeof Reflect.get(data, 'success') === 'boolean' &&
-      'message' in data &&
-      typeof Reflect.get(data, 'message') === 'string'
+      'success' in obj &&
+      typeof obj['success'] === 'boolean' &&
+      'data' in obj &&
+      obj['data'] !== null &&
+      typeof obj['data'] === 'object' &&
+      obj['data'] !== null &&
+      'user' in (obj['data'] as Record<string, unknown>)
     )
   }
 

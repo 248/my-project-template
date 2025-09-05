@@ -47,6 +47,7 @@ status: published
 ### 🛠️ 実装・品質
 
 - **[コード規約](./styleguide/code-standards.md)** - TypeScript・React・品質基準
+- **[MessageKeyシステム](./handbook/message-system-guide.md)** - 統一メッセージ管理・多言語対応システム
 - **[テスト戦略](./handbook/testing-strategy.md)** - 品質保証・静的解析・テスト方針
 - **[貢献ガイドライン](./contrib/contribution-guide.md)** - PR 規約・レビュー観点
 

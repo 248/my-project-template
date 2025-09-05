@@ -390,7 +390,7 @@ error: Argument of type '"ui.nonexistent"' is not assignable to parameter of typ
 
 ## 📚 関連ドキュメント
 
-- **[API設計ガイド](./api-design-guide.md)** - MessageKey統合API設計
+- **[API設計ガイド](../architecture/api-design.md)** - MessageKey統合API設計
 - **[テスト戦略](./testing-strategy.md)** - MessageKey系テスト方針
 - **[コード規約](../styleguide/code-standards.md)** - MessageKey命名規約詳細
 

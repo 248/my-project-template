@@ -219,15 +219,35 @@ export interface components {
        */
       success: boolean
       /**
-       * @description メッセージ
+       * @description MessageKeyシステム用コード
+       * @example success.user_ensured
+       */
+      code?: string
+      /**
+       * @description デバッグ用メッセージ（開発環境のみ）
        * @example User ensured successfully
        */
-      message: string
+      message?: string
       /** @description レスポンスデータ */
       data?: Record<string, never>
     }
-    UserResponse: components['schemas']['ApiResponse'] & {
-      data?: {
+    UserResponse: {
+      /**
+       * @description 処理成功フラグ
+       * @example true
+       */
+      success: boolean
+      /**
+       * @description MessageKeyシステム用コード
+       * @example success.user_ensured
+       */
+      code?: string
+      /**
+       * @description デバッグ用メッセージ（開発環境のみ）
+       * @example User ensured successfully
+       */
+      message?: string
+      data: {
         user: components['schemas']['User']
       }
     }
