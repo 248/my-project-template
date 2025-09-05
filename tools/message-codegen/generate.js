@@ -14,9 +14,9 @@ const { generateGo } = require('./generate-go')
 const { updateOpenApi } = require('./update-openapi')
 
 // Load configuration
-const config = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8')
-)
+const configPath =
+  process.env.MESSAGE_CONFIG_PATH || path.join(__dirname, 'config.json')
+const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
 
 /**
  * Verify registry file exists and is valid

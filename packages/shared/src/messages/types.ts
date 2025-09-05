@@ -3,18 +3,11 @@ import type { MessageKey } from './keys'
 /**
  * Message parameters type definitions (auto-generated)
  *
- * Generated from: contracts/messages/registry.yaml
+ * Generated from: tools/message-codegen/__tests__/fixtures/test-registry.yaml
  * Version: 1.0.0
- * Generated at: 2025-09-05T05:12:49.394Z
+ * Generated at: 2025-09-05T13:42:23.341Z
  */
-export interface MessageParameters {
-  'error.unknown_error': { details: string }
-  'validation.field_required': { field: string }
-  'validation.invalid_email': { email: string }
-  'validation.invalid_url': { url: string }
-  'validation.string_too_short': { field: string; minLength: number }
-  'validation.string_too_long': { field: string; maxLength: number }
-}
+export interface MessageParameters {}
 
 /**
  * Message key categories (auto-generated)
@@ -47,17 +40,8 @@ export interface MessageGetter {
 }
 
 /**
- * API Response types - re-exported from api/types for compatibility
- */
-export type {
-  ApiErrorResponse,
-  ApiSuccessResponse,
-  ValidationError,
-  ValidationErrorResponse,
-} from '../api/types'
-
-/**
- * Message-specific API response type
+ * API Response types (enhanced with registry data)
+ * Note: Primary API response types are defined in ../api/types.ts
  */
 export interface ApiResponseWithCode {
   success: boolean
