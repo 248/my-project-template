@@ -51,8 +51,6 @@ export default async function HomePage() {
             <div className="space-y-4">
               <Link
                 href="/sign-in"
-                as
-                any
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 サインイン
@@ -61,8 +59,6 @@ export default async function HomePage() {
                 まだアカウントをお持ちでない場合は{' '}
                 <Link
                   href="/sign-up"
-                  as
-                  any
                   className="text-blue-600 hover:text-blue-500"
                 >
                   サインアップ
