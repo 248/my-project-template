@@ -11,6 +11,17 @@ data "external_schema" "prisma" {
   ]
 }
 
+# Common configuration to avoid duplication
+locals {
+  schema = {
+    src = data.external_schema.prisma.url
+  }
+  migration = {
+    dir     = "file://atlas/migrations"
+    exclude = ["_prisma_migrations"]
+  }
+}
+
 # Development environment configuration
 env "dev" {
   # Development database URL for schema comparison
@@ -19,18 +30,16 @@ env "dev" {
 
   # Use Prisma-generated schema as the desired state
   schema {
-    src = data.external_schema.prisma.url
+    src = local.schema.src
   }
 
   # Atlas migration configuration
   migration {
     # Directory for Atlas-managed migrations
-    dir = "file://atlas/migrations"
+    dir = local.migration.dir
 
     # Exclude Prisma's migration table to avoid conflicts
-    exclude = [
-      "_prisma_migrations"
-    ]
+    exclude = local.migration.exclude
   }
 
   # Formatting configuration
@@ -48,15 +57,13 @@ env "prod" {
 
   # Use same schema source as dev
   schema {
-    src = data.external_schema.prisma.url
+    src = local.schema.src
   }
 
   # Same migration configuration as dev
   migration {
-    dir = "file://atlas/migrations"
-    exclude = [
-      "_prisma_migrations"
-    ]
+    dir = local.migration.dir
+    exclude = local.migration.exclude
   }
 
   # Production-specific settings
@@ -74,13 +81,11 @@ env "staging" {
   url = getenv("STAGING_DATABASE_URL")
 
   schema {
-    src = data.external_schema.prisma.url
+    src = local.schema.src
   }
 
   migration {
-    dir = "file://atlas/migrations"
-    exclude = [
-      "_prisma_migrations"
-    ]
+    dir = local.migration.dir
+    exclude = local.migration.exclude
   }
 }

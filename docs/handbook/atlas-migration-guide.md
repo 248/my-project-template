@@ -88,8 +88,17 @@ pnpm atlas:diff
 
 ```bash
 # 既存DBをAtlas管理下に移行（重複適用を防ぐ）
+# Note: 以下のコマンドはmacOS/Linux向けです。Windowsユーザーは手動での手順を参照してください。
 pnpm atlas:apply --baseline $(ls atlas/migrations/ | head -1 | sed 's/.sql//')
 ```
+
+**Windowsや手動で行う場合:**
+
+1. `atlas/migrations/` 内の最初のマイグレーションファイル名（例: `20240101000000.sql`）から、バージョン部分（`20240101000000`）をコピーします。
+2. 以下のコマンドを実行します：
+   ```bash
+   pnpm atlas:apply --baseline <コピーしたバージョン>
+   ```
 
 ### 2. 日常的な開発フロー
 
@@ -113,6 +122,9 @@ pnpm atlas:apply
 
 # マイグレーション適用（本番環境）
 pnpm atlas:apply:prod
+
+# マイグレーション適用（ステージング環境）
+pnpm atlas:apply:staging
 
 # マイグレーションファイルの品質チェック
 pnpm atlas:lint
@@ -150,7 +162,7 @@ pnpm atlas:apply
 
 ```bash
 # STAGING_DATABASE_URLを設定して実行
-STAGING_DATABASE_URL="your-staging-url" pnpm atlas:apply:prod
+pnpm atlas:apply:staging
 ```
 
 ### 本番環境
