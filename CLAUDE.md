@@ -9,7 +9,7 @@
 - **🇯🇵 日本語優先**: コミットメッセージ・PR説明・コメント・Issue報告は**必ず日本語**で記述
 - **日本語で説明、英語で識別子**
 - **まず計画→小さなPR** - いきなり書き換えない
-- **品質チェック**: `pnpm codegen && pnpm type-check && pnpm lint` を必ず通す
+- **品質チェック**: `pnpm codegen && pnpm type-check && pnpm lint && pnpm test` を必ず通す
 - **🚫 品質チェック迂回禁止**: git hooks (`--no-verify`)や品質チェックルール変更は**必ずユーザーに確認**
 - **型安全性**: 手動型定義禁止、OpenAPI仕様更新→決定的生成の流れを厳守
 - **秘密は触らない**: `.env*` や APIキーは読み書き禁止
@@ -31,6 +31,7 @@
 - **[開発者ガイド](./docs/handbook/developer-guide.md)** - セットアップ・コマンド・トラブルシューティング
 - **[APIコード生成](./docs/handbook/api-codegen-guide.md)** - OpenAPIからの型安全クライアント生成
 - **[テスト戦略](./docs/handbook/testing-strategy.md)** - 品質保証・静的解析・テスト方針
+- **[Vitestテスト実装ガイド](./docs/handbook/testing-guide.md)** - Vitest実装・テストパターン・実践方法
 - **[コード規約](./docs/styleguide/code-standards.md)** - 型安全性・品質基準・Definition of Done
 
 ### 🏗️ アーキテクチャ

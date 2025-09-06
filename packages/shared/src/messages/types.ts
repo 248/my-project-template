@@ -5,7 +5,7 @@ import type { MessageKey } from './keys'
  *
  * Generated from: contracts/messages/registry.yaml
  * Version: 1.0.0
- * Generated at: 2025-09-05T05:12:49.394Z
+ * Generated at: 2025-09-06T04:53:32.349Z
  */
 export interface MessageParameters {
   'error.unknown_error': { details: string }
@@ -47,21 +47,43 @@ export interface MessageGetter {
 }
 
 /**
- * API Response types - re-exported from api/types for compatibility
- */
-export type {
-  ApiErrorResponse,
-  ApiSuccessResponse,
-  ValidationError,
-  ValidationErrorResponse,
-} from '../api/types'
-
-/**
- * Message-specific API response type
+ * API Response types (enhanced with registry data)
  */
 export interface ApiResponseWithCode {
   success: boolean
   code: MessageKey
   message?: string // Optional for backward compatibility
   data?: unknown
+}
+
+export interface MessageApiErrorResponse {
+  success: false
+  code: Extract<
+    MessageKey,
+    `error.${string}` | `auth.${string}` | `validation.${string}`
+  >
+  message?: string
+  details?: unknown
+}
+
+export interface MessageApiSuccessResponse<T = unknown> {
+  success: true
+  code: Extract<MessageKey, `success.${string}`>
+  message?: string
+  data?: T
+}
+
+/**
+ * Validation error types
+ */
+export interface ValidationErrorDetail {
+  field: string
+  code: Extract<MessageKey, `validation.${string}`>
+  message: string
+}
+
+export interface MessageValidationErrorResponse
+  extends MessageApiErrorResponse {
+  code: 'error.validation_failed'
+  errors: ValidationErrorDetail[]
 }

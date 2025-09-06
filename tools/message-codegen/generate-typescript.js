@@ -12,12 +12,14 @@ const path = require('path')
 const yaml = require('js-yaml')
 
 // Load configuration
-const config = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8')
-)
+const configPath =
+  process.env.MESSAGE_CONFIG_PATH || path.join(__dirname, 'config.json')
+const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
 
 // Load registry
-const registryPath = path.resolve(config.registry.path)
+const registryPath = path.resolve(
+  config.registry?.path || 'contracts/messages/registry.yaml'
+)
 const registry = yaml.load(fs.readFileSync(registryPath, 'utf8'))
 
 /**
@@ -30,7 +32,9 @@ function generateKeysFile() {
   // Extract all keys from nested structure
   for (const [namespace, namespaceMessages] of Object.entries(messages)) {
     for (const [messageKey, messageData] of Object.entries(namespaceMessages)) {
-      allKeys.push(messageData.key)
+      if (messageData && messageData.key) {
+        allKeys.push(messageData.key)
+      }
     }
   }
 
@@ -38,15 +42,18 @@ function generateKeysFile() {
   const tsCode = `/**
  * Generated Message Keys - DO NOT EDIT MANUALLY
  * 
- * Generated from: ${config.registry.path}
- * Version: ${registry.metadata.version}
+ * Generated from: ${config.registry?.path || 'registry.yaml'}
+ * Version: ${registry.metadata?.version || 'unknown'}
  * Generated at: ${new Date().toISOString()}
  * 
  * Run 'pnpm gen:messages' to regenerate this file
  */
 
 export const MESSAGE_KEYS = {
-${allKeys.map(key => `  '${key}': '${key}',`).join('\n')}
+${allKeys
+  .filter(key => key)
+  .map(key => `  '${key}': '${key}',`)
+  .join('\n')}
 } as const
 
 /**
@@ -59,7 +66,9 @@ export type MessageKey = keyof typeof MESSAGE_KEYS
  */
 ${Object.keys(messages)
   .map(namespace => {
-    const namespaceKeys = allKeys.filter(key => key.startsWith(`${namespace}.`))
+    const namespaceKeys = allKeys.filter(
+      key => key && key.startsWith(`${namespace}.`)
+    )
     return `export type ${namespace.charAt(0).toUpperCase() + namespace.slice(1)}MessageKey = Extract<MessageKey, \`${namespace}.\${string}\`>`
   })
   .join('\n')}
@@ -75,7 +84,7 @@ export const ALL_MESSAGE_KEYS = Object.keys(MESSAGE_KEYS) as MessageKey[]
 ${Object.keys(messages)
   .map(namespace => {
     const constName = `${namespace.toUpperCase()}_KEYS`
-    return `export const ${constName} = ALL_MESSAGE_KEYS.filter(k => k.startsWith('${namespace}.')) as ${namespace.charAt(0).toUpperCase() + namespace.slice(1)}MessageKey[]`
+    return `export const ${constName} = ALL_MESSAGE_KEYS.filter(k => k && k.startsWith('${namespace}.')) as ${namespace.charAt(0).toUpperCase() + namespace.slice(1)}MessageKey[]`
   })
   .join('\n')}
 
@@ -96,6 +105,7 @@ export interface MessageMetadata {
 
 export const MESSAGE_METADATA: Record<MessageKey, MessageMetadata> = {
 ${allKeys
+  .filter(key => key)
   .map(key => {
     // Find message data
     let messageData = null
@@ -114,7 +124,7 @@ ${allKeys
     namespace: '${messageData.namespace}',
     category: '${messageData.category}',
     description: '${messageData.description}',
-    templateParams: [${messageData.template_params.map(p => `'${p}'`).join(', ')}],
+    templateParams: [${(messageData.template_params || []).map(p => `'${p}'`).join(', ')}],
     since: '${messageData.since}',
     deprecated: ${messageData.deprecated},
     apiUsage: ${messageData.api_usage},
@@ -154,7 +164,9 @@ export const DEPRECATED_KEYS = ALL_MESSAGE_KEYS.filter(
 `
 
   // Write to output file
-  const outputPath = path.resolve(config.targets.typescript.output_path)
+  const outputPath = path.resolve(
+    config.targets?.typescript?.output_path || './output.ts'
+  )
   const outputDir = path.dirname(outputPath)
 
   if (!fs.existsSync(outputDir)) {
@@ -178,6 +190,7 @@ function updateTypesFile() {
   )) {
     for (const [messageKey, messageData] of Object.entries(namespaceMessages)) {
       if (
+        messageData &&
         messageData.template_params &&
         messageData.template_params.length > 0
       ) {
@@ -194,8 +207,8 @@ function updateTypesFile() {
 /**
  * Message parameters type definitions (auto-generated)
  * 
- * Generated from: ${config.registry.path}
- * Version: ${registry.metadata.version}
+ * Generated from: ${config.registry?.path || 'registry.yaml'}
+ * Version: ${registry.metadata?.version || 'unknown'}
  * Generated at: ${new Date().toISOString()}
  */
 export interface MessageParameters {
@@ -228,7 +241,7 @@ export type MessageParamsFor<K extends MessageKey> =
 /**
  * Supported locales (from registry)
  */
-export type SupportedLocale = ${registry.metadata.supported_locales.map(l => `'${l}'`).join(' | ')}
+export type SupportedLocale = ${(registry.metadata?.supported_locales || ['ja', 'en']).map(l => `'${l}'`).join(' | ')}
 
 /**
  * Locale messages type
@@ -348,7 +361,9 @@ export { verifyLocaleCompleteness }`
 function generateTypeScript() {
   console.log('🚀 Generating TypeScript code from message registry...')
   console.log(`📄 Registry: ${registryPath}`)
-  console.log(`🎯 Target: ${config.targets.typescript.output_path}`)
+  console.log(
+    `🎯 Target: ${config.targets?.typescript?.output_path || 'undefined'}`
+  )
 
   try {
     generateKeysFile()

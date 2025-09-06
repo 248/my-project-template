@@ -213,22 +213,54 @@ export interface components {
       locale?: 'ja' | 'en'
     }
     ApiResponse: {
-      /**
-       * @description 処理成功フラグ
-       * @example true
-       */
+      /** @description Response success indicator */
       success: boolean
       /**
-       * @description MessageKeyシステム用コード
-       * @example success.user_ensured
+       * @description Message code from registry (language-neutral identifier)
+       * @enum {string}
        */
-      code?: string
-      /**
-       * @description デバッグ用メッセージ（開発環境のみ）
-       * @example User ensured successfully
-       */
-      message?: string
-      /** @description レスポンスデータ */
+      code:
+        | 'auth.signin_required'
+        | 'auth.signin_success'
+        | 'auth.user_ensured'
+        | 'auth.ensure_failed'
+        | 'error.user_not_found'
+        | 'error.profile_retrieval_failed'
+        | 'error.profile_update_failed'
+        | 'error.validation_failed'
+        | 'error.invalid_response_format'
+        | 'error.unknown_error'
+        | 'success.profile_retrieved'
+        | 'success.profile_updated'
+        | 'success.user_ensured'
+        | 'ui.profile_info'
+        | 'ui.user_id'
+        | 'ui.display_name'
+        | 'ui.email_address'
+        | 'ui.created_at'
+        | 'ui.updated_at'
+        | 'ui.auth_providers'
+        | 'ui.avatar'
+        | 'ui.not_set'
+        | 'ui.unknown'
+        | 'ui.dashboard'
+        | 'ui.authenticated_user_page'
+        | 'ui.loading'
+        | 'ui.executing'
+        | 'ui.last_execution'
+        | 'action.auth_api_test'
+        | 'action.health_check_success'
+        | 'action.response_data'
+        | 'action.error_occurred'
+        | 'action.error_details'
+        | 'validation.field_required'
+        | 'validation.invalid_email'
+        | 'validation.invalid_url'
+        | 'validation.string_too_short'
+        | 'validation.string_too_long'
+      /** @description Human-readable message (optional for backward compatibility) */
+      message?: string | null
+      /** @description Response data */
       data?: Record<string, never>
     }
     UserResponse: {
@@ -251,33 +283,174 @@ export interface components {
         user: components['schemas']['User']
       }
     }
+    /**
+     * @deprecated
+     * @description Deprecated error response format - use ApiError instead
+     */
     ErrorResponse: {
-      /** @example false */
-      success: boolean
       /**
-       * @description エラーメッセージ
+       * @deprecated
+       * @example false
+       * @enum {boolean}
+       */
+      success: false
+      /**
+       * @deprecated
+       * @description Error message (deprecated - use code instead)
        * @example User not found
        */
-      message: string
+      message?: string
       /**
-       * @description エラー詳細
+       * @deprecated
+       * @description Error details (deprecated - use code + details instead)
        * @example User not found. Please sign in again.
        */
       error?: string
-      /** @description バリデーションエラー詳細 */
-      errors?: {
-        /**
-         * @description エラーフィールド
-         * @example displayName
-         */
-        field?: string
-        /**
-         * @description エラーメッセージ
-         * @example String must contain at least 1 character(s)
-         */
-        message?: string
-      }[]
+      /**
+       * @description Error code (new standard)
+       * @example error.user_not_found
+       * @enum {string}
+       */
+      code:
+        | 'auth.signin_required'
+        | 'auth.signin_success'
+        | 'auth.user_ensured'
+        | 'auth.ensure_failed'
+        | 'error.user_not_found'
+        | 'error.profile_retrieval_failed'
+        | 'error.profile_update_failed'
+        | 'error.validation_failed'
+        | 'error.invalid_response_format'
+        | 'error.unknown_error'
+        | 'validation.field_required'
+        | 'validation.invalid_email'
+        | 'validation.invalid_url'
+        | 'validation.string_too_short'
+        | 'validation.string_too_long'
+      /** @description Additional error context */
+      details?: Record<string, never>
     }
+    ApiError: components['schemas']['ApiResponse'] & {
+      /**
+       * @example false
+       * @enum {boolean}
+       */
+      success?: false
+      /**
+       * @description Error code from registry
+       * @example error.user_not_found
+       * @enum {string}
+       */
+      code?:
+        | 'auth.signin_required'
+        | 'auth.signin_success'
+        | 'auth.user_ensured'
+        | 'auth.ensure_failed'
+        | 'error.user_not_found'
+        | 'error.profile_retrieval_failed'
+        | 'error.profile_update_failed'
+        | 'error.validation_failed'
+        | 'error.invalid_response_format'
+        | 'error.unknown_error'
+        | 'validation.field_required'
+        | 'validation.invalid_email'
+        | 'validation.invalid_url'
+        | 'validation.string_too_short'
+        | 'validation.string_too_long'
+      /** @description Additional error context */
+      details?: Record<string, never>
+    }
+    ApiSuccess: components['schemas']['ApiResponse'] & {
+      /**
+       * @example true
+       * @enum {boolean}
+       */
+      success?: true
+      /**
+       * @description Success code from registry
+       * @example success.profile_retrieved
+       * @enum {string}
+       */
+      code?:
+        | 'success.profile_retrieved'
+        | 'success.profile_updated'
+        | 'success.user_ensured'
+    }
+    ValidationErrorDetail: {
+      /**
+       * @description Field name that failed validation
+       * @example email
+       */
+      field: string
+      /**
+       * @description Validation error code
+       * @example validation.field_required
+       * @enum {string}
+       */
+      code:
+        | 'validation.field_required'
+        | 'validation.invalid_email'
+        | 'validation.invalid_url'
+        | 'validation.string_too_short'
+        | 'validation.string_too_long'
+      /**
+       * @description Human-readable validation error message
+       * @example Email is required
+       */
+      message: string
+    }
+    ValidationError: components['schemas']['ApiError'] & {
+      /**
+       * @example error.validation_failed
+       * @enum {string}
+       */
+      code?: 'error.validation_failed'
+      /** @description Detailed validation errors */
+      errors: components['schemas']['ValidationErrorDetail'][]
+    }
+    /**
+     * @description Message codes from registry (version 1.0.0)
+     * @enum {string}
+     */
+    MessageCode:
+      | 'auth.signin_required'
+      | 'auth.signin_success'
+      | 'auth.user_ensured'
+      | 'auth.ensure_failed'
+      | 'error.user_not_found'
+      | 'error.profile_retrieval_failed'
+      | 'error.profile_update_failed'
+      | 'error.validation_failed'
+      | 'error.invalid_response_format'
+      | 'error.unknown_error'
+      | 'success.profile_retrieved'
+      | 'success.profile_updated'
+      | 'success.user_ensured'
+      | 'ui.profile_info'
+      | 'ui.user_id'
+      | 'ui.display_name'
+      | 'ui.email_address'
+      | 'ui.created_at'
+      | 'ui.updated_at'
+      | 'ui.auth_providers'
+      | 'ui.avatar'
+      | 'ui.not_set'
+      | 'ui.unknown'
+      | 'ui.dashboard'
+      | 'ui.authenticated_user_page'
+      | 'ui.loading'
+      | 'ui.executing'
+      | 'ui.last_execution'
+      | 'action.auth_api_test'
+      | 'action.health_check_success'
+      | 'action.response_data'
+      | 'action.error_occurred'
+      | 'action.error_details'
+      | 'validation.field_required'
+      | 'validation.invalid_email'
+      | 'validation.invalid_url'
+      | 'validation.string_too_short'
+      | 'validation.string_too_long'
   }
   responses: never
   parameters: never
