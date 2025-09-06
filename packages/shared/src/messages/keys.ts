@@ -3,7 +3,7 @@
  *
  * Generated from: contracts/messages/registry.yaml
  * Version: 1.0.0
- * Generated at: 2025-09-05T13:42:23.277Z
+ * Generated at: 2025-09-06T04:53:32.348Z
  *
  * Run 'pnpm gen:messages' to regenerate this file
  */

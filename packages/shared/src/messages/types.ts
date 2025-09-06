@@ -3,11 +3,18 @@ import type { MessageKey } from './keys'
 /**
  * Message parameters type definitions (auto-generated)
  *
- * Generated from: tools/message-codegen/__tests__/fixtures/test-registry.yaml
+ * Generated from: contracts/messages/registry.yaml
  * Version: 1.0.0
- * Generated at: 2025-09-05T13:42:23.341Z
+ * Generated at: 2025-09-06T04:53:32.349Z
  */
-export interface MessageParameters {}
+export interface MessageParameters {
+  'error.unknown_error': { details: string }
+  'validation.field_required': { field: string }
+  'validation.invalid_email': { email: string }
+  'validation.invalid_url': { url: string }
+  'validation.string_too_short': { field: string; minLength: number }
+  'validation.string_too_long': { field: string; maxLength: number }
+}
 
 /**
  * Message key categories (auto-generated)
@@ -41,11 +48,42 @@ export interface MessageGetter {
 
 /**
  * API Response types (enhanced with registry data)
- * Note: Primary API response types are defined in ../api/types.ts
  */
 export interface ApiResponseWithCode {
   success: boolean
   code: MessageKey
   message?: string // Optional for backward compatibility
   data?: unknown
+}
+
+export interface MessageApiErrorResponse {
+  success: false
+  code: Extract<
+    MessageKey,
+    `error.${string}` | `auth.${string}` | `validation.${string}`
+  >
+  message?: string
+  details?: unknown
+}
+
+export interface MessageApiSuccessResponse<T = unknown> {
+  success: true
+  code: Extract<MessageKey, `success.${string}`>
+  message?: string
+  data?: T
+}
+
+/**
+ * Validation error types
+ */
+export interface ValidationErrorDetail {
+  field: string
+  code: Extract<MessageKey, `validation.${string}`>
+  message: string
+}
+
+export interface MessageValidationErrorResponse
+  extends MessageApiErrorResponse {
+  code: 'error.validation_failed'
+  errors: ValidationErrorDetail[]
 }

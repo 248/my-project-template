@@ -456,7 +456,7 @@ describe('Message Addition Utilities', () => {
       uiUsage: false,
     }
 
-    it('should add message to empty registry', () => {
+    it('should add a new message to an empty registry and create necessary structure', () => {
       const registry = {}
       const result = addMessageToRegistry(registry, baseOptions)
 
@@ -476,7 +476,7 @@ describe('Message Addition Utilities', () => {
       expect(messageEntry.ui_usage).toBe(false)
     })
 
-    it('should add message to existing namespace', () => {
+    it('should add a new message to an existing namespace without overwriting existing messages', () => {
       const registry = {
         messages: {
           auth: {
@@ -492,7 +492,7 @@ describe('Message Addition Utilities', () => {
       expect(result.messages.auth.new_message.key).toBe('auth.new_message')
     })
 
-    it('should add message to new namespace in existing registry', () => {
+    it('should create a new namespace when adding message to non-existing namespace', () => {
       const registry = {
         messages: {
           error: {
@@ -523,7 +523,7 @@ describe('Message Addition Utilities', () => {
       expect(result.messages.auth.new_message.since).toBe('2024-01-15')
     })
 
-    it('should preserve other registry properties', () => {
+    it('should preserve existing registry metadata when adding messages', () => {
       const registry = {
         metadata: {
           version: '1.0.0',
@@ -538,7 +538,7 @@ describe('Message Addition Utilities', () => {
       expect(result.messages.auth.new_message).toBeDefined()
     })
 
-    it('should handle message with both API and UI usage', () => {
+    it('should correctly set both API and UI usage flags when both are true', () => {
       const options = {
         ...baseOptions,
         apiUsage: true,
@@ -552,7 +552,7 @@ describe('Message Addition Utilities', () => {
       expect(messageEntry.ui_usage).toBe(true)
     })
 
-    it('should handle special characters in description', () => {
+    it('should preserve special characters in description without escaping', () => {
       const options = {
         ...baseOptions,
         description: 'Message with "quotes" and special chars: @#$%',
@@ -566,7 +566,7 @@ describe('Message Addition Utilities', () => {
   })
 
   describe('Integration Tests', () => {
-    it('should validate and add complete message workflow', () => {
+    it('should complete full workflow: validate options, check existence, and add message', () => {
       const options = {
         key: 'validation.required_field',
         ja: '{{field}}は必須です',

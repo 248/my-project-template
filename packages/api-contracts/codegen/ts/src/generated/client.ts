@@ -1,5 +1,5 @@
 // Auto-generated type-safe API client from OpenAPI spec
-// Generated at: 2025-09-06T04:44:20.512Z
+// Generated at: 2025-09-06T04:53:40.350Z
 
 import createClient from 'openapi-fetch'
 import type { paths } from './types'
