@@ -3,11 +3,20 @@ info:
   title: Project Template API
   version: 0.1.0
   description: A template API built with Hono and OpenAPI
-
+  x-message-registry:
+    version: 1.0.0
+    total_keys: 38
+    namespaces:
+      - auth
+      - error
+      - success
+      - ui
+      - action
+      - validation
+    last_updated: '2025-09-05T13:02:15.279Z'
 servers:
   - url: http://localhost:8000
     description: 開発環境
-
 components:
   securitySchemes:
     ClerkJWT:
@@ -15,21 +24,19 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Clerk JWT認証トークン
-
   schemas:
-    # ヘルスチェック
     HealthCheck:
       type: object
       properties:
         message:
           type: string
-          example: 'Project Template API Server'
+          example: Project Template API Server
         version:
           type: string
-          example: '0.1.0'
+          example: 0.1.0
         status:
           type: string
-          example: 'healthy'
+          example: healthy
         timestamp:
           type: string
           format: date-time
@@ -38,21 +45,22 @@ components:
         - version
         - status
         - timestamp
-
-    # 詳細ヘルスチェック
     DetailedHealthCheck:
       type: object
       properties:
         status:
           type: string
-          enum: ['healthy', 'degraded', 'unhealthy']
-          example: 'healthy'
+          enum:
+            - healthy
+            - degraded
+            - unhealthy
+          example: healthy
         timestamp:
           type: string
           format: date-time
         uptime:
           type: number
-          description: 'サーバー稼働時間（秒）'
+          description: サーバー稼働時間（秒）
           example: 3600
         services:
           type: object
@@ -73,13 +81,13 @@ components:
               properties:
                 rss:
                   type: number
-                  description: 'メモリ使用量（MB）'
+                  description: メモリ使用量（MB）
                 heapTotal:
                   type: number
-                  description: 'ヒープ合計（MB）'
+                  description: ヒープ合計（MB）
                 heapUsed:
                   type: number
-                  description: 'ヒープ使用量（MB）'
+                  description: ヒープ使用量（MB）
               required:
                 - rss
                 - heapTotal
@@ -89,10 +97,10 @@ components:
               properties:
                 user:
                   type: number
-                  description: 'ユーザーCPU時間（ミリ秒）'
+                  description: ユーザーCPU時間（ミリ秒）
                 system:
                   type: number
-                  description: 'システムCPU時間（ミリ秒）'
+                  description: システムCPU時間（ミリ秒）
               required:
                 - user
                 - system
@@ -101,10 +109,10 @@ components:
             - cpu
         version:
           type: string
-          example: '0.1.0'
+          example: 0.1.0
         environment:
           type: string
-          example: 'development'
+          example: development
       required:
         - status
         - timestamp
@@ -113,52 +121,51 @@ components:
         - system
         - version
         - environment
-
-    # サービス個別ヘルス
     ServiceHealth:
       type: object
       properties:
         status:
           type: string
-          enum: ['healthy', 'degraded', 'unhealthy']
+          enum:
+            - healthy
+            - degraded
+            - unhealthy
         message:
           type: string
         responseTime:
           type: number
-          description: '応答時間（ミリ秒）'
+          description: 応答時間（ミリ秒）
       required:
         - status
-
-    # ユーザー認証関連
     User:
       type: object
       properties:
         id:
           type: string
           description: ClerkのユーザーID
-          example: 'user_2abcd1234efgh5678ijkl'
+          example: user_2abcd1234efgh5678ijkl
         displayName:
           type: string
           nullable: true
           description: 表示名
-          example: '田中太郎'
+          example: 田中太郎
         email:
           type: string
           nullable: true
           format: email
           description: メールアドレス
-          example: 'tanaka@example.com'
+          example: tanaka@example.com
         avatarUrl:
           type: string
           nullable: true
           format: uri
           description: アバターURL
-          example: 'https://img.clerk.com/avatar.jpg'
+          example: https://img.clerk.com/avatar.jpg
         locale:
           type: string
           nullable: true
           description: 言語設定
-          example: 'ja'
+          example: ja
         createdAt:
           type: string
           format: date-time
@@ -171,7 +178,6 @@ components:
         - id
         - createdAt
         - updatedAt
-
     UserUpdateData:
       type: object
       properties:
@@ -180,44 +186,83 @@ components:
           minLength: 1
           maxLength: 100
           description: 表示名
-          example: '田中太郎'
+          example: 田中太郎
         email:
           type: string
           format: email
           description: メールアドレス
-          example: 'tanaka@example.com'
+          example: tanaka@example.com
         avatarUrl:
           type: string
           format: uri
           description: アバターURL
-          example: 'https://img.clerk.com/avatar.jpg'
+          example: https://img.clerk.com/avatar.jpg
         locale:
           type: string
-          enum: ['ja', 'en']
+          enum:
+            - ja
+            - en
           description: 言語設定
-          example: 'ja'
-
+          example: ja
     ApiResponse:
       type: object
       properties:
         success:
           type: boolean
-          description: 処理成功フラグ
-          example: true
+          description: Response success indicator
         code:
           type: string
-          description: MessageKeyシステム用コード
-          example: 'success.user_ensured'
+          enum:
+            - auth.signin_required
+            - auth.signin_success
+            - auth.user_ensured
+            - auth.ensure_failed
+            - error.user_not_found
+            - error.profile_retrieval_failed
+            - error.profile_update_failed
+            - error.validation_failed
+            - error.invalid_response_format
+            - error.unknown_error
+            - success.profile_retrieved
+            - success.profile_updated
+            - success.user_ensured
+            - ui.profile_info
+            - ui.user_id
+            - ui.display_name
+            - ui.email_address
+            - ui.created_at
+            - ui.updated_at
+            - ui.auth_providers
+            - ui.avatar
+            - ui.not_set
+            - ui.unknown
+            - ui.dashboard
+            - ui.authenticated_user_page
+            - ui.loading
+            - ui.executing
+            - ui.last_execution
+            - action.auth_api_test
+            - action.health_check_success
+            - action.response_data
+            - action.error_occurred
+            - action.error_details
+            - validation.field_required
+            - validation.invalid_email
+            - validation.invalid_url
+            - validation.string_too_short
+            - validation.string_too_long
+          description: Message code from registry (language-neutral identifier)
         message:
           type: string
-          description: デバッグ用メッセージ（開発環境のみ）
-          example: 'User ensured successfully'
+          description: Human-readable message (optional for backward compatibility)
+          nullable: true
         data:
           type: object
-          description: レスポンスデータ
+          description: Response data
+          nullable: true
       required:
         - success
-
+        - code
     UserResponse:
       type: object
       properties:
@@ -228,11 +273,11 @@ components:
         code:
           type: string
           description: MessageKeyシステム用コード
-          example: 'success.user_ensured'
+          example: success.user_ensured
         message:
           type: string
           description: デバッグ用メッセージ（開発環境のみ）
-          example: 'User ensured successfully'
+          example: User ensured successfully
         data:
           type: object
           properties:
@@ -243,41 +288,215 @@ components:
       required:
         - success
         - data
-
     ErrorResponse:
       type: object
       properties:
         success:
           type: boolean
+          enum:
+            - false
           example: false
+          deprecated: true
         message:
           type: string
-          description: エラーメッセージ
-          example: 'User not found'
+          description: Error message (deprecated - use code instead)
+          example: User not found
+          deprecated: true
         error:
           type: string
-          description: エラー詳細
-          example: 'User not found. Please sign in again.'
-        errors:
-          type: array
-          description: バリデーションエラー詳細
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-                description: エラーフィールド
-                example: 'displayName'
-              message:
-                type: string
-                description: エラーメッセージ
-                example: 'String must contain at least 1 character(s)'
+          description: Error details (deprecated - use code + details instead)
+          example: User not found. Please sign in again.
+          deprecated: true
+        code:
+          type: string
+          enum: &ref_0
+            - auth.signin_required
+            - auth.signin_success
+            - auth.user_ensured
+            - auth.ensure_failed
+            - error.user_not_found
+            - error.profile_retrieval_failed
+            - error.profile_update_failed
+            - error.validation_failed
+            - error.invalid_response_format
+            - error.unknown_error
+            - validation.field_required
+            - validation.invalid_email
+            - validation.invalid_url
+            - validation.string_too_short
+            - validation.string_too_long
+          description: Error code (new standard)
+          example: error.user_not_found
+        details:
+          type: object
+          description: Additional error context
+          nullable: true
       required:
         - success
+        - code
+      deprecated: true
+      description: Deprecated error response format - use ApiError instead
+    ApiError:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            success:
+              type: boolean
+              enum:
+                - false
+              example: false
+            code:
+              type: string
+              enum: *ref_0
+              description: Error code from registry
+              example: error.user_not_found
+            details:
+              type: object
+              description: Additional error context
+              nullable: true
+    ApiSuccess:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            success:
+              type: boolean
+              enum:
+                - true
+              example: true
+            code:
+              type: string
+              enum:
+                - success.profile_retrieved
+                - success.profile_updated
+                - success.user_ensured
+              description: Success code from registry
+              example: success.profile_retrieved
+    ValidationErrorDetail:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name that failed validation
+          example: email
+        code:
+          type: string
+          enum:
+            - validation.field_required
+            - validation.invalid_email
+            - validation.invalid_url
+            - validation.string_too_short
+            - validation.string_too_long
+          description: Validation error code
+          example: validation.field_required
+        message:
+          type: string
+          description: Human-readable validation error message
+          example: Email is required
+      required:
+        - field
+        - code
         - message
-
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - error.validation_failed
+              example: error.validation_failed
+            errors:
+              type: array
+              items:
+                $ref: '#/components/schemas/ValidationErrorDetail'
+              description: Detailed validation errors
+          required:
+            - errors
+    MessageCode:
+      type: string
+      enum:
+        - auth.signin_required
+        - auth.signin_success
+        - auth.user_ensured
+        - auth.ensure_failed
+        - error.user_not_found
+        - error.profile_retrieval_failed
+        - error.profile_update_failed
+        - error.validation_failed
+        - error.invalid_response_format
+        - error.unknown_error
+        - success.profile_retrieved
+        - success.profile_updated
+        - success.user_ensured
+        - ui.profile_info
+        - ui.user_id
+        - ui.display_name
+        - ui.email_address
+        - ui.created_at
+        - ui.updated_at
+        - ui.auth_providers
+        - ui.avatar
+        - ui.not_set
+        - ui.unknown
+        - ui.dashboard
+        - ui.authenticated_user_page
+        - ui.loading
+        - ui.executing
+        - ui.last_execution
+        - action.auth_api_test
+        - action.health_check_success
+        - action.response_data
+        - action.error_occurred
+        - action.error_details
+        - validation.field_required
+        - validation.invalid_email
+        - validation.invalid_url
+        - validation.string_too_short
+        - validation.string_too_long
+      description: Message codes from registry (version 1.0.0)
+      x-enum-descriptions:
+        auth.signin_required: '[auth.error] User authentication required'
+        auth.signin_success: '[auth.success] User signed in successfully'
+        auth.user_ensured: '[auth.success] User information synchronized'
+        auth.ensure_failed: '[auth.error] Failed to synchronize user information'
+        error.user_not_found: '[error.client_error] User record not found in database'
+        error.profile_retrieval_failed: '[error.server_error] Failed to retrieve user profile'
+        error.profile_update_failed: '[error.server_error] Failed to update user profile'
+        error.validation_failed: '[error.client_error] Request validation failed'
+        error.invalid_response_format: '[error.server_error] Server returned invalid response format'
+        error.unknown_error: '[error.server_error] An unexpected error occurred'
+        success.profile_retrieved: '[success.info] Profile information retrieved successfully'
+        success.profile_updated: '[success.info] Profile information updated successfully'
+        success.user_ensured: '[success.info] User information synchronized successfully'
+        ui.profile_info: '[ui.label] Profile information section title'
+        ui.user_id: '[ui.label] User ID field label'
+        ui.display_name: '[ui.label] Display name field label'
+        ui.email_address: '[ui.label] Email address field label'
+        ui.created_at: '[ui.label] Created date field label'
+        ui.updated_at: '[ui.label] Updated date field label'
+        ui.auth_providers: '[ui.label] Authentication providers field label'
+        ui.avatar: '[ui.label] Avatar field label'
+        ui.not_set: '[ui.status] Field value not set indicator'
+        ui.unknown: '[ui.status] Unknown value indicator'
+        ui.dashboard: '[ui.label] Dashboard page title'
+        ui.authenticated_user_page: '[ui.info] Page description for authenticated users only'
+        ui.loading: '[ui.status] Loading state indicator'
+        ui.executing: '[ui.status] Executing state indicator'
+        ui.last_execution: '[ui.label] Last execution time label'
+        action.auth_api_test: '[action.button] Authenticated API test button label'
+        action.health_check_success: '[action.status] Health check success message'
+        action.response_data: '[action.label] Response data section label'
+        action.error_occurred: '[action.error] Error occurred message'
+        action.error_details: '[action.label] Error details section label'
+        validation.field_required: '[validation.client_error] Required field validation error'
+        validation.invalid_email: '[validation.client_error] Invalid email format validation error'
+        validation.invalid_url: '[validation.client_error] Invalid URL format validation error'
+        validation.string_too_short: '[validation.client_error] String too short validation error'
+        validation.string_too_long: '[validation.client_error] String too long validation error'
 paths:
-  # ヘルスチェック
   /:
     get:
       operationId: healthCheck
@@ -290,8 +509,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthCheck'
-
-  # 詳細ヘルスチェック
   /api/health:
     get:
       operationId: getDetailedHealth
@@ -312,8 +529,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DetailedHealthCheck'
-
-  # 認証関連エンドポイント
   /api/auth/users/ensure:
     post:
       operationId: ensureUser
@@ -342,8 +557,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
-  # ユーザー管理エンドポイント
   /api/users/me:
     get:
       operationId: getUserProfile
@@ -378,7 +591,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
     put:
       operationId: updateUserProfile
       summary: プロフィール更新

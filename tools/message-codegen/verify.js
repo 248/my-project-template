@@ -16,9 +16,9 @@ const path = require('path')
 const yaml = require('js-yaml')
 
 // Configuration
-const config = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8')
-)
+const configPath =
+  process.env.MESSAGE_CONFIG_PATH || path.join(__dirname, 'config.json')
+const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
 
 /**
  * Verification results aggregator
@@ -64,7 +64,7 @@ class VerificationResults {
  * Load and parse registry
  */
 function loadRegistry() {
-  const registryPath = path.resolve(config.registry.path)
+  const registryPath = path.resolve(config.registry?.path)
 
   if (!fs.existsSync(registryPath)) {
     throw new Error(`Registry file not found: ${registryPath}`)
@@ -104,7 +104,7 @@ function extractRegistryKeys(registry) {
  * Verify TypeScript generated code
  */
 function verifyTypeScript(registryKeys, results) {
-  const tsPath = path.resolve(config.targets.typescript.output_path)
+  const tsPath = path.resolve(config.targets?.typescript?.output_path)
 
   if (!fs.existsSync(tsPath)) {
     results.addError('TypeScript generated file not found', { path: tsPath })
@@ -160,12 +160,12 @@ function verifyTypeScript(registryKeys, results) {
  * Verify Go generated code
  */
 function verifyGo(registryKeys, results) {
-  if (!config.targets.go.enabled) {
+  if (!config.targets?.go?.enabled) {
     results.addInfo('Go verification skipped (disabled)')
     return
   }
 
-  const goPath = path.resolve(config.targets.go.output_path)
+  const goPath = path.resolve(config.targets?.go?.output_path)
 
   if (!fs.existsSync(goPath)) {
     results.addWarning('Go generated file not found', { path: goPath })
@@ -308,12 +308,12 @@ function checkForDuplicates(registryKeys, results) {
  * Verify OpenAPI integration
  */
 function verifyOpenAPIIntegration(registryKeys, results) {
-  if (!config.openapi_integration.enabled) {
+  if (!config.openapi_integration?.enabled) {
     results.addInfo('OpenAPI integration verification skipped (disabled)')
     return
   }
 
-  const schemaPath = path.resolve(config.openapi_integration.schema_path)
+  const schemaPath = path.resolve(config.openapi_integration?.schema_path)
 
   if (!fs.existsSync(schemaPath)) {
     results.addWarning('OpenAPI schema not found - skipping', {
@@ -333,14 +333,14 @@ function verifyOpenAPIIntegration(registryKeys, results) {
     return
   }
 
-  const pathParts = config.openapi_integration.error_code_enum_path.split('.')
+  const pathParts = config.openapi_integration?.error_code_enum_path.split('.')
   let enumNode = schema
   for (const part of pathParts) {
     if (enumNode && Object.prototype.hasOwnProperty.call(enumNode, part)) {
       enumNode = enumNode[part]
     } else {
       results.addWarning('Error code enum path not found in OpenAPI schema', {
-        path: config.openapi_integration.error_code_enum_path,
+        path: config.openapi_integration?.error_code_enum_path,
       })
       return
     }
@@ -348,7 +348,7 @@ function verifyOpenAPIIntegration(registryKeys, results) {
 
   if (!Array.isArray(enumNode)) {
     results.addWarning('OpenAPI error code enum is not an array', {
-      path: config.openapi_integration.error_code_enum_path,
+      path: config.openapi_integration?.error_code_enum_path,
     })
     return
   }

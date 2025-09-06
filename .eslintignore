@@ -8,6 +8,14 @@ coverage/
 *.min.js
 *.bundle.js
 generated/
+**/generated/**
+packages/api-contracts/codegen/ts/src/generated/**
+packages/shared/src/messages/**
+tools/message-codegen/**
+
+# Vitest config
+vitest.config.js
+vitest.setup.js
 
 # IDE
 .vscode/
