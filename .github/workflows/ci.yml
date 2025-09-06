@@ -1,0 +1,114 @@
+name: 品質チェック (CI)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# 並列実行の制御：同一PR/ブランチでの重複実行を防ぐ
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-check:
+    name: 品質チェック
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ソースコードチェックアウト
+      - name: ソースコードチェックアウト
+        uses: actions/checkout@v4
+
+      # Node.js環境セットアップ
+      - name: Node.js環境セットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # pnpm セットアップ（高速化のため）
+      - name: pnpm セットアップ
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+
+      # pnpm キャッシュ設定
+      - name: pnpm ストアパス取得
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: pnpm キャッシュ設定
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      # 依存関係インストール
+      - name: 依存関係インストール
+        run: pnpm install --frozen-lockfile
+
+      # OpenAPI型生成（必須前処理）
+      - name: OpenAPI型生成
+        run: pnpm codegen
+
+      # 段階的品質チェック実行
+      - name: TypeScript型チェック
+        run: pnpm type-check
+
+      - name: ESLintコード品質チェック
+        run: pnpm lint
+
+      - name: Prettierフォーマット確認
+        run: pnpm format:check
+
+      - name: ビルド確認
+        run: pnpm build
+
+      # テスト実行（テストファイルが存在する場合）
+      - name: テスト実行
+        run: pnpm test --run --reporter=verbose
+        continue-on-error: false
+
+      # 品質チェック完了通知
+      - name: 品質チェック完了
+        run: |
+          echo "✅ すべての品質チェックが完了しました！"
+          echo "🎉 このPRは品質基準を満たしています"
+
+  # セキュリティチェック（追加の安心要素）
+  security-check:
+    name: セキュリティチェック
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: ソースコードチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Node.js環境セットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: pnpm セットアップ
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: 依存関係インストール
+        run: pnpm install --frozen-lockfile
+
+      # 脆弱性チェック
+      - name: npm audit（脆弱性チェック）
+        run: pnpm audit --audit-level moderate
+        continue-on-error: true # 警告レベルの脆弱性では失敗させない
+
+      # セキュリティチェック完了
+      - name: セキュリティチェック完了
+        run: echo "🔒 セキュリティチェックが完了しました"
