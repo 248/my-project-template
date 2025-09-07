@@ -54,6 +54,11 @@ function askQuestion(question) {
 // 対処法表示
 function showTroubleshootingTips(command) {
   const tips = {
+    'pnpm codegen': [
+      '• OpenAPI仕様ファイル（packages/api-contracts/openapi.yaml）の構文エラーを確認',
+      '• 参照している`$ref`の定義が不足していないか確認',
+      '• 必須フィールドの未定義がないか確認',
+    ],
     'pnpm type-check': [
       '• TypeScriptエラーの確認：型定義の不整合がないか確認',
       '• 自動生成更新：pnpm codegen && pnpm db:generate を実行',

@@ -187,11 +187,11 @@ export default function ItemsPage() {
 import { notFound } from 'next/navigation'
 
 interface UserPageProps {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }
 
 export default async function UserPage({ params }: UserPageProps) {
-  const { id } = await params
+  const { id } = params
 
   // データ取得・存在チェック
   // if (!user) notFound()
