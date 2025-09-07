@@ -22,10 +22,6 @@
 
 詳細は [📋 システム概要](docs/architecture/system-overview.md) を参照
 
-## 👋 新人開発者の方へ
-
-**初回セットアップ・初日の進め方**は [🚀 新人向けクイックスタートガイド](docs/handbook/quickstart-guide.md) をご覧ください（5分で読める導入ガイド）
-
 ## 🚀 クイックスタート
 
 ### 環境構築

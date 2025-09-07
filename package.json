@@ -68,8 +68,6 @@
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
     "@size-limit/preset-small-lib": "^11.1.6",
     "@template/eslint-plugin-message-keys": "workspace:*",
     "@testing-library/jest-dom": "^6.8.0",
