@@ -52,12 +52,12 @@ git config --global core.eol lf
 
 #### よくある問題と事前回避策
 
-| 問題                   | 症状                      | 事前回避策                       |
-| ---------------------- | ------------------------- | -------------------------------- |
-| **Node.js バージョン** | 古いNodeでビルド失敗      | nvm使用でNode 18+                |
-| **Xcode不足**          | native modules ビルド失敗 | `xcode-select --install`         |
-| **権限問題**           | npm global install失敗    | nvm使用、sudo不使用              |
-| **ポート使用**         | 開発サーバー起動失敗      | `lsof -ti:3000 \| xargs kill -9` |
+| 問題                   | 症状                      | 事前回避策               |
+| ---------------------- | ------------------------- | ------------------------ | -------------- |
+| **Node.js バージョン** | 古いNodeでビルド失敗      | nvm使用でNode 18+        |
+| **Xcode不足**          | native modules ビルド失敗 | `xcode-select --install` |
+| **権限問題**           | npm global install失敗    | nvm使用、sudo不使用      |
+| **ポート使用**         | 開発サーバー起動失敗      | `lsof -ti:3000           | xargs kill -9` |
 
 #### 推奨セットアップ手順（macOS）
 
