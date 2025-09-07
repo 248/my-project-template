@@ -314,6 +314,13 @@ const CreateItemSchema = z.object({
   description: z.string().optional(),
 })
 
+const PaginationSchema = z.object({
+  page: z.number(),
+  limit: z.number(),
+  total: z.number(),
+  totalPages: z.number(),
+})
+
 // 2. ルート定義
 const app = new OpenAPIHono()
 
@@ -438,6 +445,7 @@ app.openapi(/* ... */, async (c) => {
       data: result,
     })
   } catch (error) {
+    // 注: ValidationErrorやNotFoundErrorは、プロジェクトで定義するカスタムエラーの例です
     if (error instanceof ValidationError) {
       return c.json({
         success: false,
