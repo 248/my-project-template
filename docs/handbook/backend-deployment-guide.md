@@ -88,7 +88,7 @@ ENV_NAME=dev
 
 ```bash
 # プロジェクトルートから
-pnpm dev:workers-fullstack
+pnpm dev:full  # Workers + Frontend同時起動
 
 # または個別起動
 pnpm --filter @template/backend dev:workers  # Workers

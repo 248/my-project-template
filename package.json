@@ -59,7 +59,12 @@
     "postinstall": "echo 'Setup completed'",
     "prebuild": "pnpm codegen && pnpm db:generate",
     "prepare": "husky",
-    "clean": "pnpm -r clean"
+    "clean": "pnpm -r clean",
+    "deploy:vercel": "cd apps/frontend && vercel --prod",
+    "deploy:vercel:preview": "cd apps/frontend && vercel",
+    "build:vercel": "pnpm codegen && cd apps/frontend && pnpm build",
+    "vercel:env": "cd apps/frontend && vercel env pull .env.local",
+    "vercel:link": "cd apps/frontend && vercel link"
   },
   "dependencies": {
     "next": "15.5.2",
@@ -98,6 +103,7 @@
     "prettier": "^3.3.3",
     "size-limit": "^11.1.6",
     "tailwindcss": "^3.4.14",
+    "vercel": "^37.21.1",
     "vitest": "^3.2.4"
   },
   "lint-staged": {

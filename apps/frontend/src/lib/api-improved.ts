@@ -5,11 +5,30 @@ import type { paths, DetailedHealthCheck } from '@template/api-contracts-ts'
 export type { DetailedHealthCheck }
 
 /**
+ * APIベースURLを取得
+ * 環境変数が設定されていない場合はエラーを投げる
+ */
+function getApiBaseUrl(): string {
+  const baseUrl = process.env['NEXT_PUBLIC_API_BASE_URL']
+  
+  if (!baseUrl) {
+    throw new Error(
+      '🚨 NEXT_PUBLIC_API_BASE_URL環境変数が設定されていません。' +
+      '\n開発環境: http://localhost:8787' +
+      '\n本番環境: https://your-workers-api.workers.dev' +
+      '\n.env.localファイルまたはVercel環境変数で設定してください。'
+    )
+  }
+  
+  return baseUrl
+}
+
+/**
  * 型安全なAPIクライアント
  * OpenAPI仕様から自動生成された型を使用
  */
 export const apiClient = createClient<paths>({
-  baseUrl: process.env['NEXT_PUBLIC_API_BASE_URL'] || 'http://localhost:8080',
+  baseUrl: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },

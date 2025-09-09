@@ -1,0 +1,81 @@
+# Dependencies (上位レベル)
+../../node_modules/
+../../apps/*/node_modules/
+../../packages/*/node_modules/
+
+# Development
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Backend関連（フロントエンドから除外）
+../backend/
+../../apps/backend/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+../../postgres_data/
+../../redis_data/
+
+# Docker
+../../Dockerfile*
+../../docker-compose*.yml
+../../infra/docker/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output
+
+# Build artifacts (パッケージのビルド成果物)
+../../packages/*/dist/
+../../packages/*/build/
+
+# Miscellaneous
+.cache/
+.parcel-cache/
+.sass-cache/
+connect.lock
+typings/
+
+# Documentation source
+../../docs/
+*.md
+!README.md
+
+# Tooling
+../../.codex/
+../../.gemini/
+../../tools/
+../../atlas.disabled/
+../../contracts/
+
+# Git
+../../.git/
+../../.gitignore
+
+# Atlas (disabled)
+../../atlas.hcl.disabled
+
+# Workspace configuration
+../../pnpm-workspace.yaml
+../../pnpm-lock.yaml
