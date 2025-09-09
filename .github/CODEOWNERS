@@ -1,0 +1,32 @@
+# CODEOWNERS - コードレビュー承認者の設定
+# このファイルで指定されたユーザーが本番デプロイの承認権限を持ちます
+# フォーマット: パスパターン @ユーザー名またはチーム名
+
+# デフォルトオーナー（全ファイル）
+# TODO: あなたのGitHubユーザー名に置き換えてください
+* @your-github-username
+
+# フロントエンド
+/apps/frontend/ @your-github-username
+/packages/ui/ @your-github-username
+/packages/design-system/ @your-github-username
+
+# バックエンド
+/apps/backend/ @your-github-username
+/packages/api-contracts/ @your-github-username
+/db/ @your-github-username
+
+# インフラ・CI/CD
+/.github/ @your-github-username
+/infra/ @your-github-username
+
+# ドキュメント
+/docs/ @your-github-username
+*.md @your-github-username
+
+# 重要な設定ファイル
+package.json @your-github-username
+pnpm-workspace.yaml @your-github-username
+turbo.json @your-github-username
+tsconfig*.json @your-github-username
+.eslintrc* @your-github-username
