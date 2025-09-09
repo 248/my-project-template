@@ -6,19 +6,21 @@
 
 ### 環境構成
 
-| 環境 | Backend | Database | Redis | 用途 |
-|------|---------|----------|-------|------|
-| **Local** | `wrangler dev` | Neon (Dev) | Upstash (共通) | ローカル開発 |
-| **Preview** | Cloudflare Workers | Neon (Dev) | Upstash (共通) | プルリクエスト確認 |
-| **Production** | Cloudflare Workers | Neon (Prod) | Upstash (共通) | 本番サービス |
+| 環境           | Backend            | Database    | Redis          | 用途               |
+| -------------- | ------------------ | ----------- | -------------- | ------------------ |
+| **Local**      | `wrangler dev`     | Neon (Dev)  | Upstash (共通) | ローカル開発       |
+| **Preview**    | Cloudflare Workers | Neon (Dev)  | Upstash (共通) | プルリクエスト確認 |
+| **Production** | Cloudflare Workers | Neon (Prod) | Upstash (共通) | 本番サービス       |
 
 ### データベース戦略
 
 **Neon PostgreSQL:**
+
 - **Dev/Preview環境**: 同一DBを共有（コスト削減・簡素化）
 - **Production環境**: 独立したDB（本番データ保護）
 
 **Upstash Redis:**
+
 - **全環境共通**: 単一Redisインスタンス（無料枠活用）
 - 環境別のキープレフィックス使用（例: `dev:`, `prod:`）
 
@@ -33,14 +35,15 @@
    - Database name: `project-template-dev`
    - Region: 適切なリージョン選択
 3. **Production用DB作成**:
-   - Database name: `project-template-prod` 
+   - Database name: `project-template-prod`
    - Region: 適切なリージョン選択
 4. **接続情報取得**:
+
    ```
    # Dev/Preview用
    postgres://username:password@ep-xxx-xxx.region.neon.tech/project-template-dev
 
-   # Production用  
+   # Production用
    postgres://username:password@ep-yyy-yyy.region.neon.tech/project-template-prod
    ```
 
@@ -124,15 +127,15 @@ pnpm db:generate
 
 **Preview環境用変数設定:**
 
-| Variable Name | Type | Value |
-|---------------|------|-------|
-| `DATABASE_URL` | Secret | `postgres://...neon.tech/project-template-dev` |
-| `DB_DRIVER` | Variable | `neon` |
-| `UPSTASH_REDIS_REST_URL` | Secret | `https://xxx-xxx-xxx.upstash.io` |
-| `UPSTASH_REDIS_REST_TOKEN` | Secret | `AxxxXxxXxxx_xxxxxxxxxxxxxxxxxx` |
-| `CLERK_SECRET_KEY` | Secret | `sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
-| `NODE_ENV` | Variable | `preview` |
-| `ENV_NAME` | Variable | `preview` |
+| Variable Name              | Type     | Value                                          |
+| -------------------------- | -------- | ---------------------------------------------- |
+| `DATABASE_URL`             | Secret   | `postgres://...neon.tech/project-template-dev` |
+| `DB_DRIVER`                | Variable | `neon`                                         |
+| `UPSTASH_REDIS_REST_URL`   | Secret   | `https://xxx-xxx-xxx.upstash.io`               |
+| `UPSTASH_REDIS_REST_TOKEN` | Secret   | `AxxxXxxXxxx_xxxxxxxxxxxxxxxxxx`               |
+| `CLERK_SECRET_KEY`         | Secret   | `sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx`        |
+| `NODE_ENV`                 | Variable | `preview`                                      |
+| `ENV_NAME`                 | Variable | `preview`                                      |
 
 #### デプロイ手順
 
@@ -152,15 +155,15 @@ wrangler deploy --env preview
 
 #### Production環境用変数設定
 
-| Variable Name | Type | Value |
-|---------------|------|-------|
-| `DATABASE_URL` | Secret | `postgres://...neon.tech/project-template-prod` |
-| `DB_DRIVER` | Variable | `neon` |
-| `UPSTASH_REDIS_REST_URL` | Secret | `https://xxx-xxx-xxx.upstash.io` |
-| `UPSTASH_REDIS_REST_TOKEN` | Secret | `AxxxXxxXxxx_xxxxxxxxxxxxxxxxxx` |
-| `CLERK_SECRET_KEY` | Secret | `sk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
-| `NODE_ENV` | Variable | `production` |
-| `ENV_NAME` | Variable | `prod` |
+| Variable Name              | Type     | Value                                           |
+| -------------------------- | -------- | ----------------------------------------------- |
+| `DATABASE_URL`             | Secret   | `postgres://...neon.tech/project-template-prod` |
+| `DB_DRIVER`                | Variable | `neon`                                          |
+| `UPSTASH_REDIS_REST_URL`   | Secret   | `https://xxx-xxx-xxx.upstash.io`                |
+| `UPSTASH_REDIS_REST_TOKEN` | Secret   | `AxxxXxxXxxx_xxxxxxxxxxxxxxxxxx`                |
+| `CLERK_SECRET_KEY`         | Secret   | `sk_live_xxxxxxxxxxxxxxxxxx`                    |
+| `NODE_ENV`                 | Variable | `production`                                    |
+| `ENV_NAME`                 | Variable | `prod`                                          |
 
 #### デプロイ手順
 
@@ -170,7 +173,7 @@ wrangler deploy --env preview
 cd apps/backend
 pnpm db:migrate:deploy
 
-# 2. Production環境デプロイ  
+# 2. Production環境デプロイ
 pnpm deploy:production
 
 # または
@@ -190,11 +193,12 @@ curl http://127.0.0.1:8787/api/health
 # Preview
 curl https://your-worker-preview.your-subdomain.workers.dev/api/health
 
-# Production  
+# Production
 curl https://your-worker.your-subdomain.workers.dev/api/health
 ```
 
 **正常なレスポンス例:**
+
 ```json
 {
   "status": "healthy",
@@ -207,13 +211,13 @@ curl https://your-worker.your-subdomain.workers.dev/api/health
       "responseTime": 2
     },
     "database": {
-      "status": "healthy", 
+      "status": "healthy",
       "message": "Neon connection successful",
       "responseTime": 45
     },
     "redis": {
       "status": "healthy",
-      "message": "Upstash Redis connection successful", 
+      "message": "Upstash Redis connection successful",
       "responseTime": 12
     }
   },
@@ -235,7 +239,7 @@ curl https://your-worker.your-subdomain.workers.dev/api/health
    - IPホワイトリスト設定確認
    - 認証情報の有効性確認
 
-2. **Redis接続エラー**  
+2. **Redis接続エラー**
    - Upstash RESTトークンの有効性確認
    - リージョン設定確認
 
@@ -265,7 +269,7 @@ wrangler dev --env preview
 # Production ログ
 wrangler tail --env production
 
-# Preview ログ  
+# Preview ログ
 wrangler tail --env preview
 ```
 

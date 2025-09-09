@@ -10,6 +10,7 @@ name = "my-project-template-api-preview"
 
 [env.preview.vars]
 NODE_ENV = "preview"
+# FRONTEND_URLはCloudflare Dashboardまたはwrangler secretで設定
 
 # 本番環境
 [env.production] 
@@ -17,6 +18,7 @@ name = "my-project-template-api-production"
 
 [env.production.vars]
 NODE_ENV = "production"
+# FRONTEND_URLはCloudflare Dashboardまたはwrangler secretで設定
 
 # ローカル環境変数（.dev.varsで設定）
 [vars]
