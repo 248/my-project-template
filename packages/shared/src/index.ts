@@ -13,4 +13,7 @@ export * from './messages/types'
 export * from './messages/utils'
 export * from './messages/locales'
 
+// 型境界レイヤー（外部I/O入口での型安全化）
+export * from './type-boundary/env'
+
 // 注意: OpenAPI生成型は @template/api-contracts-ts に分離されました

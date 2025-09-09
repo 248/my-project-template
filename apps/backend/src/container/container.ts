@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import { container } from 'tsyringe'
+
 import type {
   DatabaseService,
   CacheService,
@@ -7,13 +8,13 @@ import type {
   LogLevel,
 } from '@/interfaces'
 import { SERVICE_TOKENS, LOGGER_CONFIG_TOKEN } from '@/interfaces'
+import { prisma } from '@/lib/db/prisma'
 import {
   PrismaDatabaseService,
   RedisService,
   PinoLoggerService,
   UserService,
 } from '@/services'
-import { prisma } from '@/lib/db/prisma'
 
 /**
  * DIコンテナの初期化と設定

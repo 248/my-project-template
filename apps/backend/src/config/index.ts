@@ -1,7 +1,7 @@
+import { createClerkConfig, type ClerkConfig } from './clerk'
 import { createDatabaseConfig, type DatabaseConfig } from './database'
 import { createRedisConfig, type RedisConfig } from './redis'
 import { createServerConfig, type ServerConfig } from './server'
-import { createClerkConfig, type ClerkConfig } from './clerk'
 
 /**
  * アプリケーション設定の統合型

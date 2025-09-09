@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless'
+
 import type { AuthContext } from '../middleware/clerk-auth-worker'
 
 // ユーザー更新データの型
@@ -21,10 +22,29 @@ export interface UserResult {
 }
 
 // データベース行の型
+interface UserRow {
+  id: string
+  display_name: string | null
+  email: string | null
+  avatar_url: string | null
+  locale: string | null
+  created_at: string
+  updated_at: string
+}
+
+// Neonクエリ結果の型ガード
+function isValidUserResult(result: unknown): result is [UserRow, ...UserRow[]] {
+  return (
+    Array.isArray(result) &&
+    result.length > 0 &&
+    typeof result[0] === 'object' &&
+    result[0] !== null
+  )
+}
 
 /**
  * Workers環境用ユーザー管理サービス
- * 
+ *
  * Neonアダプターを使用してSQL直接実行
  */
 export class UserServiceWorker {
@@ -84,22 +104,13 @@ export class UserServiceWorker {
           created_at,
           updated_at
       `
-      const typedResult = result
 
-      if (!typedResult[0]) {
+      if (!isValidUserResult(result)) {
         throw new Error('Failed to upsert user - no result returned')
       }
 
-      const row = typedResult[0] as {
-        id: string;
-        display_name: string | null;
-        email: string | null;
-        avatar_url: string | null;
-        locale: string | null;
-        created_at: string;
-        updated_at: string;
-      }
-      
+      const row = result[0]
+
       const user = {
         id: row.id,
         displayName: row.display_name,
@@ -142,20 +153,20 @@ export class UserServiceWorker {
         FROM users
         WHERE id = ${userId}
       `
-      const typedResult = result
 
-      if (!typedResult[0]) {
+      if (!isValidUserResult(result)) {
         return null
       }
 
+      const row = result[0]
       return {
-        id: typedResult[0].id,
-        displayName: typedResult[0].display_name,
-        email: typedResult[0].email,
-        avatarUrl: typedResult[0].avatar_url,
-        locale: typedResult[0].locale,
-        createdAt: new Date(typedResult[0].created_at),
-        updatedAt: new Date(typedResult[0].updated_at),
+        id: row.id,
+        displayName: row.display_name,
+        email: row.email,
+        avatarUrl: row.avatar_url,
+        locale: row.locale,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
       }
     } catch (error) {
       console.error(`Failed to get user: ${userId}`, error)
@@ -208,22 +219,13 @@ export class UserServiceWorker {
           created_at,
           updated_at
       `
-      const typedResult = result
 
-      if (!typedResult[0]) {
+      if (!isValidUserResult(result)) {
         throw new Error('User not found')
       }
 
-      const row = typedResult[0] as {
-        id: string;
-        display_name: string | null;
-        email: string | null;
-        avatar_url: string | null;
-        locale: string | null;
-        created_at: string;
-        updated_at: string;
-      }
-      
+      const row = result[0]
+
       const user = {
         id: row.id,
         displayName: row.display_name,

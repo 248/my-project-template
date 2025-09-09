@@ -1,16 +1,17 @@
-import { NodeSDK } from '@opentelemetry/sdk-node'
+import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api'
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node'
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
+import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino'
 import { resourceFromAttributes } from '@opentelemetry/resources'
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
+import { NodeSDK } from '@opentelemetry/sdk-node'
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
 import {
   SEMRESATTRS_SERVICE_NAME,
   SEMRESATTRS_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions'
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node'
-import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http'
-import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino'
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
-import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api'
+
 import { resolveLoggerService } from '@/container/container'
 
 // Note: DIコンテナが初期化される前に使用される可能性があるため、

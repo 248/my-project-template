@@ -1,4 +1,5 @@
 import type { DetailedHealthCheck } from '@template/api-contracts-ts'
+
 import type {
   HealthCheckService,
   HealthCheckContext,

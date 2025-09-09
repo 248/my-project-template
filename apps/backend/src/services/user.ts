@@ -1,4 +1,5 @@
 import { inject, injectable } from 'tsyringe'
+
 import { PrismaClient } from '../../generated/prisma'
 import { type LoggerService, SERVICE_TOKENS } from '../interfaces'
 import { type AuthContext } from '../middleware/clerk-auth'

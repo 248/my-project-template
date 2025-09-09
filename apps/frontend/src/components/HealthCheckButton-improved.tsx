@@ -1,9 +1,13 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+
 import { getDetailedHealth, HealthCheckUtils } from '@/lib/api-improved'
-import type { DetailedHealthCheck } from '@/lib/api-improved'
-import type { ApiResult, ApiError } from '@/lib/api-improved'
+import type {
+  DetailedHealthCheck,
+  ApiResult,
+  ApiError,
+} from '@/lib/api-improved'
 
 interface HealthCheckState {
   isLoading: boolean

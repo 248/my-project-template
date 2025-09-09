@@ -1,9 +1,11 @@
+import type { DetailedHealthCheck } from '@template/api-contracts-ts'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { HealthCheckButton } from '../HealthCheckButton'
+
 import { getDetailedHealth } from '@/lib/api'
-import type { DetailedHealthCheck } from '@template/api-contracts-ts'
+
+import { HealthCheckButton } from '../HealthCheckButton'
 
 // APIモジュールをモック
 vi.mock('@/lib/api', () => ({

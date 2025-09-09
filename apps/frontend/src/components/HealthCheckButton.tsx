@@ -1,9 +1,10 @@
 /* eslint-disable @template/message-keys/no-hardcoded-messages */
 'use client'
 
-import React, { useState } from 'react'
-import { getDetailedHealth } from '@/lib/api'
 import type { DetailedHealthCheck } from '@template/api-contracts-ts'
+import React, { useState } from 'react'
+
+import { getDetailedHealth } from '@/lib/api'
 
 interface HealthCheckState {
   isLoading: boolean

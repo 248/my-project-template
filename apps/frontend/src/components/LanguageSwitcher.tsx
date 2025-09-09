@@ -1,7 +1,8 @@
 'use client'
 
-import { useMessages } from '../hooks/useMessages'
 import type { SupportedLocale } from '@template/shared'
+
+import { useMessages } from '../hooks/useMessages'
 
 /**
  * 言語切り替えコンポーネント

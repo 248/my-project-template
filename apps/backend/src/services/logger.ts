@@ -1,5 +1,6 @@
-import { injectable, inject } from 'tsyringe'
 import pino, { type Logger } from 'pino'
+import { injectable, inject } from 'tsyringe'
+
 import type {
   LoggerService,
   LogLevel,

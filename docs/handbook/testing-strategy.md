@@ -47,28 +47,36 @@ TypeScriptコンパイラオプションの厳格な設定：
 - **型安全性: 100%保証**
 - **any型使用: 完全禁止**
 
-### 2. ESLint設定（厳格）
+### 2. ESLint設定（段階的厳格化）
 
 #### 設定
 
-プロジェクト品質を担保するESLint設定：
+**最適化されたESLint設定** (329行→197行に簡素化、パフォーマンス向上):
 
 **必須プラグイン**:
 
 - @typescript-eslint/eslint-plugin: TypeScript専用ルール
 - eslint-plugin-react: React開発でのベストプラクティス
-- eslint-plugin-react-hooks: React Hooksのルール検証
+- eslint-plugin-unused-imports: 未使用インポートの自動削除
+- eslint-plugin-import: import/export健全性チェック
 
-**重要ルール**:
+**段階的厳格化**:
 
-- @typescript-eslint/no-explicit-any: any型の使用を禁止
-- @typescript-eslint/no-unused-vars: 未使用変数の検出
-- react-hooks/rules-of-hooks: Hooksのルールを強制
+- **開発時**: 警告中心（開発速度優先）
+- **CI/本番**: 厳格エラー（品質優先）
+- 自動環境判定（`CI=true` or `NODE_ENV=production`）
+
+**型境界レイヤー**:
+
+- Cloudflare Workers `c.env` の型安全化
+- Zod による環境変数検証
+- no-unsafe系エラーの根本解決
 
 #### 品質基準
 
-- **ESLintエラー・警告: 0件必須**
-- **リンターが通らないコードはPR不可**
+- **ESLintエラー: 0件必須**（警告は開発時許可）
+- **型境界レイヤーでの厳格な型チェック**
+- **自動修正可能エラーは CI で修正**
 
 ### 3. Prettier（コードフォーマット）
 
@@ -236,10 +244,9 @@ pnpm codegen && pnpm type-check && pnpm lint && pnpm test && pnpm build
 ```json
 {
   "scripts": {
-    "type-check": "tsc --noEmit",
-    "type-check:watch": "tsc --noEmit --watch",
-    "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "type-check": "pnpm -r type-check",
+    "lint": "eslint . --ext .ts,.tsx --cache",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix --cache",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest",
@@ -248,7 +255,7 @@ pnpm codegen && pnpm type-check && pnpm lint && pnpm test && pnpm build
     "test:backend": "vitest run apps/backend/src/**/__tests__",
     "test:tools": "vitest run tools/message-codegen/__tests__",
     "test:coverage": "vitest run --coverage",
-    "quality-check": "pnpm type-check && pnpm lint && pnpm format:check && pnpm test"
+    "quality-check": "pnpm codegen && pnpm gen:messages && pnpm type-check && pnpm lint && pnpm test:run"
   }
 }
 ```

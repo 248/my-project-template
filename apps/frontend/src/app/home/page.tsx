@@ -1,7 +1,7 @@
 'use client'
 
-import { UserProfile } from '@/components/UserProfile'
 import { AuthHealthCheckButton } from '@/components/AuthHealthCheckButton'
+import { UserProfile } from '@/components/UserProfile'
 import { useMessages } from '@/hooks/useMessages'
 
 /**

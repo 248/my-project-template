@@ -26,8 +26,8 @@ export {
 } from './services'
 
 // ユーティリティ関数
-import { HealthCheckManager } from './manager'
 import { createHealthCheckConfig, validateHealthCheckConfig } from './config'
+import { HealthCheckManager } from './manager'
 import { createDefaultHealthServices } from './services'
 
 /**

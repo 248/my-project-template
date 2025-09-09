@@ -2,7 +2,9 @@
 
 import { useUser } from '@clerk/nextjs'
 import Image from 'next/image'
+
 import { useMessages } from '@/hooks/useMessages'
+
 import { LanguageSwitcher } from './LanguageSwitcher'
 
 /**
