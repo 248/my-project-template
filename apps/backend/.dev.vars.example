@@ -1,0 +1,98 @@
+# ========================================
+# Cloudflare Workers 開発環境設定テンプレート
+# ========================================
+# このファイルをコピーして .dev.vars を作成し、実際の値を設定してください
+# cp .dev.vars.example .dev.vars
+
+# ========================================
+# 基本設定
+# ========================================
+NODE_ENV=development
+ENV_NAME=dev
+
+
+# ========================================
+# CORS設定
+# ========================================
+# フロントエンド開発サーバーのURL（カンマ区切りで複数指定可能）
+# ローカル開発では複数ポートを許可することを推奨
+CORS_ORIGIN=http://localhost:3000,http://127.0.0.1:3000
+
+# 本番環境では以下のいずれかを使用:
+# 1. FRONTEND_URL（単一オリジン）: preview/production環境で推奨
+#    例: FRONTEND_URL=https://your-app.vercel.app
+# 2. CORS_ORIGIN（複数オリジン）: 複数のフロントエンドを許可する場合
+#    例: CORS_ORIGIN=https://app1.example.com,https://app2.example.com
+
+# ========================================
+# データベース設定（Prisma対応）
+# ========================================
+# 本番用 Neon PostgreSQL
+DATABASE_URL=postgresql://username:password@ep-xxx.region.aws.neon.tech/dbname?sslmode=require&search_path=public
+DB_DRIVER=neon
+
+# ローカル開発用 PostgreSQL（代替案）
+# DATABASE_URL=postgresql://template_user:template_pass@localhost:5432/template_db
+# DB_DRIVER=postgresql
+
+# ========================================
+# Redis設定（Upstash REST API）
+# ========================================
+# Upstash Redis REST URL
+UPSTASH_REDIS_REST_URL=https://your-redis-id.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your_redis_token_here
+
+# ローカル開発用 Redis（代替案）
+# REDIS_URL=redis://localhost:6379
+
+# ========================================
+# 認証設定（Clerk）
+# ========================================
+# Clerk 秘密鍵（開発用）
+CLERK_SECRET_KEY=sk_test_your_clerk_secret_key_here
+
+# JWT発行者URL（Clerk Dashboard で確認）
+CLERK_JWT_ISSUER=https://your-app.clerk.accounts.dev
+
+# Clerk 公開鍵（フロントエンド用、コメントアウト可）
+# CLERK_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+
+# CLERK_JWT_AUD=api
+
+# ========================================
+# キャッシュ設定
+# ========================================
+# キャッシュTTL（秒）
+CACHE_TTL=300
+
+# ========================================
+# ログ設定
+# ========================================
+# ログレベル: debug, info, warn, error
+LOG_LEVEL=debug
+DEBUG=true
+
+# ========================================
+# 開発用機能フラグ
+# ========================================
+# 開発ツール有効化
+ENABLE_DEV_TOOLS=true
+
+# モックデータ使用（実際のAPIを使わずテスト）
+ENABLE_MOCK_DATA=false
+
+# ========================================
+# OpenTelemetry設定（オプション）
+# ========================================
+# OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+# OTEL_SERVICE_NAME=project-template-api-local
+
+# ========================================
+# セットアップ手順
+# ========================================
+# 1. このファイルを .dev.vars にコピー
+# 2. 各サービスの実際の認証情報を設定
+# 3. wrangler dev で開発サーバーを起動
+# 4. Prismaコマンド用に環境変数設定:
+#    - Windows: set DATABASE_URL=your_database_url && pnpm db:generate
+#    - Unix: DATABASE_URL=your_database_url pnpm db:generate

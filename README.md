@@ -15,10 +15,12 @@
 
 ### 技術スタック
 
-- **Next.js 15** + **React 19** + **TypeScript** - モダンなフロントエンド
-- **Hono** + **OpenAPI** - 高速で型安全なバックエンド API
-- **pnpm workspaces** - モノレポ管理
-- **ESLint** + **Prettier** + **Husky** - コード品質管理
+- **フロントエンド**: Next.js 15 + React 19 + TypeScript
+- **バックエンド**: Cloudflare Workers + Hono + TypeScript
+- **データベース**: Neon PostgreSQL + Prisma
+- **キャッシュ**: Upstash Redis
+- **認証**: Clerk JWT
+- **開発環境**: pnpm workspace
 
 詳細は [📋 システム概要](docs/architecture/system-overview.md) を参照
 
@@ -28,81 +30,32 @@
 
 ## 🚀 クイックスタート
 
-### 環境構築
-
 ```bash
-# 依存関係インストール
+# 1. 依存関係インストール
 pnpm install
 
-# 環境変数設定
-cp .env.example .env
+# 2. 環境変数設定
+cp apps/backend/.dev.vars.example apps/backend/.dev.vars
+# .dev.vars と .env を編集（DATABASE_URL等を設定）
+
+# 3. 開発サーバー起動
+pnpm dev:workers-fullstack
 ```
 
-### 開発開始（Docker推奨）
-
-```bash
-# フルスタック開発（フロント・バック・DB同時起動）
-pnpm dev:fullstack
-
-# またはバックグラウンドで起動
-pnpm docker:up
-```
-
-### 個別開発
-
-```bash
-# フロントエンドのみ
-pnpm dev
-
-# バックエンドのみ
-pnpm dev:api
-
-# データベースのみ
-pnpm db:up
-```
-
-### 管理コマンド
-
-```bash
-# サービス停止
-pnpm docker:down
-
-# ログ確認
-pnpm docker:logs
-
-# データベース管理
-pnpm db:down  # DB停止
-pnpm db:logs  # DBログ確認
-```
-
-### 品質チェック
-
-```bash
-# 型チェック
-pnpm type-check
-
-# コード品質チェック
-pnpm lint
-
-# 一括品質チェック
-pnpm quality-check
-
-# 自動修正
-pnpm quality-fix
-```
+**アクセス先**:
+- フロントエンド: http://localhost:3000
+- バックエンド: http://localhost:8787
 
 詳細なセットアップ手順は [📖 開発者ガイド](docs/handbook/developer-guide.md) を参照
 
-## 📚 ドキュメント
+## 📚 主要ドキュメント
 
-- [📖 開発者ガイド](docs/handbook/developer-guide.md) - セットアップ・コマンド・基本開発手順
-- [🛠️ トラブルシューティング](docs/handbook/troubleshooting-guide.md) - ポート競合・プロセス問題の解決
-- [🏗️ システム設計](docs/architecture/system-overview.md) - アーキテクチャ・技術選定理由
-- [📐 コーディング規約](docs/styleguide/code-standards.md) - 型安全性・品質基準
-- [🤝 コントリビューション](docs/contrib/contribution-guide.md) - PR規約・レビューガイドライン
+- [📖 開発者ガイド](docs/handbook/developer-guide.md) - Workers開発・セットアップ・コマンド
+- [☁️ バックエンドデプロイメントガイド](docs/handbook/backend-deployment-guide.md) - Cloudflare Workers デプロイ
+- [🗄️ Prismaマイグレーションガイド](docs/handbook/prisma-migration-guide.md) - データベース管理
 - [🔧 API仕様](packages/api-contracts/openapi.yaml) - OpenAPI 3.0 仕様書
 
-その他のドキュメントは [📋 ドキュメントポータル](docs/index.md) を参照
+**全ドキュメント**: [📋 ドキュメントポータル](docs/index.md)
 
 ## 📂 プロジェクト構造
 
@@ -110,77 +63,36 @@ pnpm quality-fix
 my-project-template/
 ├── apps/
 │   ├── frontend/          # Next.js アプリケーション
-│   └── backend/           # Hono API サーバー
+│   └── backend/           # Cloudflare Workers + Hono
 ├── packages/
-│   ├── api-contracts/     # 📝 OpenAPI契約の単一ソース
-│   │   ├── openapi.yaml   # API仕様（言語非依存）
-│   │   └── codegen/
-│   │       ├── ts/        # TypeScript契約パッケージ
-│   │       └── go/        # Go契約パッケージ（将来）
-│   ├── shared/            # 🍃 軽量・言語非依存ユーティリティ
-│   ├── ui/                # UI コンポーネント
-│   ├── api-client/        # （将来Go移行時用）
-│   └── config/            # 設定管理
-├── infra/
-│   └── docker/            # 🐳 Docker開発環境
-│       ├── Dockerfile.frontend
-│       ├── Dockerfile.backend
-│       └── docker-compose.yml
+│   ├── api-contracts/     # OpenAPI仕様・型生成
+│   ├── shared/            # 共通ユーティリティ
+│   └── ui/                # UI コンポーネント
+├── db/                    # データベース（Prisma）
+│   ├── schema.prisma      # スキーマ定義
+│   └── migrations/        # マイグレーション
 ├── docs/                  # プロジェクトドキュメント
 └── tools/                 # 開発ツール
 ```
 
-## 🛠️ 利用可能コマンド
+## 🛠️ 主要コマンド
 
-### 🚀 開発用
+### 開発用
+- `pnpm dev:workers-fullstack` - フロント・バック同時起動
+- `pnpm --filter @template/frontend dev` - フロントエンドのみ
+- `pnpm --filter @template/backend dev:workers` - Workersのみ
 
-- `pnpm dev` - フロントエンド開発サーバー起動 (localhost:3000)
-- `pnpm dev:api` - バックエンド開発サーバー起動 (localhost:8080)
-- `pnpm dev:fullstack` - Docker: フロント・バック・DB同時起動
+### データベース（Prisma）
+- `pnpm --filter @template/backend db:generate` - クライアント生成
+- `pnpm --filter @template/backend db:migrate` - マイグレーション
+- `pnpm --filter @template/backend db:studio` - Prisma Studio
 
-### Docker開発環境
+### 品質チェック
+- `pnpm type-check` - TypeScript型チェック
+- `pnpm lint` - ESLint
+- `pnpm codegen` - OpenAPI型生成
 
-- `pnpm docker:up` - Dockerコンテナをバックグラウンドで起動
-- `pnpm docker:down` - Dockerコンテナ停止・削除
-- `pnpm docker:logs` - Dockerコンテナのログ表示
-- `pnpm docker:build` - Dockerイメージ再ビルド
-
-### データベース管理
-
-- `pnpm db:up` - データベース（PostgreSQL + Redis + pgAdmin）起動
-- `pnpm db:down` - データベース停止
-- `pnpm db:restart` - データベース再起動
-- `pnpm db:logs` - データベースログ表示
-- `pnpm db:generate` - Prismaクライアント生成
-- `pnpm db:push` - スキーマをDBに適用
-- `pnpm db:migrate` - マイグレーション実行
-- `pnpm db:studio` - Prisma Studio起動
-
-### ビルド・デプロイ
-
-- `pnpm build` - 全アプリケーションのビルド
-- `pnpm start` - フロントエンドの本番起動
-- `pnpm start:api` - バックエンドの本番起動
-
-### 品質管理
-
-- `pnpm type-check` - TypeScript 型チェック
-- `pnpm lint` - ESLint コード品質チェック
-- `pnpm lint:fix` - ESLint 自動修正
-- `pnpm format` - Prettier コード整形
-- `pnpm quality-check` - 一括品質チェック（型+lint+codegen）
-- `pnpm quality-fix` - 一括自動修正
-
-### メッセージシステム（MessageKey）
-
-- `pnpm codegen` - OpenAPI からの型生成
-- `pnpm gen:messages` - メッセージファイル生成
-- `pnpm verify:messages` - メッセージ整合性確認
-- `pnpm msg:add` - 新しいメッセージキー追加
-
-### ユーティリティ
-
-- `pnpm clean` - 各パッケージのビルド成果物削除
+詳細コマンドは [開発者ガイド](docs/handbook/developer-guide.md#よく使うコマンド) を参照
 
 ---
 

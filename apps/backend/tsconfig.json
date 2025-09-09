@@ -9,6 +9,7 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "types": ["@cloudflare/workers-types"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
