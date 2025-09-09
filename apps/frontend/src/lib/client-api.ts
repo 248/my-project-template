@@ -3,12 +3,9 @@
 import { useAuth } from '@clerk/nextjs'
 import createClient from 'openapi-fetch'
 import type { paths, components } from '@template/api-contracts-ts'
+import { getApiBaseUrl } from './utils/api-config'
 
-/**
- * APIベースURL設定
- */
-const API_BASE_URL =
-  process.env['NEXT_PUBLIC_API_BASE_URL'] || 'http://localhost:8080'
+const API_BASE_URL = getApiBaseUrl()
 
 /**
  * Result型パターンによるエラーハンドリング

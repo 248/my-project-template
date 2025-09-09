@@ -1,5 +1,6 @@
 import createClient from 'openapi-fetch'
 import type { paths, DetailedHealthCheck } from '@template/api-contracts-ts'
+import { getApiBaseUrl } from './utils/api-config'
 
 // 型を再エクスポート
 export type { DetailedHealthCheck }
@@ -9,7 +10,7 @@ export type { DetailedHealthCheck }
  * OpenAPI仕様から自動生成された型を使用
  */
 export const apiClient = createClient<paths>({
-  baseUrl: process.env['NEXT_PUBLIC_API_BASE_URL'] || 'http://localhost:8080',
+  baseUrl: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
