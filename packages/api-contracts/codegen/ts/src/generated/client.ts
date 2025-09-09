@@ -1,5 +1,5 @@
 // Auto-generated type-safe API client from OpenAPI spec
-// Generated at: 2025-09-06T04:53:40.350Z
+// Generated at: 2025-09-09T00:52:27.464Z
 
 import createClient from 'openapi-fetch'
 import type { paths } from './types'
@@ -14,28 +14,28 @@ export const client = createClient<paths>({
 // Enhanced API client with validation and error handling
 export const api = {
   async healthCheck(): Promise<any> {
-    const response = (await client.GET('/')) as any
+    const response = await client.GET('/') as any
     if (response.error) {
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
     }
     return response.data
   },
   async getDetailedHealth(): Promise<any> {
-    const response = (await client.GET('/api/health')) as any
+    const response = await client.GET('/api/health') as any
     if (response.error) {
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
     }
     return response.data
   },
   async ensureUser(): Promise<any> {
-    const response = (await client.POST('/api/auth/users/ensure')) as any
+    const response = await client.POST('/api/auth/users/ensure') as any
     if (response.error) {
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
     }
     return response.data
   },
   async getUserProfile(): Promise<any> {
-    const response = (await client.GET('/api/users/me')) as any
+    const response = await client.GET('/api/users/me') as any
     if (response.error) {
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
     }
@@ -43,9 +43,9 @@ export const api = {
   },
   async updateUserProfile(data: any): Promise<any> {
     const validatedData = data
-    const response = (await client.PUT('/api/users/me', {
-      body: validatedData,
-    })) as any
+    const response = await client.PUT('/api/users/me', {
+      body: validatedData
+    }) as any
     if (response.error) {
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
     }
@@ -65,8 +65,6 @@ export function isApiError(response: any): response is { error: string } {
   return response && typeof response.error === 'string'
 }
 
-export function isApiSuccess<T>(
-  response: any
-): response is { success: true; data: T } {
+export function isApiSuccess<T>(response: any): response is { success: true; data: T } {
   return response && response.success === true
 }
