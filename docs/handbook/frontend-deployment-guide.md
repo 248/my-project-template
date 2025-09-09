@@ -84,7 +84,7 @@ apps/frontend/
 # ⚠️ このファイルは.gitignoreに含める
 
 # API接続設定
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8787
 
 # Clerk認証（Development Keys）
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
