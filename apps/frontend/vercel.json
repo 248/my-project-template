@@ -63,7 +63,7 @@
     }
   ],
   "crons": [],
-  "regions": ["nrt1"],
+  "regions": ["hnd1"],
   "cleanUrls": true,
   "trailingSlash": false
 }
