@@ -38,7 +38,8 @@ function isValidUserResult(result: unknown): result is [UserRow, ...UserRow[]] {
     Array.isArray(result) &&
     result.length > 0 &&
     typeof result[0] === 'object' &&
-    result[0] !== null
+    result[0] !== null &&
+    typeof (result[0] as Record<string, unknown>)['id'] !== 'undefined'
   )
 }
 

@@ -12,18 +12,24 @@ const WorkerEnvSchema = z.object({
   // CORS設定
   CORS_ORIGIN: z.string().optional(),
 
-  // JWT認証設定
-  CLERK_SECRET_KEY: z.string().optional(),
+  // JWT認証設定（本番では必須）
+  CLERK_SECRET_KEY: z.string().min(1, 'CLERK_SECRET_KEYが設定されていません'),
   CLERK_PUBLISHABLE_KEY: z.string().optional(),
+  CLERK_JWT_ISSUER: z
+    .string()
+    .url('CLERK_JWT_ISSUERが無効なURL形式です')
+    .optional(),
 
-  // Redis設定
-  REDIS_URL: z.string().url().optional(),
+  // Redis設定（Upstash Redis）
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
   // アプリケーション設定
   NODE_ENV: z
     .enum(['development', 'staging', 'production'])
     .default('development'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  ENV_NAME: z.string().optional(),
 
   // その他の必要な環境変数をここに追加
 })

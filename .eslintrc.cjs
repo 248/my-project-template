@@ -20,6 +20,7 @@ module.exports = {
     // 設定ファイル・ログ・スクリプト
     '**/*.config.*',
     '**/*.rc.*',
+    '.eslintrc.cjs',
     'scripts/**',
     'logs/**',
     // Message生成物は既存通り除外
