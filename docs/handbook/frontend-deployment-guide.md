@@ -54,6 +54,8 @@ apps/frontend/
    - Import Git Repository
    - Root Directory: `apps/frontend`
    - Framework: Next.js (自動検出)
+   - Install Command: `cd ../.. && pnpm install --frozen-lockfile`
+   - Build Command: `cd ../.. && pnpm codegen && pnpm --filter @template/frontend build`
 
 #### Clerk 認証設定
 
