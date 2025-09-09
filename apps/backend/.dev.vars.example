@@ -8,6 +8,12 @@
 # 基本設定
 # ========================================
 NODE_ENV=development
+
+# 環境識別名（将来のRedisキープレフィックス、データ分離用）
+# 現在Redisは未使用だが、ヘルスチェックで必要
+# development: ENV_NAME=dev
+# preview: ENV_NAME=preview  
+# production: ENV_NAME=prod
 ENV_NAME=dev
 
 

@@ -56,11 +56,21 @@ app.use(
         corsOrigins = [] // 明示的に空配列（全拒否）
       }
       
+      // デバッグログ
+      console.log('🔍 CORS Debug:', {
+        origin: origin,
+        corsOriginEnv: c.env?.CORS_ORIGIN,
+        frontendUrl: c.env?.FRONTEND_URL,
+        allowedOrigins: corsOrigins,
+      })
+      
       // リクエストにoriginがない場合（例: Postman、サーバー間通信）は許可
       if (!origin) return origin
       
       // 許可されたオリジンかチェック
-      return corsOrigins.includes(origin) ? origin : null
+      const isAllowed = corsOrigins.includes(origin)
+      console.log('🔍 CORS Result:', { origin, isAllowed })
+      return isAllowed ? origin : null
     },
     allowHeaders: ['Content-Type', 'Authorization'],
     allowMethods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
