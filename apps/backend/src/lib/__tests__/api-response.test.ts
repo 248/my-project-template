@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -430,8 +431,9 @@ describe('API Response Helpers', () => {
       originalData.value = 2
       expect(response.data.value).toBe(2) // Same reference
 
-      const _copiedResponse = { ...response }
-      // TypeScript should prevent: _copiedResponse.success = false
+      // TypeScript should prevent copying and modifying readonly properties
+      // const copiedResponse = { ...response }
+      // copiedResponse.success = false // Would be TypeScript error
 
       expect(response.success).toBe(true) // Original unchanged
     })

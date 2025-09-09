@@ -1,5 +1,6 @@
-import createClient from 'openapi-fetch'
 import type { paths } from '@template/api-contracts-ts'
+import createClient from 'openapi-fetch'
+
 import { getApiBaseUrl } from './utils/api-config'
 
 /**

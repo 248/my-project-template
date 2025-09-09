@@ -1,5 +1,6 @@
 import { type Context, type Next } from 'hono'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
+
 import type { WorkerEnv } from '../types/worker-env'
 
 // 認証コンテキストの型定義
@@ -44,7 +45,9 @@ export function requireAuth(env: WorkerEnv) {
   return async (c: Context, next: Next): Promise<Response | void> => {
     // Authorizationヘッダーの取得
     const authzHeader = c.req.header('Authorization') || ''
-    const token = authzHeader.startsWith('Bearer ') ? authzHeader.slice(7) : null
+    const token = authzHeader.startsWith('Bearer ')
+      ? authzHeader.slice(7)
+      : null
 
     if (!token) {
       return c.json(
@@ -66,11 +69,11 @@ export function requireAuth(env: WorkerEnv) {
 
       // 環境変数からissuerを取得、JWKSはissuerから自動構築
       const issuer = env.CLERK_JWT_ISSUER
-      
+
       if (!issuer) {
         throw new Error('CLERK_JWT_ISSUER must be configured')
       }
-      
+
       // JWKS URLはissuerから標準的なパスで構築
       const jwksUrl = `${issuer}/.well-known/jwks.json`
 

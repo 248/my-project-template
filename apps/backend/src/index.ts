@@ -1,24 +1,24 @@
 // OpenTelemetryを最初に初期化（他のimportより前に実行）
-import { telemetrySDK } from '@/utils/telemetry'
 
 import { serve } from '@hono/node-server'
+import { swaggerUI } from '@hono/swagger-ui'
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
+import { HealthCheckSchema } from '@template/api-contracts-ts'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import { secureHeaders } from 'hono/secure-headers'
 import { timing } from 'hono/timing'
-import { swaggerUI } from '@hono/swagger-ui'
-import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
-import { resolveLoggerService } from '@/container/container'
-import { tracingMiddleware } from '@/middleware/tracing'
-// API契約パッケージからOpenAPI生成型を使用
-import { HealthCheckSchema } from '@template/api-contracts-ts'
-import { healthApp } from '@/routes/health-improved'
-import authRoutes from '@/routes/auth'
-import usersRoutes from '@/routes/users'
+
+import { resolveLoggerService, setupContainer } from '@/container/container'
 import { disconnectDatabase } from '@/lib/db/prisma'
 import { disconnectRedis } from '@/lib/db/redis'
-import { setupContainer } from '@/container/container'
+import { tracingMiddleware } from '@/middleware/tracing'
+// API契約パッケージからOpenAPI生成型を使用
+import authRoutes from '@/routes/auth'
+import { healthApp } from '@/routes/health-improved'
+import usersRoutes from '@/routes/users'
+import { telemetrySDK } from '@/utils/telemetry'
 
 // DIコンテナ初期化
 setupContainer()

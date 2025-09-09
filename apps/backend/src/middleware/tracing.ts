@@ -1,4 +1,3 @@
-import { Context, Next } from 'hono'
 import { trace, SpanKind, SpanStatusCode } from '@opentelemetry/api'
 import {
   ATTR_HTTP_REQUEST_METHOD,
@@ -8,6 +7,7 @@ import {
   ATTR_URL_SCHEME,
   ATTR_HTTP_RESPONSE_STATUS_CODE,
 } from '@opentelemetry/semantic-conventions'
+import { Context, Next } from 'hono'
 
 /**
  * OpenTelemetryトレースミドルウェア

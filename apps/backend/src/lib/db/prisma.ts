@@ -1,9 +1,7 @@
 import { PrismaClient } from '../../../generated/prisma'
-import { resolveLoggerService } from '@/container/container'
 
-// Note: DIコンテナが初期化される前に使用される可能性があるため、
-// 遅延評価でLoggerServiceを取得
-const getLogger = () => resolveLoggerService().child({ name: 'prisma' })
+// Note: 循環依存を避けるため、Prismaクライアント層では直接ログ出力を使用
+// 個別サービス層（PrismaDatabaseService）でのログ管理を推奨
 
 /**
  * Prismaクライアントのシングルトンインスタンス
@@ -27,31 +25,33 @@ function createPrismaClient(): PrismaClient {
     ],
   })
 
-  // ログイベントのハンドリング
+  // ログイベントのハンドリング（循環依存を避けるためconsole出力）
   prisma.$on('query', e => {
-    getLogger().debug('Database query executed', {
-      query: String(e.query),
-      params: String(e.params),
-      duration: Number(e.duration),
-    })
+    if (process.env['NODE_ENV'] === 'development') {
+      console.debug('Database query executed', {
+        query: String(e.query),
+        params: String(e.params),
+        duration: Number(e.duration),
+      })
+    }
   })
 
   prisma.$on('error', e => {
-    getLogger().error('Database error occurred', {
+    console.error('Database error occurred', {
       target: String(e.target),
       message: String(e.message),
     })
   })
 
   prisma.$on('info', e => {
-    getLogger().info('Database info', {
+    console.info('Database info', {
       target: String(e.target),
       message: String(e.message),
     })
   })
 
   prisma.$on('warn', e => {
-    getLogger().warn('Database warning', {
+    console.warn('Database warning', {
       target: String(e.target),
       message: String(e.message),
     })
@@ -95,12 +95,12 @@ export async function testDatabaseConnection(): Promise<{
 }> {
   try {
     await prisma.$queryRaw`SELECT 1 as health_check`
-    getLogger().info('Database connection test successful')
+    console.info('Database connection test successful')
     return { success: true }
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown database error'
-    getLogger().error('Database connection test failed', {
+    console.error('Database connection test failed', {
       error: errorMessage,
     })
     return { success: false, error: errorMessage }
@@ -113,8 +113,8 @@ export async function testDatabaseConnection(): Promise<{
 export async function disconnectDatabase(): Promise<void> {
   try {
     await prisma.$disconnect()
-    getLogger().info('Database disconnected successfully')
+    console.info('Database disconnected successfully')
   } catch (error) {
-    getLogger().error('Failed to disconnect from database', { error })
+    console.error('Failed to disconnect from database', { error })
   }
 }

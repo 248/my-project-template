@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import {
   type MessageKey,
   type SupportedLocale,
@@ -8,6 +7,7 @@ import {
   detectBrowserLocale,
   DEFAULT_LOCALE,
 } from '@template/shared'
+import { useState, useEffect, useCallback } from 'react'
 
 /**
  * メッセージ翻訳Hook

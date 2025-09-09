@@ -293,4 +293,5 @@ export function convertLegacyResponse<T>(
 // 型定義エクスポート
 // ========================================
 
-export type { MessageKey, ValidationMessageKey } from '../messages/keys'
+// MessageKey, ValidationMessageKey は ../messages/keys から直接exportされる
+// ここでは重複を避けるためにre-exportしない

@@ -1,8 +1,9 @@
 'use client'
 
 import { useAuth } from '@clerk/nextjs'
-import createClient from 'openapi-fetch'
 import type { paths, components } from '@template/api-contracts-ts'
+import createClient from 'openapi-fetch'
+
 import { getApiBaseUrl } from './utils/api-config'
 
 const API_BASE_URL = getApiBaseUrl()

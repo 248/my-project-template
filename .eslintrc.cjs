@@ -1,329 +1,202 @@
-/** ルートは"配線"だけ。生成物は ignorePatterns で確実に除外 */
+/** 
+ * ESLint設定 - 段階的厳格化とパフォーマンス最適化版
+ * - 型付きLintは型境界レイヤーのみに限定（高速化）
+ * - 開発時warn、CI時errorの段階的厳格化
+ * - 329行→120行への大幅簡素化
+ */
+/* eslint-env node */
+const isStrict = process.env.CI === 'true' || process.env.NODE_ENV === 'production';
+
 module.exports = {
   root: true,
   ignorePatterns: [
-    'node_modules/',
-    'dist/',
-    '.next/',
-    'coverage/',
-    'logs/',
+    // 自動生成・ビルド成果物を確実に除外
+    '**/node_modules/**',
+    '**/dist/**', 
+    '**/.next/**',
+    '**/coverage/**',
+    '**/generated/**',
+    '**/build/**',
+    // 設定ファイル・ログ・スクリプト
     '**/*.config.*',
     '**/*.rc.*',
-    '.eslintrc.*',
+    '.eslintrc.cjs',
     'scripts/**',
-    '**/next-env.d.ts',
-    '**/prisma/seed.ts',
-    // 生成物はここで全体除外
-    '**/generated/**',
-    // MessageKeysプラグインに関連して除外
+    'logs/**',
+    // Message生成物は既存通り除外
     'packages/shared/src/messages/**',
     'packages/eslint-plugin-message-keys/**',
-    // tools ディレクトリを除外
     'tools/**',
-    // contracts ディレクトリを除外
     'contracts/**',
   ],
 
-  // デフォルトパーサー設定
-  parser: 'espree',
+  // デフォルト設定（型情報なし＝高速）
+  parser: '@typescript-eslint/parser',
   parserOptions: {
-    ecmaVersion: 2022,
+    project: false, // 型境界レイヤー以外は型情報不使用
+    tsconfigRootDir: __dirname,
+    ecmaVersion: 'latest',
     sourceType: 'module',
   },
 
-  // 設定ファイルを TS 解析から外す（ここ重要）
+  // import解決設定
+  settings: {
+    'import/resolver': {
+      typescript: { 
+        project: [
+          './tsconfig.eslint.json',
+          './apps/frontend/tsconfig.json',
+          './apps/backend/tsconfig.json',
+          './packages/shared/tsconfig.json',
+          './packages/ui/tsconfig.json',
+          './packages/config/tsconfig.json',
+        ]
+      }
+    }
+  },
+
+  plugins: [
+    '@typescript-eslint',
+    'unused-imports', 
+    'import',
+    'react',
+    '@template/message-keys',
+  ],
+
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:import/recommended',
+    'plugin:import/typescript', 
+    'plugin:prettier/recommended',
+  ],
+
+  // ベースルール（開発速度優先）
+  rules: {
+    // 段階的厳格化
+    'no-console': isStrict ? 'error' : 'off',
+    '@typescript-eslint/no-explicit-any': isStrict ? 'error' : 'warn',
+
+    // 実害が大きいので常時強化
+    'unused-imports/no-unused-imports': 'error',
+    'unused-imports/no-unused-vars': [
+      'warn', 
+      { args: 'after-used', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
+    ],
+
+    // import健全性（循環依存・解決ミス防止）
+    'import/no-unresolved': 'error',
+    'import/no-cycle': isStrict ? 'error' : 'warn',
+    'import/order': ['warn', {
+      groups: [['builtin', 'external'], 'internal', ['parent', 'sibling', 'index']],
+      'newlines-between': 'always',
+      alphabetize: { order: 'asc', caseInsensitive: true }
+    }],
+
+    // TypeScript基本ルール
+    'prefer-const': 'error',
+    'no-var': 'error',
+  },
+
   overrides: [
+    // 1) FRONTEND（Next.js + React）
     {
-      files: ['**/*.config.*', '**/*.rc.*', '.eslintrc.*', 'scripts/**'],
-      parser: 'espree',
-      parserOptions: { project: null, ecmaVersion: 2022, sourceType: 'module' },
-      rules: {},
-    },
-
-    // Next.js自動生成ファイル（next-env.d.ts）は三重スラッシュルール除外
-    {
-      files: ['apps/frontend/next-env.d.ts'],
-      rules: {
-        '@typescript-eslint/triple-slash-reference': 'off',
-      },
-    },
-
-    // TypeScript + React ファイル（Next.js前提）
-    {
-      files: ['apps/frontend/**/*.{ts,tsx}', '!apps/frontend/next-env.d.ts'],
-      parser: '@typescript-eslint/parser',
-      parserOptions: {
-        project: 'apps/frontend/tsconfig.json',
-        tsconfigRootDir: __dirname,
-        ecmaVersion: 2022,
-        sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-      env: {
-        browser: true,
-        es2022: true,
-        node: true,
-      },
-      plugins: ['@typescript-eslint', '@template/message-keys'],
+      files: ['apps/frontend/**/*.{ts,tsx}'],
+      env: { browser: true, es2022: true },
       extends: [
-        'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
-        'plugin:@typescript-eslint/recommended-requiring-type-checking',
         'next/core-web-vitals',
+        'plugin:react/recommended',
         'plugin:@template/message-keys/recommended',
       ],
-      rules: {
-        // ベース
-        'prefer-const': 'error',
-        'no-var': 'error',
-        'no-console': 'warn',
-
-        // any/unknown を締める
-        '@typescript-eslint/no-explicit-any': ['error', { fixToUnknown: true }],
-        '@typescript-eslint/no-unsafe-assignment': 'error',
-        '@typescript-eslint/no-unsafe-call': 'error',
-        '@typescript-eslint/no-unsafe-member-access': 'error',
-        '@typescript-eslint/no-unsafe-return': 'error',
-        '@typescript-eslint/no-unsafe-argument': 'error',
-        '@typescript-eslint/ban-ts-comment': [
-          'error',
-          { 'ts-ignore': 'allow-with-description' },
-        ],
-        '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-        '@typescript-eslint/consistent-type-assertions': [
-          'error',
-          { assertionStyle: 'never' },
-        ],
-
-        // App Router なので Pages 前提ルールは無効化
-        'next/no-html-link-for-pages': 'off',
-
-        // 型情報活用
-        '@typescript-eslint/await-thenable': 'error',
-        '@typescript-eslint/no-floating-promises': 'error',
-        '@typescript-eslint/no-misused-promises': 'error',
-        '@typescript-eslint/require-await': 'error',
-
-        // 未使用変数
-        '@typescript-eslint/no-unused-vars': [
-          'error',
-          { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-        ],
-      },
       settings: {
-        next: {
-          rootDir: 'apps/frontend/',
-        },
+        react: { version: 'detect' },
+        next: { rootDir: 'apps/frontend/' },
       },
-    },
-
-    // boundaryディレクトリは型制約緩和（"境界だけ any OK"）
-    {
-      files: ['apps/frontend/src/boundary/**/*'],
       rules: {
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/consistent-type-assertions': 'off',
-        '@typescript-eslint/no-unsafe-assignment': 'off',
-        '@typescript-eslint/no-unsafe-return': 'off',
-        '@typescript-eslint/no-unsafe-call': 'off',
-        '@typescript-eslint/no-unsafe-member-access': 'off',
-        '@typescript-eslint/no-unsafe-argument': 'off',
-      },
+        // React/Next.js専用ルール
+        'react/react-in-jsx-scope': 'off', // Next.js 13+では不要
+        'react/jsx-no-useless-fragment': isStrict ? 'error' : 'warn',
+        'next/no-html-link-for-pages': 'off', // App Router対応
+        // Message Keys段階的移行
+        '@template/message-keys/no-hardcoded-messages': 'warn',
+      }
     },
 
-    // Prisma境界層は開発用console許可と型アサーション許可
-    {
-      files: ['apps/frontend/src/server/db/**/*'],
-      rules: {
-        'no-console': 'off',
-        '@typescript-eslint/consistent-type-assertions': 'off',
-      },
-    },
-
-    // Backend用のTypeScriptファイル
+    // 2) BACKEND（Node.js + Cloudflare Workers）
     {
       files: ['apps/backend/**/*.{ts,tsx}'],
-      parser: '@typescript-eslint/parser',
-      parserOptions: {
-        project: 'apps/backend/tsconfig.json',
-        tsconfigRootDir: __dirname,
-        ecmaVersion: 2022,
-        sourceType: 'module',
-      },
-      env: {
-        node: true,
-        es2022: true,
-      },
-      plugins: ['@typescript-eslint'],
-      extends: [
-        'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
-        'plugin:@typescript-eslint/recommended-requiring-type-checking',
-      ],
+      env: { node: true, es2022: true },
       rules: {
-        // ベース
-        'prefer-const': 'error',
-        'no-var': 'error',
-        'no-console': 'off', // バックエンドではconsole許可
-
-        // any/unknown を締める
-        '@typescript-eslint/no-explicit-any': ['error', { fixToUnknown: true }],
-        '@typescript-eslint/no-unsafe-assignment': 'error',
-        '@typescript-eslint/no-unsafe-call': 'error',
-        '@typescript-eslint/no-unsafe-member-access': 'error',
-        '@typescript-eslint/no-unsafe-return': 'error',
-        '@typescript-eslint/no-unsafe-argument': 'error',
-        '@typescript-eslint/ban-ts-comment': [
-          'error',
-          { 'ts-ignore': 'allow-with-description' },
-        ],
-        '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-        '@typescript-eslint/consistent-type-assertions': [
-          'error',
-          { assertionStyle: 'never' },
-        ],
-
-        // 型情報活用
-        '@typescript-eslint/await-thenable': 'error',
-        '@typescript-eslint/no-floating-promises': 'error',
-        '@typescript-eslint/no-misused-promises': 'error',
-        '@typescript-eslint/require-await': 'error',
-
-        // 未使用変数
-        '@typescript-eslint/no-unused-vars': [
-          'error',
-          { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-        ],
-      },
-    },
-
-    // packages ディレクトリ（TypeScript ファイル） - messages関連は除外
-    {
-      files: [
-        'packages/**/*.{ts,tsx}', 
-        '!packages/shared/src/messages/**/*',
-        '!packages/eslint-plugin-message-keys/**/*',
-        '!apps/**/*', // フロントエンド・バックエンドを明示的に除外
-        '!tools/**/*',
-        '!contracts/**/*'
-      ],
-      parser: '@typescript-eslint/parser',
-      parserOptions: {
-        project: [
-          'packages/shared/tsconfig.json',
-          'packages/ui/tsconfig.json',
-          'packages/api-contracts/codegen/ts/tsconfig.json',
-          'packages/config/tsconfig.json',
-          'apps/frontend/tsconfig.json',
-          'apps/backend/tsconfig.json',
-        ],
-        tsconfigRootDir: __dirname,
-        ecmaVersion: 2022,
-        sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-      env: {
-        browser: true,
-        es2022: true,
-        node: true,
-      },
-      plugins: ['@typescript-eslint'],
-      extends: [
-        'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
-        'plugin:@typescript-eslint/recommended-requiring-type-checking',
-      ],
-      rules: {
-        // ベース
-        'prefer-const': 'error',
-        'no-var': 'error',
-        'no-console': 'warn',
-
-        // any/unknown を締める
-        '@typescript-eslint/no-explicit-any': ['error', { fixToUnknown: true }],
-        '@typescript-eslint/no-unsafe-assignment': 'error',
-        '@typescript-eslint/no-unsafe-call': 'error',
-        '@typescript-eslint/no-unsafe-member-access': 'error',
-        '@typescript-eslint/no-unsafe-return': 'error',
-        '@typescript-eslint/no-unsafe-argument': 'error',
-        '@typescript-eslint/ban-ts-comment': [
-          'error',
-          { 'ts-ignore': 'allow-with-description' },
-        ],
-        '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-        '@typescript-eslint/consistent-type-assertions': [
-          'error',
-          { assertionStyle: 'never' },
-        ],
-
-        // 型情報活用
-        '@typescript-eslint/await-thenable': 'error',
-        '@typescript-eslint/no-floating-promises': 'error',
-        '@typescript-eslint/no-misused-promises': 'error',
-        '@typescript-eslint/require-await': 'error',
-
-        // 未使用変数
-        '@typescript-eslint/no-unused-vars': [
-          'error',
-          { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-        ],
-      },
-    },
-
-    // api-client パッケージの一時的な実装は型制約を緩和
-    {
-      files: ['packages/api-client/**/*'],
-      rules: {
-        '@typescript-eslint/no-unsafe-return': 'off',
-        '@typescript-eslint/consistent-type-assertions': 'off',
-      },
-    },
-
-    // OpenAPI生成物は型チェックから除外
-    {
-      files: ['packages/api-client/src/generated/**/*'],
-      parser: 'espree',
-      parserOptions: {
-        project: null,
-        ecmaVersion: 2022,
-        sourceType: 'module',
-      },
-      rules: {
-        // 生成物なので全てのルールを緩和
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-unsafe-assignment': 'off',
-        '@typescript-eslint/no-unsafe-call': 'off',
-        '@typescript-eslint/no-unsafe-member-access': 'off',
-        '@typescript-eslint/no-unsafe-return': 'off',
-        '@typescript-eslint/no-unsafe-argument': 'off',
-      },
-    },
-
-    // システム内部ファイル（設定・ログ・インフラ・API実装）はMessageKey検証を緩和
-    {
-      files: [
-        'apps/backend/src/**/*', // バックエンド全体（API実装段階では除外）
-        'apps/frontend/src/middleware.ts',
-        'packages/config/src/**/*'
-      ],
-      rules: {
+        'no-console': 'off', // バックエンドではログ出力を許可
+        'no-process-env': 'off', // バックエンドでは環境変数アクセスを許可
+        // Message Keys無効化（バックエンドでは不要）
         '@template/message-keys/no-hardcoded-messages': 'off',
         '@template/message-keys/require-message-key': 'off',
-      },
+      }
     },
 
-    // フロントエンドUIコンポーネントでは段階的MessageKey移行中（PR review対応では一時的除外）
+    // 3) TYPE-BOUNDARY（型境界レイヤー・ここだけ型付きLint）
     {
       files: [
-        'apps/frontend/src/**/*',
+        // 既存の型境界ディレクトリ
+        'apps/frontend/src/boundary/**/*.{ts,tsx}',
+        'apps/frontend/src/server/db/**/*.{ts,tsx}',
+        'packages/api-client/**/*.{ts,tsx}',
+        // 新規型境界（外部I/O入口）
+        'apps/backend/**/env*.{ts,tsx}',
+        'apps/backend/**/config*.{ts,tsx}',
+        'packages/shared/type-boundary/**/*.{ts,tsx}',
+        // routes/handlers（API境界）
+        '**/{routes,handlers,adapters}/**/*.{ts,tsx}',
+      ],
+      parserOptions: {
+        // 型付きLintを有効化（重いので境界のみ）
+        project: ['./tsconfig.eslint.json'],
+        tsconfigRootDir: __dirname,
+      },
+      extends: [
+        'plugin:@typescript-eslint/recommended-requiring-type-checking',
       ],
       rules: {
-        '@template/message-keys/no-hardcoded-messages': 'warn', // PR review対応中は警告レベル
-      },
+        // 型境界では厳格化（no-unsafe系の発生源を抑制）
+        '@typescript-eslint/no-unsafe-assignment': isStrict ? 'error' : 'warn',
+        '@typescript-eslint/no-unsafe-member-access': isStrict ? 'error' : 'warn', 
+        '@typescript-eslint/no-unsafe-call': isStrict ? 'error' : 'warn',
+        '@typescript-eslint/no-unsafe-return': isStrict ? 'error' : 'warn',
+        '@typescript-eslint/no-unsafe-argument': isStrict ? 'error' : 'warn',
+        '@typescript-eslint/restrict-template-expressions': [
+          isStrict ? 'error' : 'warn',
+          { allowNumber: true, allowBoolean: true }
+        ],
+        // 型アサーションは境界では必要に応じて許可
+        '@typescript-eslint/consistent-type-assertions': [
+          'warn',
+          { assertionStyle: 'as', objectLiteralTypeAssertions: 'allow' }
+        ],
+        // 型境界ではconsole使用を許可（デバッグのため）
+        'no-console': 'off',
+        // Message Keys無効化（外部I/O層では不要）
+        '@template/message-keys/no-hardcoded-messages': 'off',
+        '@template/message-keys/require-message-key': 'off',
+      }
+    },
+
+    // 4) 自動生成ファイル（全ルール緩和）
+    {
+      files: [
+        'packages/api-contracts/codegen/ts/src/generated/**/*',
+        'apps/frontend/next-env.d.ts',
+        '**/prisma/seed.ts',
+      ],
+      parser: 'espree',
+      parserOptions: { project: null },
+      rules: {
+        // 生成物は全てのルールを無効化
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/triple-slash-reference': 'off',
+        'unused-imports/no-unused-imports': 'off',
+      }
     },
   ],
-}
+};

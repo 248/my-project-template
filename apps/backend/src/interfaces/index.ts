@@ -16,8 +16,8 @@ export type {
 export { LOGGER_SERVICE_TOKEN } from './logger'
 
 // 個別にインポートしてからSERVICE_TOKENSオブジェクトで使用
-import { DATABASE_SERVICE_TOKEN } from './database'
 import { CACHE_SERVICE_TOKEN } from './cache'
+import { DATABASE_SERVICE_TOKEN } from './database'
 import { LOGGER_SERVICE_TOKEN } from './logger'
 
 export const LOGGER_CONFIG_TOKEN = Symbol('LoggerConfig')

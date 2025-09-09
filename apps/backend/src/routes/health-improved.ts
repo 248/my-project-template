@@ -1,16 +1,13 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { DetailedHealthCheckSchema } from '@template/api-contracts-ts'
-import { createDefaultHealthManager } from '@/lib/health'
+
 import { resolveLoggerService } from '@/container/container'
 import type { LoggerService } from '@/interfaces'
+import { createDefaultHealthManager } from '@/lib/health'
 
 // 遅延初期化: DIコンテナが初期化された後に取得する
-let log: LoggerService | null = null
-const getLogger = () => {
-  if (!log) {
-    log = resolveLoggerService().child({ name: 'health' })
-  }
-  return log
+const getLogger = (): LoggerService => {
+  return resolveLoggerService().child({ name: 'health' })
 }
 
 // ヘルスチェック用のHonoインスタンス

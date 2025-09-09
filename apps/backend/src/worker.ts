@@ -1,22 +1,24 @@
 // Cloudflare Workers用エントリーポイント
+import { swaggerUI } from '@hono/swagger-ui'
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
+import { HealthCheckSchema } from '@template/api-contracts-ts'
+import { parseWorkerEnvSafe } from '@template/shared'
+import type { Context, Next } from 'hono'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import { secureHeaders } from 'hono/secure-headers'
 import { timing } from 'hono/timing'
-import { swaggerUI } from '@hono/swagger-ui'
-import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { z } from 'zod'
-import type { Context, Next } from 'hono'
-import { HealthCheckSchema } from '@template/api-contracts-ts'
-import { UserServiceWorker } from './services/user-worker'
-import { requireAuth, getAuth } from './middleware/clerk-auth-worker'
-import { 
-  createSuccessResponse, 
-  createErrorResponse, 
+
+import {
+  createSuccessResponse,
+  createErrorResponse,
   createValidationErrorResponse,
-  mapZodErrorToValidationCode 
+  mapZodErrorToValidationCode,
 } from './lib/api-response-worker'
+import { requireAuth, getAuth } from './middleware/clerk-auth-worker'
+import { UserServiceWorker } from './services/user-worker'
 import type { WorkerEnv } from './types/worker-env'
 
 // Workers環境用の型定義（WorkerEnvを拡張）
@@ -38,35 +40,30 @@ app.use(
   '*',
   cors({
     origin: (origin, c) => {
-      // 許可するオリジンを環境変数から取得
+      // 型安全な環境変数解析
+      const safeEnv = parseWorkerEnvSafe(c.env)
       let corsOrigins: string[] = []
-      
-      // CORS_ORIGINが明示的に設定されている場合はそれを使用（複数オリジン対応）
-      const corsOriginEnv = c.env?.CORS_ORIGIN
-      if (corsOriginEnv && typeof corsOriginEnv === 'string') {
-        corsOrigins = corsOriginEnv.split(',').map((o: string) => o.trim())
-      } 
-      // FRONTEND_URLが設定されている場合（単一オリジン）
-      else if (c.env?.FRONTEND_URL && typeof c.env.FRONTEND_URL === 'string') {
-        corsOrigins = [c.env.FRONTEND_URL]
-      }
-      // どちらも設定されていない場合はエラー
-      else {
-        console.warn('警告: CORS_ORIGINまたはFRONTEND_URLが設定されていません')
+
+      if (safeEnv?.CORS_ORIGIN) {
+        // CORS_ORIGINが設定されている場合（複数オリジン対応）
+        corsOrigins = safeEnv.CORS_ORIGIN.split(',').map((o: string) =>
+          o.trim()
+        )
+      } else {
+        console.warn('警告: CORS_ORIGINが設定されていません')
         corsOrigins = [] // 明示的に空配列（全拒否）
       }
-      
+
       // デバッグログ
       console.log('🔍 CORS Debug:', {
         origin: origin,
-        corsOriginEnv: c.env?.CORS_ORIGIN,
-        frontendUrl: c.env?.FRONTEND_URL,
+        corsOrigin: safeEnv?.CORS_ORIGIN,
         allowedOrigins: corsOrigins,
       })
-      
+
       // リクエストにoriginがない場合（例: Postman、サーバー間通信）は許可
       if (!origin) return origin
-      
+
       // 許可されたオリジンかチェック
       const isAllowed = corsOrigins.includes(origin)
       console.log('🔍 CORS Result:', { origin, isAllowed })
@@ -98,24 +95,24 @@ const healthCheckRoute = createRoute({
   },
 })
 
-app.openapi(healthCheckRoute, (c) => {
-  const env = c.env
+app.openapi(healthCheckRoute, c => {
+  const safeEnv = parseWorkerEnvSafe(c.env)
   return c.json({
     message: 'Project Template API (Cloudflare Workers)',
     version: '0.1.0',
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    environment: env.NODE_ENV || 'development',
+    environment: safeEnv?.NODE_ENV || 'development',
   })
 })
 
 // 基本的なAPI情報エンドポイント
-app.get('/health', (c) => {
-  const env = c.env
+app.get('/health', c => {
+  const safeEnv = parseWorkerEnvSafe(c.env)
   return c.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    environment: env.NODE_ENV || 'development',
+    environment: safeEnv?.NODE_ENV || 'development',
   })
 })
 
@@ -137,20 +134,20 @@ const authMiddleware = (c: Context<{ Bindings: Env }, string>, next: Next) => {
 app.use('/api/auth/*', authMiddleware)
 app.use('/api/users/*', authMiddleware)
 
-app.post('/api/auth/users/ensure', async (c) => {
+app.post('/api/auth/users/ensure', async c => {
   try {
     const env = c.env
     const authContext = getAuth(c)
-    
+
     if (!env.DATABASE_URL) {
       throw new Error('DATABASE_URL is not configured')
     }
-    
+
     const userService = new UserServiceWorker(env.DATABASE_URL)
-    
+
     // ユーザーを冪等に作成/更新
     const user = await userService.ensureUserFromAuth(authContext)
-    
+
     return c.json(
       createSuccessResponse(
         {
@@ -182,18 +179,18 @@ app.post('/api/auth/users/ensure', async (c) => {
 })
 
 // ユーザー情報取得API
-app.get('/api/users/me', async (c) => {
+app.get('/api/users/me', async c => {
   try {
     const env = c.env
     const authContext = getAuth(c)
-    
+
     if (!env.DATABASE_URL) {
       throw new Error('DATABASE_URL is not configured')
     }
-    
+
     const userService = new UserServiceWorker(env.DATABASE_URL)
     const user = await userService.getUserFromAuth(authContext)
-    
+
     if (!user) {
       return c.json(
         createErrorResponse(
@@ -205,7 +202,7 @@ app.get('/api/users/me', async (c) => {
         404
       )
     }
-    
+
     return c.json(
       createSuccessResponse(
         {
@@ -237,22 +234,22 @@ app.get('/api/users/me', async (c) => {
 })
 
 // ユーザー情報更新API
-app.put('/api/users/me', async (c) => {
+app.put('/api/users/me', async c => {
   try {
     const env = c.env
     const authContext = getAuth(c)
-    
+
     if (!env.DATABASE_URL) {
       throw new Error('DATABASE_URL is not configured')
     }
-    
+
     // リクエストボディの取得とバリデーション
     const rawBody: unknown = await c.req.json()
     const validatedData = updateProfileSchema.parse(rawBody)
-    
+
     const userService = new UserServiceWorker(env.DATABASE_URL)
     const user = await userService.updateUser(authContext.userId, validatedData)
-    
+
     return c.json(
       createSuccessResponse(
         {
@@ -277,10 +274,10 @@ app.put('/api/users/me', async (c) => {
         code: mapZodErrorToValidationCode(e.code),
         message: e.message,
       }))
-      
+
       return c.json(createValidationErrorResponse(validationErrors), 400)
     }
-    
+
     // ユーザーが見つからない場合
     if (error instanceof Error && error.message === 'User not found') {
       return c.json(
@@ -293,7 +290,7 @@ app.put('/api/users/me', async (c) => {
         404
       )
     }
-    
+
     // その他のエラー
     console.error('Failed to update profile:', error)
     return c.json(
@@ -309,11 +306,11 @@ app.put('/api/users/me', async (c) => {
 })
 
 // フロントエンド用のヘルスチェックAPIエンドポイント
-app.get('/api/health', async (c) => {
+app.get('/api/health', async c => {
   const { createDBAdapter } = await import('./adapters/db')
   const { createRedisAdapter } = await import('./adapters/redis')
   const { checkEnvironmentVariables, withTimeout } = await import('./utils/env')
-  
+
   // 環境変数の型安全バリデーション
   const HealthCheckEnvSchema = z.object({
     DATABASE_URL: z.string().min(1),
@@ -327,91 +324,115 @@ app.get('/api/health', async (c) => {
   const parsedEnv = HealthCheckEnvSchema.safeParse(c.env)
 
   if (!parsedEnv.success) {
-    return c.json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: 'Missing or invalid environment variables',
-      details: parsedEnv.error.flatten().fieldErrors,
-    }, 503)
+    return c.json(
+      {
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        error: 'Missing or invalid environment variables',
+        details: parsedEnv.error.flatten().fieldErrors,
+      },
+      503
+    )
   }
-  
+
   const env = parsedEnv.data
   const startTime = Date.now()
-  
+
   // 環境変数チェック
   const envChecks = checkEnvironmentVariables(env, [
-    'DATABASE_URL', 'DB_DRIVER', 'UPSTASH_REDIS_REST_URL', 
-    'UPSTASH_REDIS_REST_TOKEN', 'ENV_NAME'
+    'DATABASE_URL',
+    'DB_DRIVER',
+    'UPSTASH_REDIS_REST_URL',
+    'UPSTASH_REDIS_REST_TOKEN',
+    'ENV_NAME',
   ])
-  
+
   // DB接続テスト
   const dbAdapter = createDBAdapter(env)
   const dbResult = await withTimeout(dbAdapter.ping()).catch(e => ({
     ok: false,
     error: e.message === 'timeout' ? 'Connection timeout' : e.message,
-    responseTime: Date.now() - startTime
+    responseTime: Date.now() - startTime,
   }))
-  
-  // Redis接続テスト  
+
+  // Redis接続テスト
   const redisAdapter = createRedisAdapter(env)
   const redisStartTime = Date.now()
   const redisResult = await withTimeout(
     redisAdapter.ping().then(ok => ({
       ok,
       error: ok ? undefined : 'Redis ping failed',
-      responseTime: Date.now() - redisStartTime
+      responseTime: Date.now() - redisStartTime,
     }))
   ).catch(e => ({
     ok: false,
     error: e.message === 'timeout' ? 'Connection timeout' : e.message,
-    responseTime: Date.now() - redisStartTime
+    responseTime: Date.now() - redisStartTime,
   }))
-  
+
   // 総合ステータス判定
   const hasEnvError = envChecks.some(check => !check.ok)
   const hasDbError = !dbResult.ok
   const hasRedisError = !redisResult.ok
-  const hasTimeout = dbResult.error?.includes('timeout') || redisResult.error?.includes('timeout')
-  
-  const status = (hasEnvError || hasDbError || hasRedisError) 
-    ? hasTimeout ? 'degraded' : 'unhealthy'
-    : 'healthy'
-  
-  return c.json({
-    status,
-    timestamp: new Date().toISOString(),
-    uptime: Math.floor(Date.now() / 1000), // Workers用の簡易uptime
-    services: {
-      api: {
-        status: 'healthy',
-        message: 'Cloudflare Workers API is running',
-        responseTime: Date.now() - startTime,
+  const hasTimeout =
+    dbResult.error?.includes('timeout') ||
+    redisResult.error?.includes('timeout')
+
+  const status =
+    hasEnvError || hasDbError || hasRedisError
+      ? hasTimeout
+        ? 'degraded'
+        : 'unhealthy'
+      : 'healthy'
+
+  return c.json(
+    {
+      status,
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor(Date.now() / 1000), // Workers用の簡易uptime
+      services: {
+        api: {
+          status: 'healthy',
+          message: 'Cloudflare Workers API is running',
+          responseTime: Date.now() - startTime,
+        },
+        database: {
+          status: dbResult.ok
+            ? 'healthy'
+            : hasTimeout
+              ? 'degraded'
+              : 'unhealthy',
+          message: dbResult.ok ? 'Neon connection successful' : dbResult.error,
+          responseTime: dbResult.responseTime,
+        },
+        redis: {
+          status: redisResult.ok
+            ? 'healthy'
+            : hasTimeout
+              ? 'degraded'
+              : 'unhealthy',
+          message: redisResult.ok
+            ? 'Upstash Redis connection successful'
+            : redisResult.error,
+          responseTime: redisResult.responseTime,
+        },
       },
-      database: {
-        status: dbResult.ok ? 'healthy' : hasTimeout ? 'degraded' : 'unhealthy',
-        message: dbResult.ok ? 'Neon connection successful' : dbResult.error,
-        responseTime: dbResult.responseTime,
+      system: {
+        memory: {
+          rss: 0,
+          heapTotal: 0,
+          heapUsed: 0,
+        },
+        cpu: {
+          user: 0,
+          system: 0,
+        },
       },
-      redis: {
-        status: redisResult.ok ? 'healthy' : hasTimeout ? 'degraded' : 'unhealthy', 
-        message: redisResult.ok ? 'Upstash Redis connection successful' : redisResult.error,
-        responseTime: redisResult.responseTime,
-      },
+      version: '0.1.0',
+      environment: env.NODE_ENV || 'development',
     },
-    system: {
-      memory: {
-        rss: 0,
-        heapTotal: 0,
-        heapUsed: 0,
-      },
-      cpu: {
-        user: 0,
-        system: 0,
-      },
-    },
-    version: '0.1.0',
-    environment: env.NODE_ENV || 'development',
-  }, status === 'healthy' ? 200 : status === 'degraded' ? 200 : 503)
+    status === 'healthy' ? 200 : status === 'degraded' ? 200 : 503
+  )
 })
 
 // OpenAPI documentation
@@ -420,7 +441,8 @@ app.doc('/api/openapi.json', {
   info: {
     version: '0.1.0',
     title: 'Project Template API',
-    description: 'A template API built with Hono, deployed on Cloudflare Workers',
+    description:
+      'A template API built with Hono, deployed on Cloudflare Workers',
   },
   servers: [
     {

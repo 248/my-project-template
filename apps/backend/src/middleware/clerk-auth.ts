@@ -1,5 +1,6 @@
 import { type Context, type Next } from 'hono'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
+
 import { getConfig } from '../config'
 
 // 認証コンテキストの型定義

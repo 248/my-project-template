@@ -1,8 +1,10 @@
 import type { ServiceHealth } from '@template/api-contracts-ts'
-import type { HealthCheckService, HealthCheckContext } from './types'
-import type { DatabaseService, CacheService } from '@/interfaces'
+
 import { container } from '@/container/container'
+import type { DatabaseService, CacheService } from '@/interfaces'
 import { SERVICE_TOKENS } from '@/interfaces'
+
+import type { HealthCheckService, HealthCheckContext } from './types'
 
 /**
  * APIサービスのヘルスチェック
@@ -10,7 +12,7 @@ import { SERVICE_TOKENS } from '@/interfaces'
  */
 export const apiHealthService: HealthCheckService = {
   name: 'api',
-  check: (_context: HealthCheckContext): Promise<ServiceHealth> =>
+  check: (): Promise<ServiceHealth> =>
     Promise.resolve({
       status: 'healthy',
       message: 'API service is running',

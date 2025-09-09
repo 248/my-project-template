@@ -1,5 +1,6 @@
-import createClient from 'openapi-fetch'
 import type { paths, DetailedHealthCheck } from '@template/api-contracts-ts'
+import createClient from 'openapi-fetch'
+
 import { getApiBaseUrl } from './utils/api-config'
 
 // 型を再エクスポート

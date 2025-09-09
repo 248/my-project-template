@@ -9,9 +9,9 @@
 ### 主要機能
 
 - **型安全性**: TypeScript strict モード + OpenAPI 仕様による決定的な型生成
-- **品質保証**: ESLint, Prettier, Husky による自動品質チェック
+- **品質保証**: ESLint段階的厳格化 + 型境界レイヤー + 自動品質チェック
 - **モノレポ**: pnpm workspaces による効率的なパッケージ管理
-- **開発体験**: ホットリロード + 包括的な開発ツール
+- **開発体験**: ホットリロード + Vitest + 包括的な開発ツール
 
 ### 技術スタック
 
@@ -43,6 +43,7 @@ pnpm dev:workers-fullstack
 ```
 
 **アクセス先**:
+
 - フロントエンド: http://localhost:3000
 - バックエンド: http://localhost:8787
 
@@ -78,16 +79,19 @@ my-project-template/
 ## 🛠️ 主要コマンド
 
 ### 開発用
+
 - `pnpm dev:workers-fullstack` - フロント・バック同時起動
 - `pnpm --filter @template/frontend dev` - フロントエンドのみ
 - `pnpm --filter @template/backend dev:workers` - Workersのみ
 
 ### データベース（Prisma）
+
 - `pnpm --filter @template/backend db:generate` - クライアント生成
 - `pnpm --filter @template/backend db:migrate` - マイグレーション
 - `pnpm --filter @template/backend db:studio` - Prisma Studio
 
 ### 品質チェック
+
 - `pnpm type-check` - TypeScript型チェック
 - `pnpm lint` - ESLint
 - `pnpm codegen` - OpenAPI型生成
