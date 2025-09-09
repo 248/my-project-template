@@ -8,11 +8,6 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "ignoreCommand": "sh -c 'test \"$FORCE_BUILD\" = \"1\" && exit 1; npx turbo-ignore'",
-  "functions": {
-    "src/pages/api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "build": {
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1",
