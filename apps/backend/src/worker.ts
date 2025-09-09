@@ -304,7 +304,28 @@ app.get('/api/health', async (c) => {
   const { createRedisAdapter } = await import('./adapters/redis')
   const { checkEnvironmentVariables, withTimeout } = await import('./utils/env')
   
-  const env = c.env as Record<string, unknown>
+  // 環境変数の型安全バリデーション
+  const HealthCheckEnvSchema = z.object({
+    DATABASE_URL: z.string().min(1),
+    DB_DRIVER: z.string().min(1),
+    UPSTASH_REDIS_REST_URL: z.string().min(1),
+    UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
+    ENV_NAME: z.string().min(1),
+    NODE_ENV: z.string().optional(),
+  })
+
+  const parsedEnv = HealthCheckEnvSchema.safeParse(c.env)
+
+  if (!parsedEnv.success) {
+    return c.json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: 'Missing or invalid environment variables',
+      details: parsedEnv.error.flatten().fieldErrors,
+    }, 503)
+  }
+  
+  const env = parsedEnv.data
   const startTime = Date.now()
   
   // 環境変数チェック

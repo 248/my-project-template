@@ -189,13 +189,14 @@ export class UserServiceWorker {
       }
 
       // Neonではタグドテンプレート形式でSQL実行
+      // undefinedでない場合にのみ値を更新（データ損失防止）
       const result = await this.sql`
         UPDATE users 
         SET 
-          display_name = ${userData.displayName ?? null},
-          email = ${userData.email ?? null},
-          avatar_url = ${userData.avatarUrl ?? null},
-          locale = ${userData.locale ?? null},
+          display_name = CASE WHEN ${userData.displayName !== undefined} THEN ${userData.displayName} ELSE display_name END,
+          email = CASE WHEN ${userData.email !== undefined} THEN ${userData.email} ELSE email END,
+          avatar_url = CASE WHEN ${userData.avatarUrl !== undefined} THEN ${userData.avatarUrl} ELSE avatar_url END,
+          locale = CASE WHEN ${userData.locale !== undefined} THEN ${userData.locale} ELSE locale END,
           updated_at = NOW()
         WHERE id = ${userId}
         RETURNING 
