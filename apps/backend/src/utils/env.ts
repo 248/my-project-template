@@ -12,7 +12,7 @@ export function checkEnvironmentVariables(
   requiredKeys: string[]
 ): EnvironmentCheck[] {
   return requiredKeys.map((key) => {
-    const value = env[key as keyof typeof env]
+    const value = env[key]
     return {
       name: `env:${key}`,
       ok: typeof value === "string" && value.length > 0,

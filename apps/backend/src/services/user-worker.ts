@@ -21,15 +21,6 @@ export interface UserResult {
 }
 
 // データベース行の型
-interface UserRow {
-  id: string
-  display_name: string | null
-  email: string | null
-  avatar_url: string | null
-  locale: string | null
-  created_at: string
-  updated_at: string
-}
 
 /**
  * Workers環境用ユーザー管理サービス
@@ -93,20 +84,30 @@ export class UserServiceWorker {
           created_at,
           updated_at
       `
-      const typedResult = result as UserRow[]
+      const typedResult = result
 
       if (!typedResult[0]) {
         throw new Error('Failed to upsert user - no result returned')
       }
 
+      const row = typedResult[0] as {
+        id: string;
+        display_name: string | null;
+        email: string | null;
+        avatar_url: string | null;
+        locale: string | null;
+        created_at: string;
+        updated_at: string;
+      }
+      
       const user = {
-        id: typedResult[0].id,
-        displayName: typedResult[0].display_name,
-        email: typedResult[0].email,
-        avatarUrl: typedResult[0].avatar_url,
-        locale: typedResult[0].locale,
-        createdAt: new Date(typedResult[0].created_at),
-        updatedAt: new Date(typedResult[0].updated_at),
+        id: row.id,
+        displayName: row.display_name,
+        email: row.email,
+        avatarUrl: row.avatar_url,
+        locale: row.locale,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
       }
 
       console.log(`User ensured successfully: ${userId}`)
@@ -141,7 +142,7 @@ export class UserServiceWorker {
         FROM users
         WHERE id = ${userId}
       `
-      const typedResult = result as UserRow[]
+      const typedResult = result
 
       if (!typedResult[0]) {
         return null
@@ -206,20 +207,30 @@ export class UserServiceWorker {
           created_at,
           updated_at
       `
-      const typedResult = result as UserRow[]
+      const typedResult = result
 
       if (!typedResult[0]) {
         throw new Error('User not found')
       }
 
+      const row = typedResult[0] as {
+        id: string;
+        display_name: string | null;
+        email: string | null;
+        avatar_url: string | null;
+        locale: string | null;
+        created_at: string;
+        updated_at: string;
+      }
+      
       const user = {
-        id: typedResult[0].id,
-        displayName: typedResult[0].display_name,
-        email: typedResult[0].email,
-        avatarUrl: typedResult[0].avatar_url,
-        locale: typedResult[0].locale,
-        createdAt: new Date(typedResult[0].created_at),
-        updatedAt: new Date(typedResult[0].updated_at),
+        id: row.id,
+        displayName: row.display_name,
+        email: row.email,
+        avatarUrl: row.avatar_url,
+        locale: row.locale,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
       }
 
       console.log(`User updated successfully: ${userId}`)

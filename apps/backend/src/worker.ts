@@ -7,6 +7,7 @@ import { timing } from 'hono/timing'
 import { swaggerUI } from '@hono/swagger-ui'
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { z } from 'zod'
+import type { Context, Next } from 'hono'
 import { HealthCheckSchema } from '@template/api-contracts-ts'
 import { UserServiceWorker } from './services/user-worker'
 import { requireAuth, getAuth } from './middleware/clerk-auth-worker'
@@ -19,7 +20,7 @@ import {
 import type { WorkerEnv } from './types/worker-env'
 
 // Workers環境用の型定義（WorkerEnvを拡張）
-export interface Env extends Partial<WorkerEnv> {}
+export type Env = Partial<WorkerEnv>
 
 // Hono アプリを作成
 const app = new OpenAPIHono<{
@@ -36,14 +37,31 @@ app.use('*', secureHeaders())
 app.use(
   '*',
   cors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3003', // 追加: フロントエンドのフォールバックポート
-      'http://127.0.0.1:8787',
-      'http://localhost:8787',
-      'https://your-app.vercel.app',
-    ],
+    origin: (origin, c) => {
+      // 許可するオリジンを環境変数から取得
+      let corsOrigins: string[] = []
+      
+      // CORS_ORIGINが明示的に設定されている場合はそれを使用（複数オリジン対応）
+      const corsOriginEnv = c.env?.CORS_ORIGIN
+      if (corsOriginEnv && typeof corsOriginEnv === 'string') {
+        corsOrigins = corsOriginEnv.split(',').map((o: string) => o.trim())
+      } 
+      // FRONTEND_URLが設定されている場合（単一オリジン）
+      else if (c.env?.FRONTEND_URL && typeof c.env.FRONTEND_URL === 'string') {
+        corsOrigins = [c.env.FRONTEND_URL]
+      }
+      // どちらも設定されていない場合はエラー
+      else {
+        console.warn('警告: CORS_ORIGINまたはFRONTEND_URLが設定されていません')
+        corsOrigins = [] // 明示的に空配列（全拒否）
+      }
+      
+      // リクエストにoriginがない場合（例: Postman、サーバー間通信）は許可
+      if (!origin) return origin
+      
+      // 許可されたオリジンかチェック
+      return corsOrigins.includes(origin) ? origin : null
+    },
     allowHeaders: ['Content-Type', 'Authorization'],
     allowMethods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
     exposeHeaders: ['Content-Length'],
@@ -100,7 +118,10 @@ const updateProfileSchema = z.object({
 })
 
 // 認証関数のヘルパー
-const authMiddleware = (c: any, next: any) => requireAuth(c.env as WorkerEnv)(c, next)
+const authMiddleware = (c: Context<{ Bindings: Env }, string>, next: Next) => {
+  const env = c.env as WorkerEnv
+  return requireAuth(env)(c, next)
+}
 
 // 認証関連API
 app.use('/api/auth/*', authMiddleware)
@@ -108,7 +129,7 @@ app.use('/api/users/*', authMiddleware)
 
 app.post('/api/auth/users/ensure', async (c) => {
   try {
-    const env = c.env as Env
+    const env = c.env
     const authContext = getAuth(c)
     
     if (!env.DATABASE_URL) {
@@ -153,7 +174,7 @@ app.post('/api/auth/users/ensure', async (c) => {
 // ユーザー情報取得API
 app.get('/api/users/me', async (c) => {
   try {
-    const env = c.env as Env
+    const env = c.env
     const authContext = getAuth(c)
     
     if (!env.DATABASE_URL) {
@@ -208,7 +229,7 @@ app.get('/api/users/me', async (c) => {
 // ユーザー情報更新API
 app.put('/api/users/me', async (c) => {
   try {
-    const env = c.env as Env
+    const env = c.env
     const authContext = getAuth(c)
     
     if (!env.DATABASE_URL) {
@@ -283,7 +304,7 @@ app.get('/api/health', async (c) => {
   const { createRedisAdapter } = await import('./adapters/redis')
   const { checkEnvironmentVariables, withTimeout } = await import('./utils/env')
   
-  const env = c.env as any
+  const env = c.env as Record<string, unknown>
   const startTime = Date.now()
   
   // 環境変数チェック

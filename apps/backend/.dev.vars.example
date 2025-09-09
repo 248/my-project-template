@@ -10,17 +10,19 @@
 NODE_ENV=development
 ENV_NAME=dev
 
-# ========================================
-# API設定
-# ========================================
-API_BASE_URL=http://localhost:8787
-PORT=8787
 
 # ========================================
 # CORS設定
 # ========================================
 # フロントエンド開発サーバーのURL（カンマ区切りで複数指定可能）
-CORS_ORIGIN=http://localhost:3000,http://localhost:3003,http://localhost:5173
+# ローカル開発では複数ポートを許可することを推奨
+CORS_ORIGIN=http://localhost:3000,http://127.0.0.1:3000
+
+# 本番環境では以下のいずれかを使用:
+# 1. FRONTEND_URL（単一オリジン）: preview/production環境で推奨
+#    例: FRONTEND_URL=https://your-app.vercel.app
+# 2. CORS_ORIGIN（複数オリジン）: 複数のフロントエンドを許可する場合
+#    例: CORS_ORIGIN=https://app1.example.com,https://app2.example.com
 
 # ========================================
 # データベース設定（Prisma対応）

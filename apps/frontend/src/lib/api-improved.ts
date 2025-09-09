@@ -9,7 +9,7 @@ export type { DetailedHealthCheck }
  * OpenAPI仕様から自動生成された型を使用
  */
 export const apiClient = createClient<paths>({
-  baseUrl: process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:8080',
+  baseUrl: process.env['NEXT_PUBLIC_API_BASE_URL'] || 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',
   },
