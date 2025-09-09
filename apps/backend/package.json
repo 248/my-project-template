@@ -5,23 +5,30 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/index.ts",
+    "dev:workers": "wrangler dev",
     "build": "tsc",
     "start": "node dist/index.js",
+    "deploy:preview": "wrangler deploy --env preview",
+    "deploy:production": "wrangler deploy --env production",
     "lint": "eslint . --ext .ts --max-warnings 0 --cache --ignore-path ../../.eslintignore",
     "lint:fix": "eslint . --ext .ts --fix --cache",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset"
+    "db:generate": "prisma generate --schema ../../db/schema.prisma",
+    "db:push": "prisma db push --schema ../../db/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema ../../db/schema.prisma",
+    "db:migrate:create": "prisma migrate dev --create-only --schema ../../db/schema.prisma",
+    "db:migrate:deploy": "prisma migrate deploy --schema ../../db/schema.prisma",
+    "db:migrate:status": "prisma migrate status --schema ../../db/schema.prisma",
+    "db:seed": "tsx ../../db/seed.ts",
+    "db:studio": "prisma studio --schema ../../db/schema.prisma",
+    "db:reset": "prisma migrate reset --schema ../../db/schema.prisma"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.1",
     "@hono/swagger-ui": "^0.5.2",
     "@hono/zod-openapi": "^0.18.0",
+    "@neondatabase/serverless": "^1.0.1",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/auto-instrumentations-node": "^0.62.2",
     "@opentelemetry/exporter-metrics-otlp-http": "^0.203.0",
@@ -36,6 +43,7 @@
     "@prisma/client": "^6.15.0",
     "@template/api-contracts-ts": "workspace:*",
     "@template/shared": "workspace:*",
+    "@upstash/redis": "^1.35.3",
     "hono": "^4.6.0",
     "ioredis": "^5.7.0",
     "jose": "^6.1.0",
@@ -47,9 +55,11 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
     "@template/config": "workspace:*",
     "@types/node": "^22.8.6",
     "tsx": "^4.20.5",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "wrangler": "^4.34.0"
   }
 }

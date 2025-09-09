@@ -22,11 +22,14 @@ locals {
   }
 }
 
-# Development environment configuration
+# Development environment configuration (using Neon)
 env "dev" {
-  # Development database URL for schema comparison
-  # Atlas uses this temporary database for schema diffing
-  dev = "docker://postgres/16/dev?search_path=public"
+  # Development database URL using Neon PostgreSQL
+  # Atlas will use the same DATABASE_URL as the application
+  url = getenv("DATABASE_URL")
+  
+  # Dev database for schema diffing (can be same as main DB for Neon)
+  dev = getenv("DATABASE_URL")
 
   # Use Prisma-generated schema as the desired state
   schema {

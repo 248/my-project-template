@@ -14,8 +14,9 @@ status: published
 
 - **説明・レビュー・コミット文・PR本文は日本語**（技術用語は英語可）
 - **変数名・関数名・ファイル名は英語**（lowerCamelCase / kebab-case / PascalCase）
-- **技術スタック**: Next.js 15 + React 19 + Hono + TypeScript + TailwindCSS + Prisma + PostgreSQL + Redis
+- **技術スタック**: Next.js 15 + React 19 + Cloudflare Workers + Hono + TypeScript + TailwindCSS + Prisma + Neon PostgreSQL + Upstash Redis
 - **パッケージマネージャ**: pnpm（Corepack で固定）
+- **開発環境**: Cloudflare Workers（エッジファースト開発）
 
 ---
 
@@ -27,15 +28,17 @@ status: published
 pnpm install
 ```
 
-### 2. Docker サービス起動（PostgreSQL + Redis）
+### 2. 環境変数設定
 
 ```bash
-# PostgreSQL + Redis 起動
-pnpm db:up
+# バックエンド環境変数設定（Workers用）
+cp apps/backend/.dev.vars.example apps/backend/.dev.vars
+# .dev.vars ファイルを編集して実際の認証情報を設定
 
-# または従来の方法
-cd infra/docker && docker compose up -d postgres redis
-cd -
+# Prisma用環境変数設定
+# apps/backend/.env ファイルを作成（DATABASE_URLのみ）
+echo 'DATABASE_URL="postgresql://username:password@endpoint.neon.tech/dbname?sslmode=require"' > apps/backend/.env
+# 実際のNeon PostgreSQLの接続文字列に置き換えてください
 ```
 
 ### 3. 型・スキーマ生成
@@ -45,90 +48,75 @@ cd -
 pnpm codegen
 
 # Prisma → 型安全DBクライアント生成（server境界層）
-pnpm db:generate
+pnpm --filter @template/backend db:generate
 
 # または一括実行
-pnpm codegen && pnpm db:generate
+pnpm codegen && pnpm --filter @template/backend db:generate
 ```
 
 ### 4. 開発サーバ起動
 
 ```bash
-# フロントエンド（Next.js）とバックエンド（Hono）を同時起動
-pnpm dev
+# フロントエンド（Next.js）とバックエンド（Cloudflare Workers）を同時起動
+pnpm dev:workers-fullstack
 
 # または個別起動
-pnpm dev:frontend  # Next.js (localhost:3000)
-pnpm dev:api       # Hono (localhost:8000)
+pnpm --filter @template/frontend dev         # Next.js (localhost:3000)
+pnpm --filter @template/backend dev:workers  # Cloudflare Workers (localhost:8787)
 ```
 
 ### 5. ✅ 品質チェック（PR 前に必ず実行）
 
 ```bash
 # 型・スキーマ生成確認
-pnpm codegen && pnpm db:generate
+pnpm codegen && pnpm --filter @template/backend db:generate
 
 # 品質チェック
 pnpm type-check      # TypeScript エラー: 0件必須
 pnpm lint            # ESLint エラー・警告: 0件必須
 pnpm format:check    # Prettier形式チェック
 
-# フロントエンド側まとめ実行
-pnpm run --filter frontend quality-check
-
-# 最終ビルド確認
-pnpm build
+# 最終ビルド確認（Workers環境）
+pnpm --filter @template/backend build
+pnpm --filter @template/frontend build
 ```
 
 ---
 
-## 🐳 Docker開発環境
+## ☁️ Cloudflare Workers 開発環境
 
-Docker環境では、フロントエンドとバックエンドを同時にコンテナ内で実行できます。ホットリロードも完全対応しています。
+プロジェクトはCloudflare Workersを使用したサーバーレス・エッジファーストアーキテクチャを採用しています。
 
-### Docker環境の起動
+### Workers開発の特徴
 
-```bash
-# フロント・バック同時起動（ホットリロード対応）
-pnpm dev:docker
+**✅ メリット**
 
-# バックグラウンドで起動
-pnpm dev:docker:detached
-```
+- **グローバル配信**: エッジロケーションでの高速レスポンス
+- **スケーラビリティ**: 自動スケーリング、コールドスタート最小化
+- **統合開発環境**: wranglerによるローカル開発環境
+- **型安全性**: TypeScriptとESモジュールの完全サポート
 
-### Docker環境の管理
+**📋 外部サービス**
 
-```bash
-# ログ確認
-pnpm docker:logs
-
-# コンテナ停止
-pnpm docker:stop
-
-# 完全クリーンアップ（コンテナ・イメージ削除）
-pnpm docker:clean
-```
+- **データベース**: Neon PostgreSQL（サーバーレス対応）
+- **キャッシュ**: Upstash Redis（HTTP REST API）
+- **認証**: Clerk JWT（JWKSによるトークン検証）
 
 ### アクセス方法
 
 - **フロントエンド**: http://localhost:3000
-- **バックエンド**: http://localhost:8000
+- **バックエンド**: http://localhost:8787（wrangler devのデフォルトポート）
 
-### メリット・デメリット
+### 環境設定
 
-**✅ メリット**
-
-- 環境構築の手間が最小
-- チーム間での環境統一
-- ホストマシンの環境に依存しない
-
-**❌ デメリット**
-
-- 初回ビルド時間が長い
-- IDEの型チェック・補完が遅い場合がある
-- ホストとコンテナ間のファイル同期オーバーヘッド
-
-推奨は **ネイティブ環境** ですが、環境構築でトラブルがある場合にDocker環境をお試しください。
+```bash
+# .dev.vars ファイル設定例（apps/backend/.dev.vars）
+DATABASE_URL=postgresql://username:password@endpoint.neon.tech/dbname
+UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your_token_here
+CLERK_SECRET_KEY=sk_test_your_clerk_key
+CLERK_JWT_ISSUER=https://your-app.clerk.accounts.dev
+```
 
 ---
 
@@ -153,42 +141,49 @@ pnpm build               # 本番ビルド
 # 開発プロセス一括停止（Linux/Mac）
 ./infra/scripts/stop-all-safe.sh
 
-# Docker環境停止
-pnpm db:down
-pnpm docker:stop
+# wrangler dev プロセス停止
+# Ctrl+C または プロセス終了
 ```
 
 ### 型・スキーマ生成
 
 ```bash
-pnpm codegen             # OpenAPI → TypeScript型 + Zodスキーマ生成
-pnpm db:generate         # Prisma → DBクライアント生成（server境界層）
+pnpm codegen                                        # OpenAPI → TypeScript型 + Zodスキーマ生成
+pnpm --filter @template/backend db:generate        # Prisma → DBクライアント生成（server境界層）
 ```
 
-### データベース操作
+### データベース操作（Prisma）
 
 ```bash
-# データベースサービス管理
-pnpm db:up           # PostgreSQL + Redis 起動
-pnpm db:down         # PostgreSQL + Redis 停止
-pnpm db:restart      # データベース再起動
-pnpm db:logs         # データベースログ確認
-
 # Prismaデータベース操作（バックエンド）
-pnpm db:push         # Prisma schema → DB反映（開発用）
-pnpm db:migrate      # マイグレーション実行
-pnpm db:studio       # Prisma Studio起動
-pnpm db:seed         # シードデータ投入（要実装）
+# 注意: 全てのPrismaコマンドは --schema ../../db/schema.prisma で統一スキーマ参照
+# 環境変数は apps/backend/.env ファイルから自動読み込み
+pnpm --filter @template/backend db:generate        # Prismaクライアント生成
+pnpm --filter @template/backend db:migrate         # マイグレーション作成+適用（開発用）
+pnpm --filter @template/backend db:migrate:create  # マイグレーション作成のみ
+pnpm --filter @template/backend db:migrate:deploy  # マイグレーション適用のみ（本番用）
+pnpm --filter @template/backend db:migrate:status  # マイグレーション状態確認
+pnpm --filter @template/backend db:push           # スキーマ → DB直接反映（プロトタイプ用）
+pnpm --filter @template/backend db:studio         # Prisma Studio起動
+pnpm --filter @template/backend db:reset          # データベース完全リセット
+
+# 詳細は Prismaマイグレーションガイドを参照
+# docs/handbook/prisma-migration-guide.md
 ```
 
-### プロジェクト特有
+### Workers開発特有
 
 ```bash
 pnpm codegen             # OpenAPI→型安全なクライアント生成
 pnpm postinstall         # 依存関係インストール後の自動生成
 pnpm prebuild            # ビルド前の自動生成
 pnpm quality-check       # 型チェック→Lint一括実行
-pnpm dev                 # 開発サーバー起動
+pnpm dev:workers-fullstack  # フロント・バック同時起動（Workers環境）
+
+# Workers個別コマンド
+pnpm --filter @template/backend dev:workers    # Cloudflare Workers ローカル開発
+pnpm --filter @template/backend build          # Workers本番ビルド
+pnpm --filter @template/backend wrangler       # wrangler CLI直接実行
 ```
 
 ### メッセージキー生成
@@ -221,18 +216,6 @@ node tools/message-codegen/generate.js --dry-run
 ✨ Dry run completed for 38 messages across 6 namespaces
 ```
 
-### Docker環境
-
-```bash
-# データベースのみ起動
-pnpm db:up
-
-# 全サービス（フロントエンド + バックエンド + データベース）
-pnpm dev:docker
-
-# 従来の方法
-cd infra/docker && docker compose up -d postgres redis
-```
 
 ---
 
@@ -248,62 +231,31 @@ cd infra/docker && docker compose up -d postgres redis
 
 ---
 
-## 🧩 依存性注入（DI）アーキテクチャ
+## ☁️ Workers開発のベストプラクティス
 
-### サービス作成の基本パターン
+### 環境変数管理
 
-#### 1. インターフェース定義
+```bash
+# .dev.vars ファイルでローカル開発環境変数を管理
+# 本番環境はCloudflare Dashboardで設定
 
-- サービス契約の明確化
-- トークンシンボルの定義
+# 必須環境変数チェック
+if (!env.DATABASE_URL) throw new Error('DATABASE_URL is required')
+if (!env.CLERK_SECRET_KEY) throw new Error('CLERK_SECRET_KEY is required')
+```
 
-#### 2. 具象実装作成
+### パフォーマンス最適化
 
-- `@injectable()` デコレータの付与
-- 依存サービスのコンストラクタ注入
+- **コールドスタート最小化**: 不要なライブラリのimport削減
+- **エッジキャッシング**: Upstash Redis活用
+- **型安全性**: TypeScript + Zodバリデーション
+- **軽量実装**: シンプルなファンクション構成
 
-#### 3. DIコンテナ登録
+### セキュリティ
 
-- `container.register()` での実装登録
-- サービストークンとクラスの紐付け
-
-#### 4. サービス利用
-
-- `container.resolve()` での取得（直接）
-- コンストラクタ注入（推奨）
-
-詳細は[依存性注入アーキテクチャガイド](../architecture/dependency-injection.md)を参照。
-
-### 設定管理パターン
-
-#### 1. Zodスキーマ定義
-
-- 環境変数の型安全な検証スキーマ作成
-- デフォルト値・制約の設定
-
-#### 2. 設定の注入
-
-- DIコンテナへの設定値登録
-- 専用トークンでの識別
-
-#### 3. サービスで設定受け取り
-
-- コンストラクタ注入による設定取得
-- 実行時変更不可の設計
-
-### テスト用モック作成
-
-#### 1. モック実装
-
-- インターフェース準拠のモッククラス作成
-- テスト用の固定レスポンス実装
-
-#### 2. テストでのDI差し替え
-
-- `beforeEach`でのコンテナ設定変更
-- テスト分離のための独立設定
-
-詳細は[設定管理ガイド](../architecture/configuration-management.md)と[DIアーキテクチャガイド](../architecture/dependency-injection.md)を参照。
+- **JWT検証**: Clerk JWKSによるトークン検証
+- **CORS設定**: 適切なオリジン制限
+- **環境変数**: `.dev.vars`は絶対にコミット禁止
 
 ---
 
@@ -315,11 +267,11 @@ cd infra/docker && docker compose up -d postgres redis
 | ------------------------ | ---------------------- | ---------------------------------------------- |
 | 依存関係不一致           | pnpm バージョン違い    | `pnpm install --force`                         |
 | 型生成が失敗             | OpenAPI 仕様エラー     | `pnpm codegen` を再実行                        |
-| CI/コンテナで遅い        | キャッシュ未使用       | `pnpm fetch` → `pnpm install --offline` を検討 |
+| Workers起動エラー        | 環境変数未設定         | `.dev.vars`ファイル確認・作成                  |
 | リンタが暴れる           | 設定競合               | `pnpm lint:fix` → 個別修正                     |
-| DI解決エラー             | トークン未登録         | `container/container.ts`でサービス登録確認     |
-| 設定バリデーションエラー | 環境変数不正・未設定   | `.env`ファイル確認、Zodスキーマエラー確認      |
-| モックが動作しない       | DIコンテナ差し替え失敗 | テスト前に`container.register`でモック登録     |
+| データベース接続エラー   | 環境変数不正・未設定   | `.env`ファイルのDATABASE_URL確認               |
+| JWT認証エラー            | Clerk設定ミス          | CLERK_SECRET_KEY, CLERK_JWT_ISSUER確認         |
+| Redis接続エラー          | Upstash設定ミス        | UPSTASH環境変数確認                            |
 
 ### デバッグ手順
 
@@ -333,26 +285,30 @@ pnpm lint --fix
 # Step 3: 自動生成更新
 pnpm codegen
 
-# Step 4: DIコンテナ確認（必要に応じて）
-# apps/backend/src/container/container.ts でサービス登録確認
+# Step 4: 環境変数確認
+cat apps/backend/.dev.vars  # ローカル開発環境変数確認
+cat apps/backend/.env       # Prisma用DATABASE_URL確認
 
-# Step 5: 最終確認
-pnpm build
+# Step 5: Workers ローカルサーバー起動テスト
+pnpm --filter @template/backend dev:workers
+
+# Step 6: 最終確認
+pnpm --filter @template/backend build
 ```
 
-### DI関連デバッグ
+### Workers特有のデバッグ
 
-#### 設定エラー診断
+#### 環境変数エラー診断
 
-- `container/container.ts` でサービス登録状況確認
-- Zodバリデーションエラーメッセージの確認
-- 環境変数の値と型の検証
+- `.dev.vars` ファイルの存在確認
+- 必須環境変数の設定確認（DATABASE_URL, CLERK_SECRET_KEY等）
+- wranglerログでの詳細エラー確認
 
-#### サービス解決エラー
+#### 外部サービス接続エラー
 
-- トークン未登録の確認
-- 循環依存の検出
-- インターフェース実装の確認
+- Neon PostgreSQL接続確認
+- Upstash Redis接続確認
+- Clerk JWT設定確認
 
 ---
 
@@ -397,9 +353,10 @@ pnpm build
 
 ## 🔗 関連ドキュメント
 
-- **[システム概要](../architecture/system-overview.md)** - ファイル所有権・設計指針
-- **[依存性注入アーキテクチャガイド](../architecture/dependency-injection.md)** - TSyringeを用いたDI設計・実装
-- **[設定管理ガイド](../architecture/configuration-management.md)** - Zodスキーマによる型安全な設定管理
-- **[ヘルスチェックAPI仕様](../api/health-check.md)** - システム監視・診断API完全仕様
+- **[システム概要](../architecture/system-overview.md)** - アーキテクチャ・技術スタック
+- **[バックエンドデプロイメントガイド](./backend-deployment-guide.md)** - Cloudflare Workers デプロイ
+- **[Prismaマイグレーションガイド](./prisma-migration-guide.md)** - データベース管理・Atlas移行
+- **[データベース管理](../../db/README.md)** - 言語非依存なDB資産管理・将来の移行戦略
+- **[JWT認証ガイド](../architecture/jwt-authentication-guide.md)** - Clerk JWT認証実装詳細
 - **[コード規約](../styleguide/code-standards.md)** - 品質基準・型安全性
 - **[貢献ガイドライン](../contrib/contribution-guide.md)** - PR 規約・レビュー観点

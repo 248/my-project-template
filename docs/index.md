@@ -15,25 +15,28 @@ status: published
 このテンプレートは最新の技術スタックを使用したフルスタックWebアプリケーション開発のためのベースプロジェクトです：
 
 - **フロントエンド**: Next.js + React + TypeScript
-- **バックエンド**: Hono + TypeScript
-- **データベース**: PostgreSQL + Prisma
-- **認証**: Clerk
-- **開発環境**: Docker + pnpm workspace
+- **バックエンド**: Hono on Cloudflare Workers + TypeScript
+- **データベース**: Neon PostgreSQL + Prisma
+- **キャッシュ**: Upstash Redis
+- **認証**: Clerk JWT
+- **開発環境**: pnpm workspace + Cloudflare Workers
 
 ### 🚀 アーキテクチャ戦略
 
-モノレポ構成でフロントエンドとバックエンドを統合管理：
+モノレポ構成でサーバーレス・エッジファーストのWebアプリケーション：
 
-- **高速プロトタイピング**: Hono で API 開発を高速化
-- **型安全性**: OpenAPI による型安全な API 開発
-- **開発効率**: pnpm workspace による依存関係管理
+- **エッジファースト**: Cloudflare Workersでグローバル高速配信
+- **型安全性**: OpenAPI仕様からの自動型生成でフルスタック型安全
+- **データベース管理**: Prismaによる型安全・統一スキーマ管理
+- **開発効率**: pnpm workspaceによる依存関係管理
 
 ## 🎯 役割別導線
 
 ### 🚀 はじめての方
 
-- **[開発者ハンドブック](./handbook/developer-guide.md)** - セットアップ手順・基本開発の流れ
-- **[環境トラブルシューティング](./handbook/environment-troubleshooting.md)** - ポート競合・プロセス問題解決
+- **[開発者ハンドブック](./handbook/developer-guide.md)** - Workers開発・セットアップ手順
+- **[バックエンドデプロイメントガイド](./handbook/backend-deployment-guide.md)** - Cloudflare Workers デプロイ
+- **[Prismaマイグレーションガイド](./handbook/prisma-migration-guide.md)** - データベース管理
 - **[プロジェクト概要](../README.md)** - 技術スタック・アーキテクチャ概要
 
 ### 🏗️ アーキテクチャ・設計

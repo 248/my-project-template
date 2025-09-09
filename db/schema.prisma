@@ -3,23 +3,13 @@
 
 generator client {
   provider      = "prisma-client-js"
-  output        = "../generated/prisma"
+  output        = "../apps/backend/generated/prisma"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-// Health check table for database connectivity testing
-model HealthCheck {
-  id        String   @id @default(cuid())
-  status    String   @default("healthy")
-  message   String?
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("health_checks")
 }
 
 // User model for authentication with Clerk

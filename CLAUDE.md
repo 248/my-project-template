@@ -28,7 +28,10 @@
 
 ### 🛠️ 開発・実装
 
-- **[開発者ガイド](./docs/handbook/developer-guide.md)** - セットアップ・コマンド・トラブルシューティング
+- **[開発者ガイド](./docs/handbook/developer-guide.md)** - Workers開発・セットアップ・トラブルシューティング
+- **[バックエンドデプロイメントガイド](./docs/handbook/backend-deployment-guide.md)** - Cloudflare Workers デプロイ
+- **[Prismaマイグレーションガイド](./docs/handbook/prisma-migration-guide.md)** - データベース管理・Atlas移行
+- **[データベース管理](./db/README.md)** - 言語非依存なDB資産管理・将来の移行戦略
 - **[APIコード生成](./docs/handbook/api-codegen-guide.md)** - OpenAPIからの型安全クライアント生成
 - **[テスト戦略](./docs/handbook/testing-strategy.md)** - 品質保証・静的解析・テスト方針
 - **[Vitestテスト実装ガイド](./docs/handbook/testing-guide.md)** - Vitest実装・テストパターン・実践方法
@@ -102,9 +105,8 @@ git commit -m "fix: ヘルスチェックのバグを修正"
 
 Claude は以下のサーバー関連操作を**一切実行してはならない**：
 
-- `pnpm dev`, `pnpm dev:api`, `pnpm dev:fullstack` の実行
-- `docker compose up`, `docker compose restart` の実行
-- `pnpm docker:up`, `pnpm docker:down` の実行
+- `pnpm dev`, `pnpm dev:workers`, `pnpm dev:fullstack` の実行
+- `wrangler dev`, `wrangler deploy` の実行
 - その他あらゆるサーバー起動・再起動・停止コマンド
 
 **理由**: ポート競合やプロセス残存によるシステム不安定化防止
@@ -112,8 +114,8 @@ Claude は以下のサーバー関連操作を**一切実行してはならな�
 **対応方法**: サーバー操作が必要な場合は必ず以下のようにユーザーに依頼する：
 
 ```
-サーバーの起動が必要です。以下のコマンドを実行してください：
-pnpm dev:fullstack
+Workersサーバーの起動が必要です。以下のコマンドを実行してください：
+pnpm dev:workers-fullstack
 ```
 
 #### 品質チェック迂回・設定変更は要確認

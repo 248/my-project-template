@@ -4,654 +4,540 @@
  */
 
 export interface paths {
-  '/': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * ヘルスチェック
-     * @description APIサーバーの状態確認
-     */
-    get: operations['healthCheck']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/health': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * 詳細ヘルスチェック
-     * @description システム全体の詳細な健全性状態を取得
-     */
-    get: operations['getDetailedHealth']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/auth/users/ensure': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * ユーザー冪等作成/同期
-     * @description 初回サインイン/アップ時にユーザーを冪等に作成・同期する
-     */
-    post: operations['ensureUser']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/users/me': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * プロフィール取得
-     * @description 認証済みユーザーの自分のプロフィール情報を取得
-     */
-    get: operations['getUserProfile']
-    /**
-     * プロフィール更新
-     * @description 認証済みユーザーの自分のプロフィール情報を更新
-     */
-    put: operations['updateUserProfile']
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
+    "/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * ヘルスチェック
+         * @description APIサーバーの状態確認
+         */
+        get: operations["healthCheck"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 詳細ヘルスチェック
+         * @description システム全体の詳細な健全性状態を取得
+         */
+        get: operations["getDetailedHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/users/ensure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * ユーザー冪等作成/同期
+         * @description 初回サインイン/アップ時にユーザーを冪等に作成・同期する
+         */
+        post: operations["ensureUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * プロフィール取得
+         * @description 認証済みユーザーの自分のプロフィール情報を取得
+         */
+        get: operations["getUserProfile"];
+        /**
+         * プロフィール更新
+         * @description 認証済みユーザーの自分のプロフィール情報を更新
+         */
+        put: operations["updateUserProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
-export type webhooks = Record<string, never>
+export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    HealthCheck: {
-      /** @example Project Template API Server */
-      message: string
-      /** @example 0.1.0 */
-      version: string
-      /** @example healthy */
-      status: string
-      /** Format: date-time */
-      timestamp: string
-    }
-    DetailedHealthCheck: {
-      /**
-       * @example healthy
-       * @enum {string}
-       */
-      status: 'healthy' | 'degraded' | 'unhealthy'
-      /** Format: date-time */
-      timestamp: string
-      /**
-       * @description サーバー稼働時間（秒）
-       * @example 3600
-       */
-      uptime: number
-      services: {
-        api: components['schemas']['ServiceHealth']
-        database?: components['schemas']['ServiceHealth']
-        redis?: components['schemas']['ServiceHealth']
-      }
-      system: {
-        memory: {
-          /** @description メモリ使用量（MB） */
-          rss: number
-          /** @description ヒープ合計（MB） */
-          heapTotal: number
-          /** @description ヒープ使用量（MB） */
-          heapUsed: number
-        }
-        cpu: {
-          /** @description ユーザーCPU時間（ミリ秒） */
-          user: number
-          /** @description システムCPU時間（ミリ秒） */
-          system: number
-        }
-      }
-      /** @example 0.1.0 */
-      version: string
-      /** @example development */
-      environment: string
-    }
-    ServiceHealth: {
-      /** @enum {string} */
-      status: 'healthy' | 'degraded' | 'unhealthy'
-      message?: string
-      /** @description 応答時間（ミリ秒） */
-      responseTime?: number
-    }
-    User: {
-      /**
-       * @description ClerkのユーザーID
-       * @example user_2abcd1234efgh5678ijkl
-       */
-      id: string
-      /**
-       * @description 表示名
-       * @example 田中太郎
-       */
-      displayName?: string | null
-      /**
-       * Format: email
-       * @description メールアドレス
-       * @example tanaka@example.com
-       */
-      email?: string | null
-      /**
-       * Format: uri
-       * @description アバターURL
-       * @example https://img.clerk.com/avatar.jpg
-       */
-      avatarUrl?: string | null
-      /**
-       * @description 言語設定
-       * @example ja
-       */
-      locale?: string | null
-      /**
-       * Format: date-time
-       * @description 作成日時
-       */
-      createdAt: string
-      /**
-       * Format: date-time
-       * @description 更新日時
-       */
-      updatedAt: string
-    }
-    UserUpdateData: {
-      /**
-       * @description 表示名
-       * @example 田中太郎
-       */
-      displayName?: string
-      /**
-       * Format: email
-       * @description メールアドレス
-       * @example tanaka@example.com
-       */
-      email?: string
-      /**
-       * Format: uri
-       * @description アバターURL
-       * @example https://img.clerk.com/avatar.jpg
-       */
-      avatarUrl?: string
-      /**
-       * @description 言語設定
-       * @example ja
-       * @enum {string}
-       */
-      locale?: 'ja' | 'en'
-    }
-    ApiResponse: {
-      /** @description Response success indicator */
-      success: boolean
-      /**
-       * @description Message code from registry (language-neutral identifier)
-       * @enum {string}
-       */
-      code:
-        | 'auth.signin_required'
-        | 'auth.signin_success'
-        | 'auth.user_ensured'
-        | 'auth.ensure_failed'
-        | 'error.user_not_found'
-        | 'error.profile_retrieval_failed'
-        | 'error.profile_update_failed'
-        | 'error.validation_failed'
-        | 'error.invalid_response_format'
-        | 'error.unknown_error'
-        | 'success.profile_retrieved'
-        | 'success.profile_updated'
-        | 'success.user_ensured'
-        | 'ui.profile_info'
-        | 'ui.user_id'
-        | 'ui.display_name'
-        | 'ui.email_address'
-        | 'ui.created_at'
-        | 'ui.updated_at'
-        | 'ui.auth_providers'
-        | 'ui.avatar'
-        | 'ui.not_set'
-        | 'ui.unknown'
-        | 'ui.dashboard'
-        | 'ui.authenticated_user_page'
-        | 'ui.loading'
-        | 'ui.executing'
-        | 'ui.last_execution'
-        | 'action.auth_api_test'
-        | 'action.health_check_success'
-        | 'action.response_data'
-        | 'action.error_occurred'
-        | 'action.error_details'
-        | 'validation.field_required'
-        | 'validation.invalid_email'
-        | 'validation.invalid_url'
-        | 'validation.string_too_short'
-        | 'validation.string_too_long'
-      /** @description Human-readable message (optional for backward compatibility) */
-      message?: string | null
-      /** @description Response data */
-      data?: Record<string, never>
-    }
-    UserResponse: {
-      /**
-       * @description 処理成功フラグ
-       * @example true
-       */
-      success: boolean
-      /**
-       * @description MessageKeyシステム用コード
-       * @example success.user_ensured
-       */
-      code?: string
-      /**
-       * @description デバッグ用メッセージ（開発環境のみ）
-       * @example User ensured successfully
-       */
-      message?: string
-      data: {
-        user: components['schemas']['User']
-      }
-    }
-    /**
-     * @deprecated
-     * @description Deprecated error response format - use ApiError instead
-     */
-    ErrorResponse: {
-      /**
-       * @deprecated
-       * @example false
-       * @enum {boolean}
-       */
-      success: false
-      /**
-       * @deprecated
-       * @description Error message (deprecated - use code instead)
-       * @example User not found
-       */
-      message?: string
-      /**
-       * @deprecated
-       * @description Error details (deprecated - use code + details instead)
-       * @example User not found. Please sign in again.
-       */
-      error?: string
-      /**
-       * @description Error code (new standard)
-       * @example error.user_not_found
-       * @enum {string}
-       */
-      code:
-        | 'auth.signin_required'
-        | 'auth.signin_success'
-        | 'auth.user_ensured'
-        | 'auth.ensure_failed'
-        | 'error.user_not_found'
-        | 'error.profile_retrieval_failed'
-        | 'error.profile_update_failed'
-        | 'error.validation_failed'
-        | 'error.invalid_response_format'
-        | 'error.unknown_error'
-        | 'validation.field_required'
-        | 'validation.invalid_email'
-        | 'validation.invalid_url'
-        | 'validation.string_too_short'
-        | 'validation.string_too_long'
-      /** @description Additional error context */
-      details?: Record<string, never>
-    }
-    ApiError: components['schemas']['ApiResponse'] & {
-      /**
-       * @example false
-       * @enum {boolean}
-       */
-      success?: false
-      /**
-       * @description Error code from registry
-       * @example error.user_not_found
-       * @enum {string}
-       */
-      code?:
-        | 'auth.signin_required'
-        | 'auth.signin_success'
-        | 'auth.user_ensured'
-        | 'auth.ensure_failed'
-        | 'error.user_not_found'
-        | 'error.profile_retrieval_failed'
-        | 'error.profile_update_failed'
-        | 'error.validation_failed'
-        | 'error.invalid_response_format'
-        | 'error.unknown_error'
-        | 'validation.field_required'
-        | 'validation.invalid_email'
-        | 'validation.invalid_url'
-        | 'validation.string_too_short'
-        | 'validation.string_too_long'
-      /** @description Additional error context */
-      details?: Record<string, never>
-    }
-    ApiSuccess: components['schemas']['ApiResponse'] & {
-      /**
-       * @example true
-       * @enum {boolean}
-       */
-      success?: true
-      /**
-       * @description Success code from registry
-       * @example success.profile_retrieved
-       * @enum {string}
-       */
-      code?:
-        | 'success.profile_retrieved'
-        | 'success.profile_updated'
-        | 'success.user_ensured'
-    }
-    ValidationErrorDetail: {
-      /**
-       * @description Field name that failed validation
-       * @example email
-       */
-      field: string
-      /**
-       * @description Validation error code
-       * @example validation.field_required
-       * @enum {string}
-       */
-      code:
-        | 'validation.field_required'
-        | 'validation.invalid_email'
-        | 'validation.invalid_url'
-        | 'validation.string_too_short'
-        | 'validation.string_too_long'
-      /**
-       * @description Human-readable validation error message
-       * @example Email is required
-       */
-      message: string
-    }
-    ValidationError: components['schemas']['ApiError'] & {
-      /**
-       * @example error.validation_failed
-       * @enum {string}
-       */
-      code?: 'error.validation_failed'
-      /** @description Detailed validation errors */
-      errors: components['schemas']['ValidationErrorDetail'][]
-    }
-    /**
-     * @description Message codes from registry (version 1.0.0)
-     * @enum {string}
-     */
-    MessageCode:
-      | 'auth.signin_required'
-      | 'auth.signin_success'
-      | 'auth.user_ensured'
-      | 'auth.ensure_failed'
-      | 'error.user_not_found'
-      | 'error.profile_retrieval_failed'
-      | 'error.profile_update_failed'
-      | 'error.validation_failed'
-      | 'error.invalid_response_format'
-      | 'error.unknown_error'
-      | 'success.profile_retrieved'
-      | 'success.profile_updated'
-      | 'success.user_ensured'
-      | 'ui.profile_info'
-      | 'ui.user_id'
-      | 'ui.display_name'
-      | 'ui.email_address'
-      | 'ui.created_at'
-      | 'ui.updated_at'
-      | 'ui.auth_providers'
-      | 'ui.avatar'
-      | 'ui.not_set'
-      | 'ui.unknown'
-      | 'ui.dashboard'
-      | 'ui.authenticated_user_page'
-      | 'ui.loading'
-      | 'ui.executing'
-      | 'ui.last_execution'
-      | 'action.auth_api_test'
-      | 'action.health_check_success'
-      | 'action.response_data'
-      | 'action.error_occurred'
-      | 'action.error_details'
-      | 'validation.field_required'
-      | 'validation.invalid_email'
-      | 'validation.invalid_url'
-      | 'validation.string_too_short'
-      | 'validation.string_too_long'
-  }
-  responses: never
-  parameters: never
-  requestBodies: never
-  headers: never
-  pathItems: never
+    schemas: {
+        HealthCheck: {
+            /** @example Project Template API Server */
+            message: string;
+            /** @example 0.1.0 */
+            version: string;
+            /** @example healthy */
+            status: string;
+            /** Format: date-time */
+            timestamp: string;
+        };
+        DetailedHealthCheck: {
+            /**
+             * @example healthy
+             * @enum {string}
+             */
+            status: "healthy" | "degraded" | "unhealthy";
+            /** Format: date-time */
+            timestamp: string;
+            /**
+             * @description サーバー稼働時間（秒）
+             * @example 3600
+             */
+            uptime: number;
+            services: {
+                api: components["schemas"]["ServiceHealth"];
+                database?: components["schemas"]["ServiceHealth"];
+                redis?: components["schemas"]["ServiceHealth"];
+            };
+            system: {
+                memory: {
+                    /** @description メモリ使用量（MB） */
+                    rss: number;
+                    /** @description ヒープ合計（MB） */
+                    heapTotal: number;
+                    /** @description ヒープ使用量（MB） */
+                    heapUsed: number;
+                };
+                cpu: {
+                    /** @description ユーザーCPU時間（ミリ秒） */
+                    user: number;
+                    /** @description システムCPU時間（ミリ秒） */
+                    system: number;
+                };
+            };
+            /** @example 0.1.0 */
+            version: string;
+            /** @example development */
+            environment: string;
+        };
+        ServiceHealth: {
+            /** @enum {string} */
+            status: "healthy" | "degraded" | "unhealthy";
+            message?: string;
+            /** @description 応答時間（ミリ秒） */
+            responseTime?: number;
+        };
+        User: {
+            /**
+             * @description ClerkのユーザーID
+             * @example user_2abcd1234efgh5678ijkl
+             */
+            id: string;
+            /**
+             * @description 表示名
+             * @example 田中太郎
+             */
+            displayName?: string | null;
+            /**
+             * Format: email
+             * @description メールアドレス
+             * @example tanaka@example.com
+             */
+            email?: string | null;
+            /**
+             * Format: uri
+             * @description アバターURL
+             * @example https://img.clerk.com/avatar.jpg
+             */
+            avatarUrl?: string | null;
+            /**
+             * @description 言語設定
+             * @example ja
+             */
+            locale?: string | null;
+            /**
+             * Format: date-time
+             * @description 作成日時
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description 更新日時
+             */
+            updatedAt: string;
+        };
+        UserUpdateData: {
+            /**
+             * @description 表示名
+             * @example 田中太郎
+             */
+            displayName?: string;
+            /**
+             * Format: email
+             * @description メールアドレス
+             * @example tanaka@example.com
+             */
+            email?: string;
+            /**
+             * Format: uri
+             * @description アバターURL
+             * @example https://img.clerk.com/avatar.jpg
+             */
+            avatarUrl?: string;
+            /**
+             * @description 言語設定
+             * @example ja
+             * @enum {string}
+             */
+            locale?: "ja" | "en";
+        };
+        ApiResponse: {
+            /** @description Response success indicator */
+            success: boolean;
+            /**
+             * @description Message code from registry (language-neutral identifier)
+             * @enum {string}
+             */
+            code: "auth.signin_required" | "auth.signin_success" | "auth.user_ensured" | "auth.ensure_failed" | "error.user_not_found" | "error.profile_retrieval_failed" | "error.profile_update_failed" | "error.validation_failed" | "error.invalid_response_format" | "error.unknown_error" | "success.profile_retrieved" | "success.profile_updated" | "success.user_ensured" | "ui.profile_info" | "ui.user_id" | "ui.display_name" | "ui.email_address" | "ui.created_at" | "ui.updated_at" | "ui.auth_providers" | "ui.avatar" | "ui.not_set" | "ui.unknown" | "ui.dashboard" | "ui.authenticated_user_page" | "ui.loading" | "ui.executing" | "ui.last_execution" | "action.auth_api_test" | "action.health_check_success" | "action.response_data" | "action.error_occurred" | "action.error_details" | "validation.field_required" | "validation.invalid_email" | "validation.invalid_url" | "validation.string_too_short" | "validation.string_too_long";
+            /** @description Human-readable message (optional for backward compatibility) */
+            message?: string | null;
+            /** @description Response data */
+            data?: Record<string, never>;
+        };
+        UserResponse: {
+            /**
+             * @description 処理成功フラグ
+             * @example true
+             */
+            success: boolean;
+            /**
+             * @description MessageKeyシステム用コード
+             * @example success.user_ensured
+             */
+            code?: string;
+            /**
+             * @description デバッグ用メッセージ（開発環境のみ）
+             * @example User ensured successfully
+             */
+            message?: string;
+            data: {
+                user: components["schemas"]["User"];
+            };
+        };
+        /**
+         * @deprecated
+         * @description Deprecated error response format - use ApiError instead
+         */
+        ErrorResponse: {
+            /**
+             * @deprecated
+             * @example false
+             * @enum {boolean}
+             */
+            success: false;
+            /**
+             * @deprecated
+             * @description Error message (deprecated - use code instead)
+             * @example User not found
+             */
+            message?: string;
+            /**
+             * @deprecated
+             * @description Error details (deprecated - use code + details instead)
+             * @example User not found. Please sign in again.
+             */
+            error?: string;
+            /**
+             * @description Error code (new standard)
+             * @example error.user_not_found
+             * @enum {string}
+             */
+            code: "auth.signin_required" | "auth.signin_success" | "auth.user_ensured" | "auth.ensure_failed" | "error.user_not_found" | "error.profile_retrieval_failed" | "error.profile_update_failed" | "error.validation_failed" | "error.invalid_response_format" | "error.unknown_error" | "validation.field_required" | "validation.invalid_email" | "validation.invalid_url" | "validation.string_too_short" | "validation.string_too_long";
+            /** @description Additional error context */
+            details?: Record<string, never>;
+        };
+        ApiError: components["schemas"]["ApiResponse"] & {
+            /**
+             * @example false
+             * @enum {boolean}
+             */
+            success?: false;
+            /**
+             * @description Error code from registry
+             * @example error.user_not_found
+             * @enum {string}
+             */
+            code?: "auth.signin_required" | "auth.signin_success" | "auth.user_ensured" | "auth.ensure_failed" | "error.user_not_found" | "error.profile_retrieval_failed" | "error.profile_update_failed" | "error.validation_failed" | "error.invalid_response_format" | "error.unknown_error" | "validation.field_required" | "validation.invalid_email" | "validation.invalid_url" | "validation.string_too_short" | "validation.string_too_long";
+            /** @description Additional error context */
+            details?: Record<string, never>;
+        };
+        ApiSuccess: components["schemas"]["ApiResponse"] & {
+            /**
+             * @example true
+             * @enum {boolean}
+             */
+            success?: true;
+            /**
+             * @description Success code from registry
+             * @example success.profile_retrieved
+             * @enum {string}
+             */
+            code?: "success.profile_retrieved" | "success.profile_updated" | "success.user_ensured";
+        };
+        ValidationErrorDetail: {
+            /**
+             * @description Field name that failed validation
+             * @example email
+             */
+            field: string;
+            /**
+             * @description Validation error code
+             * @example validation.field_required
+             * @enum {string}
+             */
+            code: "validation.field_required" | "validation.invalid_email" | "validation.invalid_url" | "validation.string_too_short" | "validation.string_too_long";
+            /**
+             * @description Human-readable validation error message
+             * @example Email is required
+             */
+            message: string;
+        };
+        ValidationError: components["schemas"]["ApiError"] & {
+            /**
+             * @example error.validation_failed
+             * @enum {string}
+             */
+            code?: "error.validation_failed";
+            /** @description Detailed validation errors */
+            errors: components["schemas"]["ValidationErrorDetail"][];
+        };
+        /**
+         * @description Message codes from registry (version 1.0.0)
+         * @enum {string}
+         */
+        MessageCode: "auth.signin_required" | "auth.signin_success" | "auth.user_ensured" | "auth.ensure_failed" | "error.user_not_found" | "error.profile_retrieval_failed" | "error.profile_update_failed" | "error.validation_failed" | "error.invalid_response_format" | "error.unknown_error" | "success.profile_retrieved" | "success.profile_updated" | "success.user_ensured" | "ui.profile_info" | "ui.user_id" | "ui.display_name" | "ui.email_address" | "ui.created_at" | "ui.updated_at" | "ui.auth_providers" | "ui.avatar" | "ui.not_set" | "ui.unknown" | "ui.dashboard" | "ui.authenticated_user_page" | "ui.loading" | "ui.executing" | "ui.last_execution" | "action.auth_api_test" | "action.health_check_success" | "action.response_data" | "action.error_occurred" | "action.error_details" | "validation.field_required" | "validation.invalid_email" | "validation.invalid_url" | "validation.string_too_short" | "validation.string_too_long";
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
-export type $defs = Record<string, never>
+export type $defs = Record<string, never>;
 export interface operations {
-  healthCheck: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description サーバー正常 */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HealthCheck']
-        }
-      }
-    }
-  }
-  getDetailedHealth: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description システム正常 */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['DetailedHealthCheck']
-        }
-      }
-      /** @description サービス利用不可 */
-      503: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['DetailedHealthCheck']
-        }
-      }
-    }
-  }
-  ensureUser: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description ユーザー作成/更新成功 */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['UserResponse']
-        }
-      }
-      /** @description 認証エラー */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-      /** @description サーバーエラー */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  getUserProfile: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description プロフィール取得成功 */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['UserResponse']
-        }
-      }
-      /** @description 認証エラー */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-      /** @description ユーザーが見つからない */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-      /** @description サーバーエラー */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  updateUserProfile: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UserUpdateData']
-      }
-    }
-    responses: {
-      /** @description プロフィール更新成功 */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['UserResponse']
-        }
-      }
-      /** @description バリデーションエラー */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-      /** @description 認証エラー */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-      /** @description ユーザーが見つからない */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-      /** @description サーバーエラー */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
+    healthCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description サーバー正常 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthCheck"];
+                };
+            };
+        };
+    };
+    getDetailedHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description システム正常 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DetailedHealthCheck"];
+                };
+            };
+            /** @description サービス利用不可 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DetailedHealthCheck"];
+                };
+            };
+        };
+    };
+    ensureUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ユーザー作成/更新成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description 認証エラー */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description サーバーエラー */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getUserProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description プロフィール取得成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description 認証エラー */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description ユーザーが見つからない */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description サーバーエラー */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateUserProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdateData"];
+            };
+        };
+        responses: {
+            /** @description プロフィール更新成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description バリデーションエラー */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description 認証エラー */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description ユーザーが見つからない */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description サーバーエラー */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
 }
