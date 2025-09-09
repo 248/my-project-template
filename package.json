@@ -60,11 +60,12 @@
     "prebuild": "pnpm codegen && pnpm db:generate",
     "prepare": "husky",
     "clean": "pnpm -r clean",
-    "deploy:vercel": "cd apps/frontend && vercel --prod",
+    "build:frontend": "pnpm --filter @template/frontend build",
+    "build:backend": "pnpm --filter @template/backend build",
+    "deploy:vercel:production": "cd apps/frontend && vercel --prod",
     "deploy:vercel:preview": "cd apps/frontend && vercel",
-    "build:vercel": "pnpm codegen && cd apps/frontend && pnpm build",
-    "vercel:env": "cd apps/frontend && vercel env pull .env.local",
-    "vercel:link": "cd apps/frontend && vercel link"
+    "deploy:workers:preview": "pnpm --filter @template/backend deploy:preview",
+    "deploy:workers:production": "pnpm --filter @template/backend deploy:production"
   },
   "dependencies": {
     "next": "15.5.2",

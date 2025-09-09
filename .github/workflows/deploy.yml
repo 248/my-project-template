@@ -75,7 +75,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: コード生成
-        run: pnpm codegen
+        run: pnpm codegen && pnpm gen:messages
 
       - name: 型チェック
         run: pnpm type-check
@@ -142,7 +142,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build frontend
-        run: pnpm --filter @template/frontend build
+        run: pnpm build:frontend
 
       - name: Deploy to Vercel (Preview)
         if: github.event_name == 'pull_request'
@@ -219,7 +219,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build backend
-        run: pnpm --filter @template/backend build
+        run: pnpm build:backend
 
       # プレビュー環境へのデプロイ
       - name: Deploy to Cloudflare Workers (Preview)

@@ -41,18 +41,23 @@ echo 'DATABASE_URL="postgresql://username:password@endpoint.neon.tech/dbname?ssl
 # 実際のNeon PostgreSQLの接続文字列に置き換えてください
 ```
 
-### 3. 型・スキーマ生成
+### 3. 型・スキーマ生成（必須）
 
 ```bash
-# OpenAPI → TypeScript型 + Zodスキーマ生成
+# 1. OpenAPI → TypeScript型 + Zodスキーマ生成
 pnpm codegen
 
-# Prisma → 型安全DBクライアント生成（server境界層）
+# 2. メッセージキー → TypeScript型定義生成（i18n対応）
+pnpm gen:messages
+
+# 3. Prisma → 型安全DBクライアント生成（server境界層）
 pnpm --filter @template/backend db:generate
 
-# または一括実行
-pnpm codegen && pnpm --filter @template/backend db:generate
+# 一括実行（推奨）
+pnpm codegen && pnpm gen:messages && pnpm --filter @template/backend db:generate
 ```
+
+**⚠️ 重要**: `gen:messages`を実行しないとフロントエンドのメッセージ型定義が不足し、開発サーバーが起動しません。
 
 ### 4. 開発サーバ起動
 
@@ -72,8 +77,8 @@ pnpm --filter @template/backend dev:workers  # Cloudflare Workers (localhost:878
 pnpm quality-check
 
 # または個別実行
-pnpm codegen         # 型生成確認
-pnpm gen:messages    # メッセージキー生成確認
+pnpm codegen         # API型生成確認
+pnpm gen:messages    # メッセージキー型生成確認
 pnpm type-check      # TypeScript エラー: 0件必須
 pnpm lint            # ESLint（段階的厳格化対応）
 pnpm test:run        # テスト実行
@@ -82,8 +87,10 @@ pnpm test:run        # テスト実行
 pnpm lint:fix        # 自動修正可能なESLintエラー修正
 pnpm format          # Prettier自動整形
 
-# 最終ビルド確認
-pnpm build
+# ビルド確認
+pnpm build           # 全体ビルド
+pnpm build:frontend  # フロントエンドのみビルド
+pnpm build:backend   # バックエンドのみビルド
 ```
 
 #### ESLint段階的厳格化について
@@ -137,11 +144,49 @@ CLERK_JWT_ISSUER=https://your-app.clerk.accounts.dev
 ### 基本コマンド
 
 ```bash
+# インストール・セットアップ
 pnpm i                    # 依存関係インストール
+pnpm codegen             # API型定義生成
+pnpm gen:messages        # メッセージキー型定義生成
+
+# 開発
+pnpm dev                 # フロントエンド開発サーバー
+pnpm dev:workers         # バックエンドWorkers開発サーバー
+pnpm dev:workers-fullstack # フルスタック開発環境
+
+# 品質チェック
 pnpm type-check          # TypeScript型チェック
-pnpm lint                # ESLint（警告0件必須）
+pnpm lint                # ESLint
+pnpm test:run            # テスト実行
+pnpm quality-check       # 全体品質チェック
+
+# ビルド
+pnpm build               # 全体ビルド
+pnpm build:frontend      # フロントエンドのみ
+pnpm build:backend       # バックエンドのみ
+
+# コード整形
+pnpm lint:fix            # ESLint自動修正
 pnpm format              # Prettier整形
-pnpm build               # 本番ビルド
+
+# クリーンアップ
+pnpm clean               # 全パッケージクリーンアップ
+```
+
+### 手動デプロイコマンド（緊急時用）
+
+通常はCI/CDで自動デプロイされますが、緊急時は以下のコマンドで手動デプロイ可能：
+
+```bash
+# 緊急時の手動デプロイコマンド（CI/CDが使用できない場合のみ）
+pnpm deploy:vercel:production   # Vercel本番デプロイ
+pnpm deploy:vercel:preview      # Vercelプレビューデプロイ
+pnpm deploy:workers:preview     # Workers プレビューデプロイ
+pnpm deploy:workers:production  # Workers 本番デプロイ
+
+# 削除されたセットアップコマンド（使用頻度低）
+# pnpm vercel:link         # → 初回セットアップ時のみ手動実行
+# pnpm vercel:env          # → GitHub Secretsで管理
 ```
 
 ### 停止コマンド
