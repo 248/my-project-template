@@ -6,11 +6,11 @@
 
 ### 環境構成
 
-| 環境           | Frontend (Vercel) | Backend API        | 認証           | 用途               |
-| -------------- | ----------------- | ------------------ | -------------- | ------------------ |
-| **Local**      | `next dev` (3000) | `wrangler dev` (8787) | Clerk (Test)   | ローカル開発       |
-| **Preview**    | Vercel Preview    | Workers (Preview)  | Clerk (Test)   | プルリクエスト確認 |
-| **Production** | Vercel Production | Workers (Prod)     | Clerk (Live)   | 本番サービス       |
+| 環境           | Frontend (Vercel) | Backend API           | 認証         | 用途               |
+| -------------- | ----------------- | --------------------- | ------------ | ------------------ |
+| **Local**      | `next dev` (3000) | `wrangler dev` (8787) | Clerk (Test) | ローカル開発       |
+| **Preview**    | Vercel Preview    | Workers (Preview)     | Clerk (Test) | プルリクエスト確認 |
+| **Production** | Vercel Production | Workers (Prod)        | Clerk (Live) | 本番サービス       |
 
 ### アーキテクチャ戦略
 
@@ -31,10 +31,10 @@
 
 ```
 apps/frontend/
-├── vercel.json              # Vercel設定ファイル  
+├── vercel.json              # Vercel設定ファイル
 ├── .vercelignore            # Vercelデプロイ時除外ファイル
 ├── .env.example             # 環境変数テンプレート
-├── ignored-build-step.sh    # 自動ビルドスキップスクリプト
+├── turbo.json               # Turbo設定（自動ビルドスキップ用）
 ├── package.json             # 依存関係とスクリプト
 ├── next.config.js           # Next.js設定（セキュリティ対策含む）
 └── src/                     # ソースコード
@@ -68,7 +68,7 @@ apps/frontend/
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    CLERK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-   # Production Keys  
+   # Production Keys
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    CLERK_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    ```
@@ -136,30 +136,36 @@ CORS_ORIGIN=https://your-app.vercel.app,https://your-app-git-branch.vercel.app
 1. **Vercel Dashboard** → プロジェクト選択 → **Settings** → **Environment Variables**
 2. **Preview環境用変数設定:**
 
-| Variable Name                        | Environment | Value                                            |
-| ------------------------------------ | ----------- | ------------------------------------------------ |
-| `NEXT_PUBLIC_API_BASE_URL`           | Preview     | `https://your-worker-preview.workers.dev`       |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`  | Preview     | `pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx`          |
-| `CLERK_SECRET_KEY`                   | Preview     | `sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx`          |
-| `NODE_ENV`                           | Preview     | `preview`                                        |
-| `NEXT_TELEMETRY_DISABLED`            | Preview     | `1`                                              |
-| `AUTH_BYPASS`                        | Preview     | `0`                                              |
-| `NEXT_PUBLIC_AUTH_BYPASS`            | Preview     | `0`                                              |
+| Variable Name                       | Environment | Value                                     |
+| ----------------------------------- | ----------- | ----------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL`          | Preview     | `https://your-worker-preview.workers.dev` |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Preview     | `pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx`   |
+| `CLERK_SECRET_KEY`                  | Preview     | `sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx`   |
+| `NODE_ENV`                          | Preview     | `preview`                                 |
+| `NEXT_TELEMETRY_DISABLED`           | Preview     | `1`                                       |
+| `AUTH_BYPASS`                       | Preview     | `0`                                       |
+| `NEXT_PUBLIC_AUTH_BYPASS`           | Preview     | `0`                                       |
 
 #### 自動ビルドスキップ設定
 
-`ignored-build-step.sh`により、フロントエンド関係のない変更はビルドスキップ:
+`turbo-ignore`により、フロントエンド関係のない変更はビルドスキップ:
 
 **ビルド実行する変更:**
+
 - `apps/frontend/` - フロントエンドコード
 - `packages/ui/`, `packages/shared/` - 共通パッケージ
 - `packages/api-contracts/` - API型定義
-- 依存関係ファイル
+- `packages/config/` - 設定パッケージ
+- 依存関係ファイル（`package.json`, `pnpm-lock.yaml`等）
 
 **ビルドスキップする変更:**
+
 - `apps/backend/` - バックエンドのみ
 - `docs/`, `*.md` - ドキュメント
 - `infra/docker/` - Docker設定
+
+**強制ビルド対応:**
+緊急時にどうしてもビルドしたい場合、Vercelの環境変数で`FORCE_BUILD=1`を設定すると必ずビルドが実行されます。
 
 #### デプロイ手順
 
@@ -172,6 +178,7 @@ pnpm deploy:vercel:preview
 ```
 
 **Vercelの自動デプロイトリガー:**
+
 - **Production**: `main`/`master` ブランチへのpush
 - **Preview**: フィーチャーブランチへのpush（プルリクエスト不要）
 - **Manual**: `vercel` コマンド実行時
@@ -192,15 +199,15 @@ FRONTEND_URL=https://your-domain.com
 
 #### Production環境用変数設定
 
-| Variable Name                        | Environment | Value                                            |
-| ------------------------------------ | ----------- | ------------------------------------------------ |
-| `NEXT_PUBLIC_API_BASE_URL`           | Production  | `https://your-worker.workers.dev`               |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`  | Production  | `pk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx`          |
-| `CLERK_SECRET_KEY`                   | Production  | `sk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx`          |
-| `NODE_ENV`                           | Production  | `production`                                     |
-| `NEXT_TELEMETRY_DISABLED`            | Production  | `1`                                              |
-| `AUTH_BYPASS`                        | Production  | `0` ⚠️                                           |
-| `NEXT_PUBLIC_AUTH_BYPASS`            | Production  | `0` ⚠️                                           |
+| Variable Name                       | Environment | Value                                   |
+| ----------------------------------- | ----------- | --------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL`          | Production  | `https://your-worker.workers.dev`       |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Production  | `pk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
+| `CLERK_SECRET_KEY`                  | Production  | `sk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
+| `NODE_ENV`                          | Production  | `production`                            |
+| `NEXT_TELEMETRY_DISABLED`           | Production  | `1`                                     |
+| `AUTH_BYPASS`                       | Production  | `0` ⚠️                                  |
+| `NEXT_PUBLIC_AUTH_BYPASS`           | Production  | `0` ⚠️                                  |
 
 ⚠️ **重要:** 本番環境では認証バイパスを絶対に有効にしないでください。
 
@@ -255,7 +262,7 @@ curl https://your-worker.workers.dev/api/health
 
 ```javascript
 // コンソールで実行
-console.log(process.env.NEXT_PUBLIC_API_BASE_URL);
+console.log(process.env.NEXT_PUBLIC_API_BASE_URL)
 // → http://localhost:8787 (開発時)
 ```
 
@@ -304,9 +311,9 @@ cd apps/frontend && pnpm lint
 # Vercel環境変数確認
 pnpm vercel:env
 
-# ビルドスキップテスト
-bash apps/frontend/ignored-build-step.sh
-echo $?  # 0=ビルド実行, 1=スキップ
+# ビルドスキップテスト（turbo-ignore）
+cd apps/frontend && npx turbo-ignore
+echo $?  # 0=ビルドスキップ, 1=ビルド実行
 ```
 
 ### ログ確認方法
