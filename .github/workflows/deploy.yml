@@ -144,7 +144,7 @@ jobs:
       - name: Generate required files
         run: pnpm codegen && pnpm gen:messages
 
-      # 👇 ここがポイント：毎回 project.json を pull して再生成する
+      # 👇 Vercel側ビルドに移行：GitHub Actions内でのビルドを廃止
       - name: Vercel pull
         working-directory: apps/frontend
         run: |
@@ -153,24 +153,13 @@ jobs:
             --scope ${{ secrets.VERCEL_TEAM_SLUG }} \
             --token ${{ secrets.VERCEL_TOKEN }}
 
-      - name: Build
-        working-directory: apps/frontend
-        run: pnpm build
-
-      - name: Vercel build
-        working-directory: apps/frontend
-        run: |
-          npx vercel@latest build \
-            --scope ${{ secrets.VERCEL_TEAM_SLUG }} \
-            --token ${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy with Vercel CLI
+      - name: Deploy with Vercel CLI (Vercel側ビルド)
         working-directory: apps/frontend
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "🔄 プレビュー環境用デプロイ開始"
+            echo "🔄 プレビュー環境用デプロイ開始（Vercel側ビルド）"
             
-            DEPLOY_URL=$(npx vercel@latest deploy --prebuilt --yes \
+            DEPLOY_URL=$(npx vercel@latest deploy --yes \
               --scope ${{ secrets.VERCEL_TEAM_SLUG }} \
               --token ${{ secrets.VERCEL_TOKEN }})
             
@@ -180,7 +169,7 @@ jobs:
             echo "⚠️ 本番環境デプロイは一時的にスキップ（環境準備中）"
             echo "prod-url=https://production-url-will-be-set-later" >> $GITHUB_OUTPUT
             # 将来的に本番デプロイが必要な場合は以下を有効化:
-            # DEPLOY_URL=$(npx vercel@latest deploy --prebuilt --prod --yes \
+            # DEPLOY_URL=$(npx vercel@latest deploy --prod --yes \
             #   --scope ${{ secrets.VERCEL_TEAM_SLUG }} \
             #   --token ${{ secrets.VERCEL_TOKEN }})
             # echo "prod-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
