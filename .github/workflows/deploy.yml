@@ -79,8 +79,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: コード生成とPrisma Client生成
-        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
+      - name: OpenAPI 型生成
+        run: pnpm -w codegen
+
+      - name: メッセージ型生成
+        run: pnpm -w gen:messages
+
+      - name: Prisma Client 生成
+        run: pnpm --filter @template/backend exec prisma generate --schema ../../db/schema.prisma
 
       - name: 型チェック
         run: pnpm type-check
@@ -147,8 +153,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate required files and Prisma Client
-        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
+      - name: OpenAPI 型生成（フロントエンド）
+        run: pnpm -w codegen
+
+      - name: メッセージ型生成（フロントエンド）
+        run: pnpm -w gen:messages
+
+      - name: Prisma Client 生成（フロントエンド）
+        run: pnpm --filter @template/backend exec prisma generate --schema ../../db/schema.prisma
 
       # Vercel CLI公式フローで環境変数取得 + ビルド + デプロイ（条件統一）
       - name: Build and Deploy with Vercel CLI
@@ -233,8 +245,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate required files and Prisma Client
-        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
+      - name: OpenAPI 型生成（バックエンド）
+        run: pnpm -w codegen
+
+      - name: メッセージ型生成（バックエンド）
+        run: pnpm -w gen:messages
+
+      - name: Prisma Client 生成（バックエンド）
+        run: pnpm --filter @template/backend exec prisma generate --schema ../../db/schema.prisma
 
       - name: Build backend
         run: pnpm build:backend
