@@ -55,7 +55,7 @@
     "verify:messages": "node tools/message-codegen/verify.js",
     "ci:verify:messages": "node tools/message-codegen/ci-verify.js",
     "msg:add": "node tools/message-codegen/add-message.js",
-    "db:generate": "prisma generate --schema db/schema.prisma",
+    "db:generate": "pnpm --filter @template/backend db:generate",
     "postinstall": "echo 'Setup completed'",
     "prebuild": "pnpm codegen && pnpm gen:messages && pnpm db:generate",
     "prepare": "husky",
