@@ -3,7 +3,7 @@
     "deploymentEnabled": false
   },
   "framework": "nextjs",
-  "buildCommand": "pnpm build",
+  "buildCommand": "pnpm codegen && pnpm build:frontend",
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
   "outputDirectory": ".next"
