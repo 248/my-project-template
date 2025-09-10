@@ -4,6 +4,8 @@
   "name": "template-frontend",
   "outputDirectory": ".next",
   "framework": "nextjs",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm build",
   "build": {
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1",
