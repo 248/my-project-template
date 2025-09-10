@@ -144,31 +144,38 @@ jobs:
       - name: Generate required files
         run: pnpm codegen && pnpm gen:messages
 
-      # Vercel CLI デプロイ（Git連携不要・scope指定方式）
+      # Vercel CLI デプロイ（.vercel設定削除による完全クリーン実行）
       - name: Build and Deploy with Vercel CLI
-        working-directory: ./apps/frontend
         run: |
           echo "📋 Vercelプロジェクトのデプロイ開始"
 
+          # .vercel設定ファイルを完全削除してパス競合を根絶
+          rm -rf apps/frontend/.vercel
+          echo "🧹 .vercel設定を完全削除（パス競合根絶）"
+
           # デバッグ情報出力
-          echo "Working directory: $(pwd)"
+          echo "Root directory: $(pwd)"
+          echo "Frontend directory: $(ls -la apps/frontend/)"
           echo "Vercel version: $(npx vercel --version)"
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "🔄 プレビュー環境用デプロイ開始"
-            # プロジェクト名を明示してデプロイ（Git連携不要）
+            
+            # apps/frontendディレクトリに移動してクリーンデプロイ
+            cd apps/frontend
+            
+            # 完全にクリーンなVercel実行（プロジェクト設定を環境変数で制御）
             DEPLOY_URL=$(npx vercel deploy \
               --token=${{ secrets.VERCEL_TOKEN }} \
               --scope=${{ secrets.VERCEL_ORG_ID }} \
-              --yes)
+              --yes \
+              --force)
+            
             echo "preview-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
             echo "✅ プレビューデプロイ完了: $DEPLOY_URL"
           else
             echo "⚠️ 本番環境デプロイは一時的にスキップ（環境準備中）"
             echo "prod-url=https://production-url-will-be-set-later" >> $GITHUB_OUTPUT
-            # echo "🚀 本番環境用デプロイ開始"
-            # DEPLOY_URL=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm)
-            # echo "prod-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           fi
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
