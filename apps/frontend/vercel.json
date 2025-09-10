@@ -4,7 +4,6 @@
   "name": "my-project-template-frontend",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "rootDirectory": "apps/frontend",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "buildCommand": "cd ../.. && pnpm codegen && pnpm gen:messages && cd apps/frontend && pnpm build",
   "build": {
