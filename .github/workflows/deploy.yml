@@ -144,7 +144,7 @@ jobs:
       - name: Generate required files
         run: pnpm codegen && pnpm gen:messages
 
-      # Vercel CLI デプロイ（プロジェクト設定を環境変数で指定）
+      # Vercel CLI デプロイ（Git連携不要・scope指定方式）
       - name: Build and Deploy with Vercel CLI
         working-directory: ./apps/frontend
         run: |
@@ -156,8 +156,11 @@ jobs:
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "🔄 プレビュー環境用デプロイ開始"
-            # プレビュー環境のデプロイ（自動ビルド付き）
-            DEPLOY_URL=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --confirm)
+            # プロジェクト名を明示してデプロイ（Git連携不要）
+            DEPLOY_URL=$(npx vercel deploy \
+              --token=${{ secrets.VERCEL_TOKEN }} \
+              --scope=${{ secrets.VERCEL_ORG_ID }} \
+              --yes)
             echo "preview-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
             echo "✅ プレビューデプロイ完了: $DEPLOY_URL"
           else
@@ -200,9 +203,9 @@ jobs:
   deploy-backend:
     runs-on: ubuntu-latest
     needs: [detect-changes, quality-check, test, deploy-frontend]
-    # バックエンドまたは共通パッケージが変更された場合のみ実行
+    # フロントエンドが成功し、バックエンドまたは共通パッケージが変更された場合のみ実行
     if: |
-      always() &&
+      needs.deploy-frontend.result == 'success' &&
       (needs.detect-changes.outputs.backend == 'true' || 
        needs.detect-changes.outputs.packages == 'true' ||
        needs.detect-changes.outputs.infra == 'true') &&
