@@ -1,9 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "name": "template-frontend",
+  "name": "my-project-template-frontend",
   "outputDirectory": ".next",
   "framework": "nextjs",
+  "rootDirectory": "apps/frontend",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "buildCommand": "cd ../.. && pnpm codegen && pnpm gen:messages && cd apps/frontend && pnpm build",
   "build": {
