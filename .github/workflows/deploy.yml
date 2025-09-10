@@ -146,9 +146,11 @@ jobs:
 
       # Vercel CLI デプロイ（Git連携不要・scope指定方式）
       - name: Build and Deploy with Vercel CLI
-        working-directory: ./apps/frontend
         run: |
           echo "📋 Vercelプロジェクトのデプロイ開始"
+
+          # フロントエンドディレクトリに移動
+          cd apps/frontend
 
           # デバッグ情報出力
           echo "Working directory: $(pwd)"
