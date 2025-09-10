@@ -57,7 +57,7 @@
     "msg:add": "node tools/message-codegen/add-message.js",
     "db:generate": "pnpm --filter @template/backend exec prisma generate",
     "postinstall": "echo 'Setup completed'",
-    "prebuild": "pnpm codegen && pnpm db:generate",
+    "prebuild": "pnpm codegen && pnpm gen:messages && pnpm db:generate",
     "prepare": "husky",
     "clean": "pnpm -r clean",
     "build:frontend": "pnpm --filter @template/frontend build",
