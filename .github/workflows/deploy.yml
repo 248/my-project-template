@@ -149,17 +149,14 @@ jobs:
         run: |
           echo "📋 Vercelプロジェクトのデプロイ開始"
 
-          # フロントエンドディレクトリに移動
-          cd apps/frontend
-
           # デバッグ情報出力
-          echo "Working directory: $(pwd)"
+          echo "Root directory: $(pwd)"
           echo "Vercel version: $(npx vercel --version)"
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "🔄 プレビュー環境用デプロイ開始"
-            # プロジェクト名を明示してデプロイ（Git連携不要）
-            DEPLOY_URL=$(npx vercel deploy \
+            # フロントエンドディレクトリを指定してデプロイ
+            DEPLOY_URL=$(npx vercel deploy apps/frontend \
               --token=${{ secrets.VERCEL_TOKEN }} \
               --scope=${{ secrets.VERCEL_ORG_ID }} \
               --yes)
@@ -169,7 +166,7 @@ jobs:
             echo "⚠️ 本番環境デプロイは一時的にスキップ（環境準備中）"
             echo "prod-url=https://production-url-will-be-set-later" >> $GITHUB_OUTPUT
             # echo "🚀 本番環境用デプロイ開始"
-            # DEPLOY_URL=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm)
+            # DEPLOY_URL=$(npx vercel deploy apps/frontend --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm)
             # echo "prod-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           fi
         env:

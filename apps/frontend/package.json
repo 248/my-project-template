@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "cd ../.. && pnpm gen:messages && cd apps/frontend && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0 --cache --ignore-path ../../.eslintignore",
     "lint:fix": "eslint . --ext .ts,.tsx --fix --cache",

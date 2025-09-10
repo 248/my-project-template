@@ -2,9 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "name": "template-frontend",
-  "buildCommand": "cd ../.. && pnpm codegen && pnpm --filter @template/frontend build",
+  "buildCommand": "pnpm build",
   "devCommand": "pnpm dev",
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "installCommand": "pnpm install --frozen-lockfile",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "build": {
