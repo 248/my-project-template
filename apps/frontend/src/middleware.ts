@@ -33,21 +33,23 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const response = NextResponse.next({ request: { headers: requestHeaders } })
 
   // CSPヘッダーを設定（全リクエストで実行）
-  // 開発環境では緩い設定、本番環境では厳格な設定
+  // 開発環境・Vercel preview環境では緩い設定、本番環境のみ厳格な設定
   const isDevelopment = process.env.NODE_ENV === 'development'
+  const isVercelPreview = process.env['VERCEL_ENV'] === 'preview'
+  const useRelaxedCSP = isDevelopment || isVercelPreview
 
   response.headers.set(
     'Content-Security-Policy',
     [
       `default-src 'self'`,
-      isDevelopment
+      useRelaxedCSP
         ? `script-src 'self' 'unsafe-eval' 'unsafe-inline' 'nonce-${nonce}' https://*.clerk.dev https://*.clerk.com https://*.clerk.accounts.dev`
         : `script-src 'self' 'strict-dynamic' 'nonce-${nonce}' https://*.clerk.dev https://*.clerk.com https://*.clerk.accounts.dev`,
-      isDevelopment
+      useRelaxedCSP
         ? `connect-src 'self' http://localhost:8787 http://127.0.0.1:8787 https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`
         : `connect-src 'self' https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`,
       `worker-src 'self' blob:`,
-      `frame-src https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`,
+      `frame-src https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev${isVercelPreview ? ' https://vercel.live' : ''}`,
       `img-src 'self' data: https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://img.clerk.com`,
       `style-src 'self' 'unsafe-inline'`,
       `base-uri 'self'`,
