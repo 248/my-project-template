@@ -141,39 +141,35 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build frontend
-        run: pnpm build:frontend
-
-      - name: Deploy to Vercel (Preview)
-        if: github.event_name == 'pull_request'
-        id: deploy-preview
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./apps/frontend
-          alias-domains: |
-            pr-{{PR_NUMBER}}.my-project-template.vercel.app
-
-      - name: Deploy to Vercel (Production)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        id: deploy-prod
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./apps/frontend
-          prod: true
+      # Vercel CLI公式フローで環境変数取得 + ビルド + デプロイ（条件統一）
+      - name: Build and Deploy with Vercel CLI
+        working-directory: ./apps/frontend
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "🔄 プレビュー環境用ビルド・デプロイ開始"
+            npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+            npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+            DEPLOY_URL=$(npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+            echo "preview-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          else
+            echo "🚀 本番環境用ビルド・デプロイ開始"
+            npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+            npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+            DEPLOY_URL=$(npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+            echo "prod-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          fi
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        id: vercel-deploy
 
       - name: Set output URLs
         id: deploy
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "preview-url=${{ steps.deploy-preview.outputs.preview-url }}" >> $GITHUB_OUTPUT
+            echo "preview-url=${{ steps.vercel-deploy.outputs.preview-url }}" >> $GITHUB_OUTPUT
           else
-            echo "prod-url=${{ steps.deploy-prod.outputs.preview-url }}" >> $GITHUB_OUTPUT
+            echo "prod-url=${{ steps.vercel-deploy.outputs.prod-url }}" >> $GITHUB_OUTPUT
           fi
 
       - name: PRにプレビューURLをコメント
