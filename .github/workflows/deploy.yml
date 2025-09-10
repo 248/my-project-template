@@ -74,14 +74,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: OpenAPI 型生成
-        run: pnpm -w codegen
-
-      - name: メッセージ型生成
-        run: pnpm -w gen:messages
-
-      - name: Prisma Client 生成
-        run: pnpm --filter @template/backend exec prisma generate --schema ../../db/schema.prisma
+      - name: コード生成
+        run: pnpm codegen && pnpm gen:messages
 
       - name: 型チェック
         run: pnpm type-check
@@ -147,51 +141,34 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: OpenAPI 型生成
-        run: pnpm -w codegen
+      - name: Generate required files
+        run: pnpm codegen && pnpm gen:messages
 
-      - name: メッセージ型生成
-        run: pnpm -w gen:messages
-
-      - name: Prisma Client 生成（フロントエンド用）
-        run: pnpm --filter @template/backend exec prisma generate --schema ../../db/schema.prisma
-
-      # Vercel CLI デプロイ（ルートディレクトリから実行・設定競合回避）
+      # Vercel CLI デプロイ（Git連携不要・scope指定方式）
       - name: Build and Deploy with Vercel CLI
+        working-directory: ./apps/frontend
         run: |
           echo "📋 Vercelプロジェクトのデプロイ開始"
 
           # デバッグ情報出力
-          echo "Root directory: $(pwd)"
+          echo "Working directory: $(pwd)"
           echo "Vercel version: $(npx vercel --version)"
-
-          # Vercel設定の競合回避：既存の.vercelフォルダを一時的にリネーム
-          if [ -d "apps/frontend/.vercel" ]; then
-            mv apps/frontend/.vercel apps/frontend/.vercel.backup
-            echo "既存の.vercel設定をバックアップしました"
-          fi
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "🔄 プレビュー環境用デプロイ開始"
-            # ルートディレクトリからプロジェクトを自動検出してデプロイ
-            cd apps/frontend
+            # プロジェクト名を明示してデプロイ（Git連携不要）
             DEPLOY_URL=$(npx vercel deploy \
               --token=${{ secrets.VERCEL_TOKEN }} \
               --scope=${{ secrets.VERCEL_ORG_ID }} \
-              --confirm \
               --yes)
-            cd ../..
             echo "preview-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
             echo "✅ プレビューデプロイ完了: $DEPLOY_URL"
           else
             echo "⚠️ 本番環境デプロイは一時的にスキップ（環境準備中）"
             echo "prod-url=https://production-url-will-be-set-later" >> $GITHUB_OUTPUT
-          fi
-
-          # .vercelフォルダを復元
-          if [ -d "apps/frontend/.vercel.backup" ]; then
-            mv apps/frontend/.vercel.backup apps/frontend/.vercel
-            echo ".vercel設定を復元しました"
+            # echo "🚀 本番環境用デプロイ開始"
+            # DEPLOY_URL=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm)
+            # echo "prod-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           fi
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -250,14 +227,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: OpenAPI 型生成
-        run: pnpm -w codegen
-
-      - name: メッセージ型生成
-        run: pnpm -w gen:messages
-
-      - name: Prisma Client 生成
-        run: pnpm --filter @template/backend exec prisma generate --schema ../../db/schema.prisma
+      - name: Generate required files
+        run: pnpm codegen && pnpm gen:messages
 
       - name: Build backend
         run: pnpm build:backend
