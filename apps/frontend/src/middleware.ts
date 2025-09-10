@@ -24,34 +24,13 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set('x-nonce', nonce)
 
-  let response: NextResponse
-
-  // 公開ルートかどうかで処理分岐
-  if (isPublicRoute(req)) {
-    // 公開ルート: 認証チェック無しでレスポンス生成
-    response = NextResponse.next({ request: { headers: requestHeaders } })
-  } else {
-    // 保護ルート: 認証チェック実行
-    const authResult = await auth()
-
-    // 型ガードでprotect関数の存在を確認
-    const hasProtectMethod = (
-      result: unknown
-    ): result is { protect: () => void | Promise<void> } => {
-      return (
-        result !== null &&
-        typeof result === 'object' &&
-        'protect' in result &&
-        typeof Reflect.get(result, 'protect') === 'function'
-      )
-    }
-
-    if (hasProtectMethod(authResult)) {
-      void authResult.protect()
-    }
-
-    response = NextResponse.next({ request: { headers: requestHeaders } })
+  // Clerkの標準的な処理を行い、保護が必要な場合のみprotectを呼ぶ
+  if (!isPublicRoute(req)) {
+    await auth.protect()
   }
+
+  // レスポンス生成
+  const response = NextResponse.next({ request: { headers: requestHeaders } })
 
   // CSPヘッダーを設定（全リクエストで実行）
   // 開発環境では緩い設定、本番環境では厳格な設定
