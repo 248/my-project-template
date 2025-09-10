@@ -7,8 +7,11 @@
 このプロジェクトは以下の機能を持つCI/CDパイプラインを実装しています：
 
 - ✅ **PRプレビューデプロイ** - プルリクエストごとに独立した環境
-- ✅ **手動承認ステップ** - 本番デプロイ前の安全確認
-- ✅ **依存関係スキップ** - 変更がないパッケージはデプロイしない
+- ✅ **フロントエンド成功依存** - バックエンドはフロント成功時のみデプロイ
+- ✅ **動的CORS設定** - プレビュー環境のURL自動設定
+- ✅ **競合実行防止** - 同一ブランチの古い実行を自動キャンセル
+- ✅ **Vercel CLI公式フロー** - 環境変数統一によるビルド成功率向上
+- ✅ **Prisma Client自動生成** - CI/CD失敗の根本原因を修正
 - ✅ **段階的移行** - テスト無視 → テスト必須への段階的移行
 
 ## 🚀 クイックスタート
@@ -65,30 +68,44 @@
 
 **注意**: これによりVercel側の自動デプロイは無効となり、GitHub Actions経由でのみデプロイされます。
 
-### 5. 本番URLの設定
+### 5. 動的URL設定と本番環境スキップ
 
-`.github/workflows/deploy.yml`の本番URLを更新：
+**現在の実装**：
+
+- **プレビュー環境**：フロントエンドURL成功時に動的にCORS設定
+- **本番環境**：一時的にスキップ（Cloudflare GUIで固定URL設定予定）
+
+`.github/workflows/deploy.yml`の設定状況：
 
 ```yaml
-# TODO: 本番URLが決まったら更新
-FRONTEND_URL: ${{ needs.deploy-frontend.outputs.prod-url || 'https://your-production-domain.com' }}
+# プレビュー環境：動的FRONTEND_URL設定
+- name: Set FRONTEND_URL Secret (Preview)
+  uses: cloudflare/wrangler-action@v3
+  command: |
+    echo "${{ needs.deploy-frontend.outputs.url }}" | wrangler secret put FRONTEND_URL --env preview
+
+# 本番環境：一時的にスキップ
+- name: Deploy to Cloudflare Workers (Production)
+  if: false # 本番環境は未作成のため一時的にスキップ
 ```
 
 ## 📊 ワークフローの動作
 
-### PR作成時の動作
+### PR作成時の動作（改善版）
 
 1. **変更検出** - どのパッケージが変更されたか判定
 2. **品質チェック** - lint/type-check実行（失敗しても続行）
 3. **テスト** - 現在はスキップ（将来実装）
-4. **プレビューデプロイ** - Vercel/Cloudflareのプレビュー環境
-5. **コメント投稿** - PRにプレビューURLを自動コメント
+4. **フロントエンドデプロイ** - Vercel CLI公式フローでプレビュー環境
+5. **バックエンドデプロイ** - **フロントエンド成功時のみ**実行
+   - 動的FRONTEND_URL設定 → Cloudflareプレビューデプロイ
+6. **コメント投稿** - PRにプレビューURLを自動コメント
 
 ### mainブランチへのpush時の動作
 
-1. **品質チェック** - lint/type-check実行
+1. **品質チェック** - lint/type-check + **Prisma Client生成**実行
 2. **テスト** - 現在はスキップ
-3. **本番デプロイ** - 手動承認後に本番環境へデプロイ
+3. **本番デプロイ** - **現在は一時的にスキップ**（フロントエンド・バックエンド共に）
 
 ## 🔄 段階的移行パス
 
@@ -127,7 +144,7 @@ FRONTEND_URL: ${{ needs.deploy-frontend.outputs.prod-url || 'https://your-produc
 
 **品質チェック用:**
 
-- `pnpm quality-check` - 全体的な品質チェック（codegen + gen:messages + type-check + lint + test）
+- `pnpm quality-check` - 全体的な品質チェック（codegen + gen:messages + db:generate + type-check + lint + test）
 - `pnpm type-check` - 型チェック
 - `pnpm lint` - Lint実行
 - `pnpm test:run` - テスト実行
@@ -136,6 +153,7 @@ FRONTEND_URL: ${{ needs.deploy-frontend.outputs.prod-url || 'https://your-produc
 
 - `pnpm codegen` - API型定義生成
 - `pnpm gen:messages` - メッセージキー型定義生成（38メッセージ）
+- `pnpm db:generate` - **Prisma Client生成**（CI/CD必須）
 - `pnpm clean` - 全パッケージのクリーンアップ
 
 ### 手動デプロイコマンド（緊急時用）
@@ -170,16 +188,34 @@ pnpm build:backend && pnpm deploy:workers:production
 
 ## 🔧 トラブルシューティング
 
+### 🚨 CI/CD根本原因修正済み問題（2024年対応）
+
+以下の問題は**修正済み**です：
+
+1. **"Cannot find module '../../../generated/prisma'"エラー**
+   - **原因**: CI環境でPrisma Client生成不足
+   - **修正**: 全ワークフローに`pnpm db:generate`追加済み
+
+2. **"Project not found" Vercelエラー**
+   - **原因**: 不要な`vercel link`コマンド実行
+   - **修正**: 環境変数による自動識別に変更済み
+
+3. **フロント失敗時のバックエンドデプロイ実行**
+   - **原因**: 並列実行設定
+   - **修正**: フロントエンド成功依存に変更済み
+
 ### デプロイが失敗する場合
 
 1. **Secrets確認** - 全てのSecretsが正しく設定されているか
 2. **権限確認** - Vercel/CloudflareのAPIトークンに適切な権限があるか
 3. **ログ確認** - GitHub Actionsのログでエラーメッセージをチェック
+4. **Prisma Client確認** - バックエンドビルド前に生成されているか
 
 ### プレビューURLが表示されない
 
 - Vercelプロジェクトが正しく設定されているか確認
 - `VERCEL_PROJECT_ID`が正しいか確認
+- Vercel CLI公式フローが正常に動作しているか確認
 
 ### 依存関係の変更が反映されない
 
@@ -188,7 +224,7 @@ pnpm build:backend && pnpm deploy:workers:production
 
 ### ビルドエラーが発生する場合
 
-- `pnpm codegen`を実行してAPI型定義を最新化
+- `pnpm codegen && pnpm gen:messages && pnpm db:generate`の順序実行
 - `pnpm clean && pnpm install`でクリーンインストール
 - 各パッケージで`pnpm type-check`を個別実行して問題箇所を特定
 

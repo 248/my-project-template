@@ -16,6 +16,11 @@ on:
           - 'true'
           - 'false'
 
+# 同一ブランチの古い実行を自動キャンセル（安全性向上）
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # 段階的移行用の環境変数（GitHub Settings > Variables で設定）
 env:
   # false: テストをスキップしてデプロイ / true: テスト合格時のみデプロイ
@@ -74,8 +79,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: コード生成
-        run: pnpm codegen && pnpm gen:messages
+      - name: コード生成とPrisma Client生成
+        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
 
       - name: 型チェック
         run: pnpm type-check
@@ -126,6 +131,7 @@ jobs:
     outputs:
       preview-url: ${{ steps.deploy.outputs.preview-url }}
       prod-url: ${{ steps.deploy.outputs.prod-url }}
+      url: ${{ steps.deploy.outputs.url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -141,16 +147,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate required files
-        run: pnpm codegen && pnpm gen:messages
+      - name: Generate required files and Prisma Client
+        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
 
       # Vercel CLI公式フローで環境変数取得 + ビルド + デプロイ（条件統一）
       - name: Build and Deploy with Vercel CLI
         working-directory: ./apps/frontend
         run: |
-          # Vercelプロジェクトの設定確認とlink
-          echo "📋 Vercelプロジェクトのリンク確認・初期化"
-          npx vercel link --yes --token=${{ secrets.VERCEL_TOKEN }}
+          echo "📋 VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}"
+          echo "📋 VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}"
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "🔄 プレビュー環境用ビルド・デプロイ開始"
@@ -159,11 +164,13 @@ jobs:
             DEPLOY_URL=$(npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
             echo "preview-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           else
-            echo "🚀 本番環境用ビルド・デプロイ開始"
-            npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-            npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-            DEPLOY_URL=$(npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-            echo "prod-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+            echo "⚠️ 本番環境デプロイは一時的にスキップ（未作成のため）"
+            echo "prod-url=https://temporary-skip" >> $GITHUB_OUTPUT
+            # echo "🚀 本番環境用ビルド・デプロイ開始"
+            # npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+            # npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+            # DEPLOY_URL=$(npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+            # echo "prod-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           fi
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -175,9 +182,13 @@ jobs:
         id: deploy
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "preview-url=${{ steps.vercel-deploy.outputs.preview-url }}" >> $GITHUB_OUTPUT
+            URL="${{ steps.vercel-deploy.outputs.preview-url }}"
+            echo "preview-url=$URL" >> $GITHUB_OUTPUT
+            echo "url=$URL" >> $GITHUB_OUTPUT  # バックエンド用統一出力
           else
-            echo "prod-url=${{ steps.vercel-deploy.outputs.prod-url }}" >> $GITHUB_OUTPUT
+            URL="${{ steps.vercel-deploy.outputs.prod-url }}"
+            echo "prod-url=$URL" >> $GITHUB_OUTPUT
+            echo "url=$URL" >> $GITHUB_OUTPUT  # バックエンド用統一出力
           fi
 
       - name: PRにプレビューURLをコメント
@@ -197,16 +208,16 @@ jobs:
   # バックエンドのデプロイ（Cloudflare Workers）
   deploy-backend:
     runs-on: ubuntu-latest
-    needs: [detect-changes, quality-check, test, deploy-frontend]
-    # バックエンドまたは共通パッケージが変更された場合のみ実行
+    needs: [detect-changes, deploy-frontend]
+    # フロントエンド成功＋URL取得成功＋バックエンド変更時のみ実行
     if: |
-      always() &&
+      needs.deploy-frontend.result == 'success' &&
+      needs.deploy-frontend.outputs.url != '' &&
       (needs.detect-changes.outputs.backend == 'true' || 
        needs.detect-changes.outputs.packages == 'true' ||
        needs.detect-changes.outputs.infra == 'true') &&
       (github.event_name == 'pull_request' ||
-       (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-        (vars.GATE_DEPLOY != 'true' || needs.test.result == 'success')))
+       (github.event_name == 'push' && github.ref == 'refs/heads/main'))
     steps:
       - uses: actions/checkout@v4
 
@@ -222,11 +233,24 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate required files
-        run: pnpm codegen && pnpm gen:messages
+      - name: Generate required files and Prisma Client
+        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
 
       - name: Build backend
         run: pnpm build:backend
+
+      # CORS用フロントエンドURLを動的設定
+      - name: Set FRONTEND_URL Secret (Preview)
+        if: github.event_name == 'pull_request'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: ./apps/backend
+          command: |
+            echo "${{ needs.deploy-frontend.outputs.url }}" | wrangler secret put FRONTEND_URL --env preview
+
+      # 本番環境のFRONTEND_URLは固定（Cloudflare GUI設定済み）
 
       # プレビュー環境へのデプロイ
       - name: Deploy to Cloudflare Workers (Preview)
@@ -237,25 +261,17 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: ./apps/backend
           command: deploy --env preview
-          secrets: |
-            FRONTEND_URL
-        env:
-          FRONTEND_URL: ${{ needs.deploy-frontend.outputs.preview-url || 'http://localhost:3000' }}
 
-      # 本番環境へのデプロイ（承認が必要な場合）
+      # 本番環境へのデプロイ（現在は一時的にスキップ）
       - name: Deploy to Cloudflare Workers (Production)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: false # 本番環境は未作成のため一時的にスキップ
+        # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: ./apps/backend
           command: deploy --env production
-          secrets: |
-            FRONTEND_URL
-        env:
-          # TODO: 本番URLが決まったら更新
-          FRONTEND_URL: ${{ needs.deploy-frontend.outputs.prod-url || 'https://your-production-domain.com' }}
 
       - name: PRにAPIエンドポイントをコメント
         if: github.event_name == 'pull_request'

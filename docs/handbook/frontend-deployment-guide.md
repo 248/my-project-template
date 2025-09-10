@@ -17,13 +17,15 @@
 **フロントエンド（Next.js）:**
 
 - **Local環境**: 開発サーバー + ローカルAPI接続
-- **Preview環境**: Vercel Preview Deployment + Preview API
-- **Production環境**: Vercel Production + Production API
+- **Preview環境**: **Vercel CLI公式フロー** + 動的API接続
+- **Production環境**: **一時的にスキップ**（準備中）
 
-**API接続:**
+**デプロイフロー（改善版）:**
 
-- 環境変数による動的API接続先切り替え
-- CORS設定はバックエンド側で管理
+- **CI/CD統合**: GitHub Actions + Vercel CLI公式フロー採用
+- **環境変数統一**: Vercel GUI ≠ GitHub Actions問題を解決
+- **動的CORS設定**: デプロイ成功URLを自動でバックエンドに設定
+- **フロントエンド成功依存**: バックエンドはフロント成功時のみデプロイ
 
 ## 📁 ファイル構成
 
@@ -118,20 +120,28 @@ pnpm --filter @template/frontend dev         # Frontend (http://localhost:3000)
 CORS_ORIGIN=http://localhost:3000,http://127.0.0.1:3000
 ```
 
-### 3. Preview環境デプロイ
+### 3. Preview環境デプロイ（CI/CD自動化済み）
 
-#### 事前準備: バックエンドCORS設定
+#### 🚀 自動デプロイフロー（推奨）
 
-Vercelデプロイ前に、**バックエンド**（Cloudflare Workers）でフロントエンドURLを許可する必要があります：
+**現在の実装**：プルリクエスト作成で全自動デプロイ
 
-```bash
-# Cloudflare Workers Dashboard → Environment Variables
-# または wrangler secret コマンドで設定
-FRONTEND_URL=https://your-app-git-branch.vercel.app
+1. **GitHub Actions トリガー**: PR作成・更新時
+2. **Vercel CLI公式フロー**: 環境変数統一でビルド成功率向上
+3. **動的CORS設定**: デプロイ成功時にバックエンドへURL自動設定
+4. **PR自動コメント**: プレビューURL投稿
 
-# 複数環境の場合
-CORS_ORIGIN=https://your-app.vercel.app,https://your-app-git-branch.vercel.app
+```yaml
+# 自動実行される処理（参考）
+vercel pull --environment=preview
+vercel build
+DEPLOY_URL=$(vercel deploy --prebuilt)
+echo "$DEPLOY_URL" | wrangler secret put FRONTEND_URL --env preview
 ```
+
+#### ⚠️ 事前準備不要
+
+**従来必要だった手動CORS設定は不要**です。CI/CDが自動で実行します。
 
 #### Vercel環境変数設定
 
@@ -169,37 +179,44 @@ CORS_ORIGIN=https://your-app.vercel.app,https://your-app-git-branch.vercel.app
 **強制ビルド対応:**
 緊急時にどうしてもビルドしたい場合、Vercelの環境変数で`FORCE_BUILD=1`を設定すると必ずビルドが実行されます。
 
-#### デプロイ手順
+#### デプロイ手順（推奨: CI/CD自動化）
 
 ```bash
-# プレビューデプロイ（ブランチpush時に自動実行）
+# 1. プルリクエスト作成（推奨）
+git checkout -b feature/your-feature
+# 変更を実装
+git add . && git commit -m "feat: 機能追加"
 git push origin feature/your-feature
 
-# または手動デプロイ
+# 2. GitHub PR作成
+# → 自動でプレビュー環境デプロイ実行
+# → PRにプレビューURL自動投稿
+
+# 3. 手動デプロイ（緊急時のみ）
 pnpm deploy:vercel:preview
 ```
 
-**Vercelの自動デプロイトリガー:**
+**現在のデプロイトリガー（更新版）:**
 
-- **Production**: `main`/`master` ブランチへのpush
-- **Preview**: フィーチャーブランチへのpush（プルリクエスト不要）
-- **Manual**: `vercel` コマンド実行時
+- **Preview**: プルリクエスト作成・更新時（GitHub Actions自動）
+- **Production**: **一時的にスキップ**
+- **Manual**: `vercel` コマンド実行時（緊急時のみ）
 
-### 4. Production環境デプロイ
+### 4. Production環境デプロイ（現在は一時的にスキップ）
 
-#### 事前準備: 本番バックエンドCORS設定
+**⚠️ 現在の状況**: 本番環境は準備中のため、CI/CDで一時的にスキップされています。
 
-本番デプロイ前に、**バックエンド**（Cloudflare Workers Production）でフロントエンドURLを許可：
+#### 本番環境有効化時の設定（将来使用予定）
+
+**事前準備**: Cloudflare Workers本番環境で固定FRONTEND_URLを設定
 
 ```bash
 # Cloudflare Workers Dashboard → Production Environment Variables
-FRONTEND_URL=https://your-app.vercel.app
-
-# カスタムドメインの場合
+# 独自ドメインの固定URL設定
 FRONTEND_URL=https://your-domain.com
 ```
 
-#### Production環境用変数設定
+#### Production環境用変数設定（将来使用予定）
 
 | Variable Name                       | Environment | Value                                   |
 | ----------------------------------- | ----------- | --------------------------------------- |
@@ -211,21 +228,19 @@ FRONTEND_URL=https://your-domain.com
 | `AUTH_BYPASS`                       | Production  | `0` ⚠️                                  |
 | `NEXT_PUBLIC_AUTH_BYPASS`           | Production  | `0` ⚠️                                  |
 
-⚠️ **重要:** 本番環境では認証バイパスを絶対に有効にしないでください。
-
-#### デプロイ手順
+#### 本番環境有効化手順（将来実施予定）
 
 ```bash
-# 1. main/masterブランチにpush（自動デプロイ）
+# 1. CI/CDワークフロー修正
+# .github/workflows/deploy.yml内のコメントアウト解除：
+# echo "⚠️ 本番環境デプロイは一時的にスキップ（未作成のため）"
+# ↓
+# 本番デプロイコマンドを有効化
+
+# 2. 自動デプロイ（将来）
 git checkout main
 git merge feature/your-feature
-git push origin main  # 本番デプロイ実行
-
-# または手動デプロイ
-pnpm deploy:vercel
-
-# プロジェクトリンクが必要な場合
-pnpm vercel:link
+git push origin main  # 本番デプロイ実行（有効化後）
 ```
 
 ## 🔍 動作確認
