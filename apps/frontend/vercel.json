@@ -2,12 +2,15 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "name": "template-frontend",
+  "git": {
+    "deploymentEnabled": false
+  },
   "buildCommand": "cd ../.. && pnpm codegen && pnpm --filter @template/frontend build",
   "devCommand": "pnpm dev",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "ignoreCommand": "sh -c 'test \"$FORCE_BUILD\" = \"1\" && exit 1; cd ../.. && npx turbo-ignore ${WORKSPACE_NAME:-@template/frontend}'",
+  "ignoreCommand": "sh -c 'test \"$GITHUB_ACTIONS\" = \"true\" && exit 1; echo \"[CI] GitHub Actions以外の自動デプロイをスキップ\"; exit 0'",
   "build": {
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1",
