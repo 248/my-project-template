@@ -114,9 +114,6 @@ jobs:
   # フロントエンドのデプロイ（Vercel）
   deploy-frontend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/frontend
     needs: [detect-changes, quality-check, test]
     # フロントエンドまたは共通パッケージが変更された場合のみ実行
     if: |
@@ -149,6 +146,7 @@ jobs:
 
       # 👇 ここがポイント：毎回 project.json を pull して再生成する
       - name: Vercel pull
+        working-directory: apps/frontend
         run: |
           npx vercel@latest pull --yes \
             --environment=preview \
@@ -156,9 +154,11 @@ jobs:
             --token ${{ secrets.VERCEL_TOKEN }}
 
       - name: Build
+        working-directory: apps/frontend
         run: pnpm build
 
       - name: Deploy with Vercel CLI
+        working-directory: apps/frontend
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "🔄 プレビュー環境用デプロイ開始"
