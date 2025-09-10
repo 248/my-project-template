@@ -144,27 +144,27 @@ jobs:
       - name: Generate required files
         run: pnpm codegen && pnpm gen:messages
 
-      # Vercel CLI公式フローで環境変数取得 + ビルド + デプロイ（条件統一）
+      # Vercel CLI デプロイ（プロジェクト設定を環境変数で指定）
       - name: Build and Deploy with Vercel CLI
         working-directory: ./apps/frontend
         run: |
-          # Vercelプロジェクトの設定確認とlink
-          echo "📋 Vercelプロジェクトのリンク確認・初期化"
-          npx vercel link --yes --token=${{ secrets.VERCEL_TOKEN }}
+          echo "📋 Vercelプロジェクトのデプロイ開始"
+
+          # デバッグ情報出力
+          echo "Working directory: $(pwd)"
+          echo "Vercel version: $(npx vercel --version)"
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "🔄 プレビュー環境用ビルド・デプロイ開始"
-            npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-            npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
-            DEPLOY_URL=$(npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+            echo "🔄 プレビュー環境用デプロイ開始"
+            # プレビュー環境のデプロイ（自動ビルド付き）
+            DEPLOY_URL=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --confirm)
             echo "preview-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+            echo "✅ プレビューデプロイ完了: $DEPLOY_URL"
           else
             echo "⚠️ 本番環境デプロイは一時的にスキップ（環境準備中）"
             echo "prod-url=https://production-url-will-be-set-later" >> $GITHUB_OUTPUT
-            # echo "🚀 本番環境用ビルド・デプロイ開始"
-            # npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-            # npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-            # DEPLOY_URL=$(npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+            # echo "🚀 本番環境用デプロイ開始"
+            # DEPLOY_URL=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm)
             # echo "prod-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           fi
         env:
