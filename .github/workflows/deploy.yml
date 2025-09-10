@@ -114,6 +114,9 @@ jobs:
   # フロントエンドのデプロイ（Vercel）
   deploy-frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/frontend
     needs: [detect-changes, quality-check, test]
     # フロントエンドまたは共通パッケージが変更された場合のみ実行
     if: |
@@ -144,43 +147,38 @@ jobs:
       - name: Generate required files
         run: pnpm codegen && pnpm gen:messages
 
-      # Vercel CLI デプロイ（.vercel設定削除による完全クリーン実行）
-      - name: Build and Deploy with Vercel CLI
+      # 👇 ここがポイント：毎回 project.json を pull して再生成する
+      - name: Vercel pull
         run: |
-          echo "📋 Vercelプロジェクトのデプロイ開始"
+          npx vercel@latest pull --yes \
+            --environment=preview \
+            --scope ${{ secrets.VERCEL_TEAM_SLUG }} \
+            --token ${{ secrets.VERCEL_TOKEN }}
 
-          # .vercel設定ファイルを完全削除してパス競合を根絶
-          rm -rf apps/frontend/.vercel
-          echo "🧹 .vercel設定を完全削除（パス競合根絶）"
+      - name: Build
+        run: pnpm build
 
-          # デバッグ情報出力
-          echo "Root directory: $(pwd)"
-          echo "Frontend directory: $(ls -la apps/frontend/)"
-          echo "Vercel version: $(npx vercel --version)"
-
+      - name: Deploy with Vercel CLI
+        run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "🔄 プレビュー環境用デプロイ開始"
             
-            # apps/frontendディレクトリに移動してクリーンデプロイ
-            cd apps/frontend
-            
-            # 完全にクリーンなVercel実行（プロジェクト設定を環境変数で制御）
-            DEPLOY_URL=$(npx vercel deploy \
-              --token=${{ secrets.VERCEL_TOKEN }} \
-              --scope=${{ secrets.VERCEL_ORG_ID }} \
-              --yes \
-              --force)
+            DEPLOY_URL=$(npx vercel@latest deploy --prebuilt --yes \
+              --scope ${{ secrets.VERCEL_TEAM_SLUG }} \
+              --token ${{ secrets.VERCEL_TOKEN }})
             
             echo "preview-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
             echo "✅ プレビューデプロイ完了: $DEPLOY_URL"
           else
             echo "⚠️ 本番環境デプロイは一時的にスキップ（環境準備中）"
             echo "prod-url=https://production-url-will-be-set-later" >> $GITHUB_OUTPUT
+            # 将来的に本番デプロイが必要な場合は以下を有効化:
+            # DEPLOY_URL=$(npx vercel@latest deploy --prebuilt --prod --yes \
+            #   --scope ${{ secrets.VERCEL_TEAM_SLUG }} \
+            #   --token ${{ secrets.VERCEL_TOKEN }})
+            # echo "prod-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+            # echo "✅ 本番デプロイ完了: $DEPLOY_URL"
           fi
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         id: vercel-deploy
 
       - name: Set output URLs
