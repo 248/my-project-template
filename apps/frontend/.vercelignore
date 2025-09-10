@@ -78,4 +78,10 @@ typings/
 
 # Workspace configuration
 ../../pnpm-workspace.yaml
-../../pnpm-lock.yaml
+
+# ※ 重要: 以下のファイルは除外しないこと
+# !package.json
+# !pnpm-lock.yaml
+# !next.config.js
+# !tsconfig.json
+# pnpm-lock.yamlは除外しない（Vercelのmonorepo対応に必要）
