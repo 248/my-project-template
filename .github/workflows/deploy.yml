@@ -139,15 +139,15 @@ jobs:
           ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
 
       - name: Generate Prisma Client
-        working-directory: apps/backend
         env:
           PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
           echo "🔧 Prisma Client生成開始"
-          echo "📄 Schema確認: $(test -f ../../db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
-          echo "📦 Prisma CLI確認: $(pnpm exec prisma --version)"
-          echo "🔧 実行: pnpm exec prisma generate --schema ../../db/schema.prisma"
-          pnpm exec prisma generate --schema ../../db/schema.prisma
+          echo "📄 Schema確認: $(test -f db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
+          echo "📁 生成先ディレクトリ作成: mkdir -p apps/backend/generated/prisma"
+          mkdir -p apps/backend/generated/prisma
+          echo "🔧 実行: pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma"
+          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma
           echo "✅ Prisma Client生成完了"
 
       - name: Generate code (OpenAPI + Messages)
@@ -245,15 +245,15 @@ jobs:
           ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
 
       - name: Generate Prisma Client
-        working-directory: apps/backend
         env:
           PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
           echo "🔧 Prisma Client生成開始"
-          echo "📄 Schema確認: $(test -f ../../db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
-          echo "📦 Prisma CLI確認: $(pnpm exec prisma --version)"
-          echo "🔧 実行: pnpm exec prisma generate --schema ../../db/schema.prisma"
-          pnpm exec prisma generate --schema ../../db/schema.prisma
+          echo "📄 Schema確認: $(test -f db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
+          echo "📁 生成先ディレクトリ作成: mkdir -p apps/backend/generated/prisma"
+          mkdir -p apps/backend/generated/prisma
+          echo "🔧 実行: pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma"
+          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma
           echo "✅ Prisma Client生成完了"
 
       # コード生成（ルートから実行）
@@ -366,15 +366,15 @@ jobs:
           ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
 
       - name: Generate Prisma Client
-        working-directory: apps/backend
         env:
           PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
           echo "🔧 Prisma Client生成開始"
-          echo "📄 Schema確認: $(test -f ../../db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
-          echo "📦 Prisma CLI確認: $(pnpm exec prisma --version)"
-          echo "🔧 実行: pnpm exec prisma generate --schema ../../db/schema.prisma"
-          pnpm exec prisma generate --schema ../../db/schema.prisma
+          echo "📄 Schema確認: $(test -f db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
+          echo "📁 生成先ディレクトリ作成: mkdir -p apps/backend/generated/prisma"
+          mkdir -p apps/backend/generated/prisma
+          echo "🔧 実行: pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma"
+          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma
           echo "✅ Prisma Client生成完了"
 
       - name: Generate required files
