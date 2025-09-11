@@ -97,6 +97,8 @@ jobs:
   quality-check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true' # Prisma自動インストール無効
     steps:
       - uses: actions/checkout@v4
 
@@ -112,8 +114,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: コード生成
-        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
+      - name: Generate Prisma Client
+        working-directory: apps/backend
+        run: pnpm exec prisma generate --schema ../../db/schema.prisma
+
+      - name: Generate code (OpenAPI + Messages)
+        run: pnpm codegen && pnpm gen:messages
 
       - name: 型チェック
         run: pnpm type-check
@@ -173,6 +179,7 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true' # Prisma自動インストール無効
     # Vercel側Root Directory設定（apps/frontend）を活用
     # CLI常にルート実行でRoot Directory設定に委ねる（方針A）
     steps:
@@ -192,10 +199,15 @@ jobs:
         working-directory: .
         run: pnpm install --frozen-lockfile
 
+      # Prisma Client生成
+      - name: Generate Prisma Client
+        working-directory: apps/backend
+        run: pnpm exec prisma generate --schema ../../db/schema.prisma
+
       # コード生成（ルートから実行）
       - name: Generate required files
         working-directory: .
-        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
+        run: pnpm codegen && pnpm gen:messages
 
       # パス検証（リポジトリルートから実行）
       - name: Assert PWD and files (repo root)
@@ -263,6 +275,8 @@ jobs:
     permissions:
       contents: read
       pull-requests: write # PRコメント用
+    env:
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true' # Prisma自動インストール無効
     needs: [detect-changes, quality-check, test, deploy-frontend]
     # フロントエンドが成功し、バックエンドまたは共通パッケージが変更された場合のみ実行
     if: |
@@ -288,8 +302,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma Client
+        working-directory: apps/backend
+        run: pnpm exec prisma generate --schema ../../db/schema.prisma
+
       - name: Generate required files
-        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
+        run: pnpm codegen && pnpm gen:messages
 
       - name: Build backend
         run: pnpm build:backend
