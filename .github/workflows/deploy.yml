@@ -34,13 +34,14 @@ on:
           - 'true'
           - 'false'
 
-# GitHub Actions権限設定
+# 競合デプロイ防止（ブランチ単位で最新のみ実行）
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# 最小権限設定（必要な箇所で個別に昇格）
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
-  actions: read
-  checks: read
 
 # 段階的移行用の環境変数（GitHub Settings > Variables で設定）
 env:
@@ -95,6 +96,7 @@ jobs:
   # コード品質チェック（lint/type-check）
   quality-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -124,6 +126,7 @@ jobs:
   # テスト実行
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [quality-check]
     steps:
       - uses: actions/checkout@v4
@@ -150,6 +153,10 @@ jobs:
   # フロントエンドのデプロイ（Vercel）
   deploy-frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write # PRコメント用
     needs: [detect-changes, quality-check, test]
     # フロントエンドまたは共通パッケージが変更された場合のみ実行
     if: |
@@ -252,10 +259,14 @@ jobs:
   # バックエンドのデプロイ（Cloudflare Workers）
   deploy-backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write # PRコメント用
     needs: [detect-changes, quality-check, test, deploy-frontend]
     # フロントエンドが成功し、バックエンドまたは共通パッケージが変更された場合のみ実行
     if: |
-      needs.deploy-frontend.result == 'success' &&
+      (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped') &&
       (needs.detect-changes.outputs.backend == 'true' || 
        needs.detect-changes.outputs.packages == 'true' ||
        needs.detect-changes.outputs.infra == 'true') &&
@@ -291,6 +302,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: ./apps/backend
+          wranglerVersion: '3.78.0' # 再現性確保のため固定
           command: deploy --env preview
           secrets: |
             FRONTEND_URL
@@ -306,6 +318,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: ./apps/backend
+          wranglerVersion: '3.78.0' # 再現性確保のため固定
           command: deploy --env production
           # Note: 本番環境のFRONTEND_URLはCloudflare GUI（Dashboard）から事前設定済み
 
