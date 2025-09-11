@@ -3,8 +3,26 @@ name: Deploy CI/CD
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE/**'
+      - '.github/CODEOWNERS'
+      - '.github/FUNDING.yml'
+      - '.*/**'
   push:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE/**'
+      - '.github/CODEOWNERS'
+      - '.github/FUNDING.yml'
+      - '.*/**'
   workflow_dispatch:
     inputs:
       skip_approval:
@@ -41,6 +59,7 @@ jobs:
       backend: ${{ steps.changes.outputs.backend }}
       packages: ${{ steps.changes.outputs.packages }}
       infra: ${{ steps.changes.outputs.infra }}
+      docs-only: ${{ steps.changes.outputs.docs-only }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -63,6 +82,15 @@ jobs:
               - 'turbo.json'
               - 'package.json'
               - 'pnpm-workspace.yaml'
+            docs-only:
+              - 'docs/**'
+              - '**/*.md'
+              - 'LICENSE'
+              - '.github/ISSUE_TEMPLATE/**'
+              - '.github/PULL_REQUEST_TEMPLATE/**'
+              - '.github/CODEOWNERS'
+              - '.github/FUNDING.yml'
+              - '.kiro/**/*.md'
 
   # コード品質チェック（lint/type-check）
   quality-check:
