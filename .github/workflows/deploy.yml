@@ -101,15 +101,16 @@ jobs:
                     [ "${{ steps.changes.outputs.infra    }}" = "true" ] && echo true || echo false)
           echo "has_app_changes=$changed" >> "$GITHUB_OUTPUT"
 
-  # コード品質チェック（lint/type-check）
   quality-check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [detect-changes]
+    # 変更がなければスキップ（元の条件を踏襲）
     if: needs.detect-changes.outputs.has_app_changes == 'true'
     env:
-      GATE_DEPLOY: ${{ github.event_name == 'pull_request' && 'false' || 'true' }}
       CI: 'true'
+      # PRでは緩め、mainへのpushでは厳格（従来ロジックを簡潔化）
+      GATE_DEPLOY: ${{ vars.GATE_DEPLOY != '' && vars.GATE_DEPLOY || (github.event_name == 'pull_request' && 'false' || 'true') }}
     steps:
       - uses: actions/checkout@v4
 
@@ -122,66 +123,32 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Install dependencies
+      - name: Install dependencies (workspace root)
         run: pnpm install --frozen-lockfile
 
-      - name: Ensure backend dependencies
-        run: pnpm --filter @template/backend install --frozen-lockfile
-
-      - name: Assert Prisma deps & environment
-        run: |
-          echo "🔍 Environment & tool versions:"
-          node -v && pnpm -v
-          echo "🔍 Verifying Prisma dependencies in backend workspace..."
-          pnpm --filter @template/backend ls @prisma/client --depth 0 || echo "❌ @prisma/client not found in backend"
-          pnpm --filter @template/backend ls prisma --depth 0 || echo "❌ prisma CLI not found in backend"
-          echo "📍 Backend working directory check:"
-          ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
-
-      - name: Prisma Debug & Generate
+      # --- ここが要点：apps/backend で1回だけ Prisma Client を生成 ---
+      - name: Prisma generate (apps/backend → ../../db/schema.prisma)
         working-directory: apps/backend
         env:
+          # 生成時の自動インストールは抑止（依存は上の pnpm install で解決済み）
           PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
-          echo "🔍 === PRISMA 詳細診断開始 ==="
-          echo "📍 Current PWD: $(pwd)"
-          echo "📍 Repository structure:"
-          find /home/runner/work/my-project-template/my-project-template -name "schema.prisma" -type f 2>/dev/null || echo "No schema.prisma found"
-          echo "📍 Current directory contents:"
-          ls -la .
-          echo "📍 Parent directories:"
-          ls -la ../
-          ls -la ../../
-          echo "📍 Database directory check:"
-          ls -la ../../db/ 2>/dev/null || echo "No db directory found"
-          echo "📍 Schema file verification:"
-          [ -f ../../db/schema.prisma ] && echo "✅ Schema exists at ../../db/schema.prisma" || echo "❌ Schema missing at ../../db/schema.prisma"
-          [ -f ../db/schema.prisma ] && echo "✅ Schema exists at ../db/schema.prisma" || echo "❌ Schema missing at ../db/schema.prisma"
-          [ -f db/schema.prisma ] && echo "✅ Schema exists at db/schema.prisma" || echo "❌ Schema missing at db/schema.prisma"
-          echo "📍 Prisma CLI check:"
-          pnpm exec prisma --version || echo "Prisma CLI not available"
-          echo "📍 Package.json scripts:"
-          cat package.json | grep -A 10 -B 2 "scripts" || echo "No scripts found"
-          echo "📁 生成先ディレクトリ作成: mkdir -p generated/prisma"
-          mkdir -p generated/prisma
-          echo "🔧 Attempting Prisma generate with different paths:"
-          echo "--- Method 1: ../../db/schema.prisma ---"
-          pnpm exec prisma generate --schema ../../db/schema.prisma 2>&1 || echo "Method 1 failed"
-          echo "--- Method 2: ../db/schema.prisma ---"  
-          pnpm exec prisma generate --schema ../db/schema.prisma 2>&1 || echo "Method 2 failed"
-          echo "--- Method 3: Using package.json script ---"
-          pnpm run db:generate 2>&1 || echo "Method 3 failed - script not available"
-          echo "🔍 === PRISMA 詳細診断終了 ==="
+          echo "🔧 prisma generate 開始"
+          pnpm exec prisma generate --schema ../../db/schema.prisma
+          echo "✅ prisma generate 完了"
 
-      - name: Generate code (OpenAPI + Messages)
+      # コード生成（必要最小限）
+      - name: Codegen (OpenAPI / Messages)
         run: pnpm codegen && pnpm gen:messages
 
-      - name: 型チェック
+      # 型チェック（PR時は許容 / 本番系は失敗にする）
+      - name: Type check
         run: pnpm type-check
         continue-on-error: ${{ env.GATE_DEPLOY != 'true' }}
 
+      # Lint（警告も失敗扱い・ただしPRでは許容）
       - name: Lint
-        run: pnpm lint
+        run: pnpm lint --max-warnings=0
         continue-on-error: ${{ env.GATE_DEPLOY != 'true' }}
 
   # テスト実行
