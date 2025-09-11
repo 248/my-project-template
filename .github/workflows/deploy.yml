@@ -141,7 +141,7 @@ jobs:
       - name: Generate Prisma Client
         working-directory: apps/backend
         env:
-          PRISMA_SKIP_AUTOINSTALL: 'true'
+          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
           echo "🔧 Prisma Client生成開始"
           echo "📄 Schema確認: $(test -f ../../db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
@@ -247,7 +247,7 @@ jobs:
       - name: Generate Prisma Client
         working-directory: apps/backend
         env:
-          PRISMA_SKIP_AUTOINSTALL: 'true'
+          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
           echo "🔧 Prisma Client生成開始"
           echo "📄 Schema確認: $(test -f ../../db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
@@ -368,7 +368,7 @@ jobs:
       - name: Generate Prisma Client
         working-directory: apps/backend
         env:
-          PRISMA_SKIP_AUTOINSTALL: 'true'
+          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
           echo "🔧 Prisma Client生成開始"
           echo "📄 Schema確認: $(test -f ../../db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
