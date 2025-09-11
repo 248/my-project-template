@@ -54,19 +54,21 @@
 * @your-github-username
 ```
 
-### 4. Vercelの自動デプロイを無効化
+### 4. Vercelの自動デプロイ設定
 
-`vercel.json`で自動デプロイが無効化されています：
+**現在の設定**: Vercel側でGit連携を無効化し、GitHub Actions経由でのみデプロイします。
 
-```json
-{
-  "git": {
-    "deploymentEnabled": false // GitHub Actionsでデプロイ制御
-  }
-}
-```
+**設定方法**:
 
-**注意**: これによりVercel側の自動デプロイは無効となり、GitHub Actions経由でのみデプロイされます。
+1. **Vercel Dashboard** → プロジェクト → **Settings** → **Git**
+2. **Git Integration** → **Disconnect** でGit連携を解除
+3. これによりVercel側の自動デプロイは無効となり、GitHub Actions経由でのみデプロイされます
+
+**メリット**:
+
+- CI/CDパイプラインの完全制御
+- プレビュー環境の動的URL設定が可能
+- バックエンドとの依存関係管理が確実
 
 ### 5. 動的URL設定と本番環境スキップ
 
