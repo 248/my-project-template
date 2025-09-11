@@ -11,7 +11,6 @@ on:
       - '.github/PULL_REQUEST_TEMPLATE/**'
       - '.github/CODEOWNERS'
       - '.github/FUNDING.yml'
-      - '.*/**'
   push:
     branches: [main]
     paths-ignore:
@@ -22,7 +21,6 @@ on:
       - '.github/PULL_REQUEST_TEMPLATE/**'
       - '.github/CODEOWNERS'
       - '.github/FUNDING.yml'
-      - '.*/**'
   workflow_dispatch:
     inputs:
       skip_approval:
@@ -61,6 +59,7 @@ jobs:
       packages: ${{ steps.changes.outputs.packages }}
       infra: ${{ steps.changes.outputs.infra }}
       docs-only: ${{ steps.changes.outputs.docs-only }}
+      has_app_changes: ${{ steps.set.outputs.has_app_changes }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -93,12 +92,26 @@ jobs:
               - '.github/FUNDING.yml'
               - '.kiro/**/*.md'
 
+      - name: Compose has_app_changes
+        id: set
+        run: |
+          changed=$([ "${{ steps.changes.outputs.frontend }}" = "true" ] || \
+                    [ "${{ steps.changes.outputs.backend  }}" = "true" ] || \
+                    [ "${{ steps.changes.outputs.packages }}" = "true" ] || \
+                    [ "${{ steps.changes.outputs.infra    }}" = "true" ] && echo true || echo false)
+          echo "has_app_changes=$changed" >> "$GITHUB_OUTPUT"
+
   # コード品質チェック（lint/type-check）
   quality-check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.has_app_changes == 'true'
     env:
+      GATE_DEPLOY: ${{ github.event_name == 'pull_request' && 'false' || 'true' }}
       PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true' # Prisma自動インストール無効
+      CI: 'true'
+      NODE_ENV: 'production'
     steps:
       - uses: actions/checkout@v4
 
@@ -114,24 +127,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Debug Prisma dependencies
-        run: |
-          echo "=== Workspace dependency check ==="
-          pnpm -r ls @prisma/client prisma --depth 0
-          echo "=== Backend package.json check ==="
-          cat apps/backend/package.json | jq '{name, dependencies, devDependencies}'
-          echo "=== Backend node_modules check ==="
-          ls -la apps/backend/node_modules/@prisma || true
-          ls -la apps/backend/node_modules/.prisma || true
-
-      - name: Ensure backend deps
+      - name: Ensure backend dependencies
         run: pnpm --filter @template/backend install --frozen-lockfile
 
+      - name: Assert Prisma deps & environment
+        run: |
+          echo "🔍 Environment & tool versions:"
+          node -v && pnpm -v
+          echo "🔍 Verifying Prisma dependencies in backend workspace..."
+          pnpm --filter @template/backend ls @prisma/client --depth 0 || echo "❌ @prisma/client not found in backend"
+          pnpm --filter @template/backend ls prisma --depth 0 || echo "❌ prisma CLI not found in backend"
+          echo "📍 Backend working directory check:"
+          ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
+
       - name: Generate Prisma Client
+        working-directory: apps/backend
         env:
           PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
-        working-directory: apps/backend
-        run: pnpm exec prisma generate --schema ../../db/schema.prisma
+        run: |
+          echo "🔧 Generating Prisma Client from backend workspace..."
+          echo "📁 Current working directory: $(pwd)"
+          echo "📄 Schema path: ../../db/schema.prisma"
+          test -f "../../db/schema.prisma" || (echo "❌ Schema file not found" && exit 1)
+          pnpm exec prisma generate --schema ../../db/schema.prisma
+          echo "✅ Prisma Client generation completed"
 
       - name: Generate code (OpenAPI + Messages)
         run: pnpm codegen && pnpm gen:messages
@@ -215,24 +234,30 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # Prisma Client生成
-      - name: Debug Prisma dependencies
-        run: |
-          echo "=== Workspace dependency check ==="
-          pnpm -r ls @prisma/client prisma --depth 0
-          echo "=== Backend package.json check ==="
-          cat apps/backend/package.json | jq '{name, dependencies, devDependencies}'
-          echo "=== Backend node_modules check ==="
-          ls -la apps/backend/node_modules/@prisma || true
-          ls -la apps/backend/node_modules/.prisma || true
-
-      - name: Ensure backend deps
+      - name: Ensure backend dependencies
         run: pnpm --filter @template/backend install --frozen-lockfile
 
+      - name: Assert Prisma deps & environment
+        run: |
+          echo "🔍 Environment & tool versions:"
+          node -v && pnpm -v
+          echo "🔍 Verifying Prisma dependencies in backend workspace..."
+          pnpm --filter @template/backend ls @prisma/client --depth 0 || echo "❌ @prisma/client not found in backend"
+          pnpm --filter @template/backend ls prisma --depth 0 || echo "❌ prisma CLI not found in backend"
+          echo "📍 Backend working directory check:"
+          ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
+
       - name: Generate Prisma Client
+        working-directory: apps/backend
         env:
           PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
-        working-directory: apps/backend
-        run: pnpm exec prisma generate --schema ../../db/schema.prisma
+        run: |
+          echo "🔧 Generating Prisma Client from backend workspace..."
+          echo "📁 Current working directory: $(pwd)"
+          echo "📄 Schema path: ../../db/schema.prisma"
+          test -f "../../db/schema.prisma" || (echo "❌ Schema file not found" && exit 1)
+          pnpm exec prisma generate --schema ../../db/schema.prisma
+          echo "✅ Prisma Client generation completed"
 
       # コード生成（ルートから実行）
       - name: Generate required files
@@ -332,24 +357,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Debug Prisma dependencies
-        run: |
-          echo "=== Workspace dependency check ==="
-          pnpm -r ls @prisma/client prisma --depth 0
-          echo "=== Backend package.json check ==="
-          cat apps/backend/package.json | jq '{name, dependencies, devDependencies}'
-          echo "=== Backend node_modules check ==="
-          ls -la apps/backend/node_modules/@prisma || true
-          ls -la apps/backend/node_modules/.prisma || true
-
-      - name: Ensure backend deps
+      - name: Ensure backend dependencies
         run: pnpm --filter @template/backend install --frozen-lockfile
 
+      - name: Assert Prisma deps & environment
+        run: |
+          echo "🔍 Environment & tool versions:"
+          node -v && pnpm -v
+          echo "🔍 Verifying Prisma dependencies in backend workspace..."
+          pnpm --filter @template/backend ls @prisma/client --depth 0 || echo "❌ @prisma/client not found in backend"
+          pnpm --filter @template/backend ls prisma --depth 0 || echo "❌ prisma CLI not found in backend"
+          echo "📍 Backend working directory check:"
+          ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
+
       - name: Generate Prisma Client
+        working-directory: apps/backend
         env:
           PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
-        working-directory: apps/backend
-        run: pnpm exec prisma generate --schema ../../db/schema.prisma
+        run: |
+          echo "🔧 Generating Prisma Client from backend workspace..."
+          echo "📁 Current working directory: $(pwd)"
+          echo "📄 Schema path: ../../db/schema.prisma"
+          test -f "../../db/schema.prisma" || (echo "❌ Schema file not found" && exit 1)
+          pnpm exec prisma generate --schema ../../db/schema.prisma
+          echo "✅ Prisma Client generation completed"
 
       - name: Generate required files
         run: pnpm codegen && pnpm gen:messages
@@ -359,6 +390,7 @@ jobs:
 
       # プレビュー環境へのデプロイ（動的FRONTEND_URL設定）
       - name: Deploy to Cloudflare Workers (Preview)
+        id: cf-deploy
         if: github.event_name == 'pull_request'
         uses: cloudflare/wrangler-action@v3
         with:
@@ -391,11 +423,12 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const url = '${{ steps.cf-deploy.outputs.deployment-url }}';
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🔧 **バックエンドAPIがプレビュー環境にデプロイされました！**\n\n👉 https://my-project-template-api-preview.workers.dev`
+              body: `🔧 **バックエンドAPIがプレビュー環境にデプロイされました！**\n\n👉 ${url}`
             });
 
   # 本番デプロイの承認ステップ（現在は準備中のためスキップ）
