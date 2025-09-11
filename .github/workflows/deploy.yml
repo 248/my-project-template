@@ -114,8 +114,24 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Debug Prisma dependencies
+        run: |
+          echo "=== Workspace dependency check ==="
+          pnpm -r ls @prisma/client prisma --depth 0
+          echo "=== Backend package.json check ==="
+          cat apps/backend/package.json | jq '{name, dependencies, devDependencies}'
+          echo "=== Backend node_modules check ==="
+          ls -la apps/backend/node_modules/@prisma || true
+          ls -la apps/backend/node_modules/.prisma || true
+
+      - name: Ensure backend deps
+        run: pnpm --filter @template/backend install --frozen-lockfile
+
       - name: Generate Prisma Client
-        run: pnpm --filter @template/backend exec prisma generate --schema ../../db/schema.prisma
+        env:
+          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
+        working-directory: apps/backend
+        run: pnpm exec prisma generate --schema ../../db/schema.prisma
 
       - name: Generate code (OpenAPI + Messages)
         run: pnpm codegen && pnpm gen:messages
@@ -199,8 +215,24 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # Prisma Client生成
+      - name: Debug Prisma dependencies
+        run: |
+          echo "=== Workspace dependency check ==="
+          pnpm -r ls @prisma/client prisma --depth 0
+          echo "=== Backend package.json check ==="
+          cat apps/backend/package.json | jq '{name, dependencies, devDependencies}'
+          echo "=== Backend node_modules check ==="
+          ls -la apps/backend/node_modules/@prisma || true
+          ls -la apps/backend/node_modules/.prisma || true
+
+      - name: Ensure backend deps
+        run: pnpm --filter @template/backend install --frozen-lockfile
+
       - name: Generate Prisma Client
-        run: pnpm --filter @template/backend exec prisma generate --schema ../../db/schema.prisma
+        env:
+          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
+        working-directory: apps/backend
+        run: pnpm exec prisma generate --schema ../../db/schema.prisma
 
       # コード生成（ルートから実行）
       - name: Generate required files
@@ -300,8 +332,24 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Debug Prisma dependencies
+        run: |
+          echo "=== Workspace dependency check ==="
+          pnpm -r ls @prisma/client prisma --depth 0
+          echo "=== Backend package.json check ==="
+          cat apps/backend/package.json | jq '{name, dependencies, devDependencies}'
+          echo "=== Backend node_modules check ==="
+          ls -la apps/backend/node_modules/@prisma || true
+          ls -la apps/backend/node_modules/.prisma || true
+
+      - name: Ensure backend deps
+        run: pnpm --filter @template/backend install --frozen-lockfile
+
       - name: Generate Prisma Client
-        run: pnpm --filter @template/backend exec prisma generate --schema ../../db/schema.prisma
+        env:
+          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
+        working-directory: apps/backend
+        run: pnpm exec prisma generate --schema ../../db/schema.prisma
 
       - name: Generate required files
         run: pnpm codegen && pnpm gen:messages
