@@ -138,17 +138,40 @@ jobs:
           echo "📍 Backend working directory check:"
           ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
 
-      - name: Generate Prisma Client
+      - name: Prisma Debug & Generate
+        working-directory: apps/backend
         env:
           PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
-          echo "🔧 Prisma Client生成開始"
-          echo "📄 Schema確認: $(test -f db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
-          echo "📁 生成先ディレクトリ作成: mkdir -p apps/backend/generated/prisma"
-          mkdir -p apps/backend/generated/prisma
-          echo "🔧 実行: pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma"
-          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma
-          echo "✅ Prisma Client生成完了"
+          echo "🔍 === PRISMA 詳細診断開始 ==="
+          echo "📍 Current PWD: $(pwd)"
+          echo "📍 Repository structure:"
+          find /home/runner/work/my-project-template/my-project-template -name "schema.prisma" -type f 2>/dev/null || echo "No schema.prisma found"
+          echo "📍 Current directory contents:"
+          ls -la .
+          echo "📍 Parent directories:"
+          ls -la ../
+          ls -la ../../
+          echo "📍 Database directory check:"
+          ls -la ../../db/ 2>/dev/null || echo "No db directory found"
+          echo "📍 Schema file verification:"
+          [ -f ../../db/schema.prisma ] && echo "✅ Schema exists at ../../db/schema.prisma" || echo "❌ Schema missing at ../../db/schema.prisma"
+          [ -f ../db/schema.prisma ] && echo "✅ Schema exists at ../db/schema.prisma" || echo "❌ Schema missing at ../db/schema.prisma"
+          [ -f db/schema.prisma ] && echo "✅ Schema exists at db/schema.prisma" || echo "❌ Schema missing at db/schema.prisma"
+          echo "📍 Prisma CLI check:"
+          pnpm exec prisma --version || echo "Prisma CLI not available"
+          echo "📍 Package.json scripts:"
+          cat package.json | grep -A 10 -B 2 "scripts" || echo "No scripts found"
+          echo "📁 生成先ディレクトリ作成: mkdir -p generated/prisma"
+          mkdir -p generated/prisma
+          echo "🔧 Attempting Prisma generate with different paths:"
+          echo "--- Method 1: ../../db/schema.prisma ---"
+          pnpm exec prisma generate --schema ../../db/schema.prisma 2>&1 || echo "Method 1 failed"
+          echo "--- Method 2: ../db/schema.prisma ---"  
+          pnpm exec prisma generate --schema ../db/schema.prisma 2>&1 || echo "Method 2 failed"
+          echo "--- Method 3: Using package.json script ---"
+          pnpm run db:generate 2>&1 || echo "Method 3 failed - script not available"
+          echo "🔍 === PRISMA 詳細診断終了 ==="
 
       - name: Generate code (OpenAPI + Messages)
         run: pnpm codegen && pnpm gen:messages
@@ -244,17 +267,40 @@ jobs:
           echo "📍 Backend working directory check:"
           ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
 
-      - name: Generate Prisma Client
+      - name: Prisma Debug & Generate
+        working-directory: apps/backend
         env:
           PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
-          echo "🔧 Prisma Client生成開始"
-          echo "📄 Schema確認: $(test -f db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
-          echo "📁 生成先ディレクトリ作成: mkdir -p apps/backend/generated/prisma"
-          mkdir -p apps/backend/generated/prisma
-          echo "🔧 実行: pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma"
-          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma
-          echo "✅ Prisma Client生成完了"
+          echo "🔍 === PRISMA 詳細診断開始 ==="
+          echo "📍 Current PWD: $(pwd)"
+          echo "📍 Repository structure:"
+          find /home/runner/work/my-project-template/my-project-template -name "schema.prisma" -type f 2>/dev/null || echo "No schema.prisma found"
+          echo "📍 Current directory contents:"
+          ls -la .
+          echo "📍 Parent directories:"
+          ls -la ../
+          ls -la ../../
+          echo "📍 Database directory check:"
+          ls -la ../../db/ 2>/dev/null || echo "No db directory found"
+          echo "📍 Schema file verification:"
+          [ -f ../../db/schema.prisma ] && echo "✅ Schema exists at ../../db/schema.prisma" || echo "❌ Schema missing at ../../db/schema.prisma"
+          [ -f ../db/schema.prisma ] && echo "✅ Schema exists at ../db/schema.prisma" || echo "❌ Schema missing at ../db/schema.prisma"
+          [ -f db/schema.prisma ] && echo "✅ Schema exists at db/schema.prisma" || echo "❌ Schema missing at db/schema.prisma"
+          echo "📍 Prisma CLI check:"
+          pnpm exec prisma --version || echo "Prisma CLI not available"
+          echo "📍 Package.json scripts:"
+          cat package.json | grep -A 10 -B 2 "scripts" || echo "No scripts found"
+          echo "📁 生成先ディレクトリ作成: mkdir -p generated/prisma"
+          mkdir -p generated/prisma
+          echo "🔧 Attempting Prisma generate with different paths:"
+          echo "--- Method 1: ../../db/schema.prisma ---"
+          pnpm exec prisma generate --schema ../../db/schema.prisma 2>&1 || echo "Method 1 failed"
+          echo "--- Method 2: ../db/schema.prisma ---"  
+          pnpm exec prisma generate --schema ../db/schema.prisma 2>&1 || echo "Method 2 failed"
+          echo "--- Method 3: Using package.json script ---"
+          pnpm run db:generate 2>&1 || echo "Method 3 failed - script not available"
+          echo "🔍 === PRISMA 詳細診断終了 ==="
 
       # コード生成（ルートから実行）
       - name: Generate required files
@@ -365,17 +411,40 @@ jobs:
           echo "📍 Backend working directory check:"
           ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
 
-      - name: Generate Prisma Client
+      - name: Prisma Debug & Generate
+        working-directory: apps/backend
         env:
           PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
-          echo "🔧 Prisma Client生成開始"
-          echo "📄 Schema確認: $(test -f db/schema.prisma && echo "✅ Schema exists" || echo "❌ Schema missing")"
-          echo "📁 生成先ディレクトリ作成: mkdir -p apps/backend/generated/prisma"
-          mkdir -p apps/backend/generated/prisma
-          echo "🔧 実行: pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma"
-          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma
-          echo "✅ Prisma Client生成完了"
+          echo "🔍 === PRISMA 詳細診断開始 ==="
+          echo "📍 Current PWD: $(pwd)"
+          echo "📍 Repository structure:"
+          find /home/runner/work/my-project-template/my-project-template -name "schema.prisma" -type f 2>/dev/null || echo "No schema.prisma found"
+          echo "📍 Current directory contents:"
+          ls -la .
+          echo "📍 Parent directories:"
+          ls -la ../
+          ls -la ../../
+          echo "📍 Database directory check:"
+          ls -la ../../db/ 2>/dev/null || echo "No db directory found"
+          echo "📍 Schema file verification:"
+          [ -f ../../db/schema.prisma ] && echo "✅ Schema exists at ../../db/schema.prisma" || echo "❌ Schema missing at ../../db/schema.prisma"
+          [ -f ../db/schema.prisma ] && echo "✅ Schema exists at ../db/schema.prisma" || echo "❌ Schema missing at ../db/schema.prisma"
+          [ -f db/schema.prisma ] && echo "✅ Schema exists at db/schema.prisma" || echo "❌ Schema missing at db/schema.prisma"
+          echo "📍 Prisma CLI check:"
+          pnpm exec prisma --version || echo "Prisma CLI not available"
+          echo "📍 Package.json scripts:"
+          cat package.json | grep -A 10 -B 2 "scripts" || echo "No scripts found"
+          echo "📁 生成先ディレクトリ作成: mkdir -p generated/prisma"
+          mkdir -p generated/prisma
+          echo "🔧 Attempting Prisma generate with different paths:"
+          echo "--- Method 1: ../../db/schema.prisma ---"
+          pnpm exec prisma generate --schema ../../db/schema.prisma 2>&1 || echo "Method 1 failed"
+          echo "--- Method 2: ../db/schema.prisma ---"  
+          pnpm exec prisma generate --schema ../db/schema.prisma 2>&1 || echo "Method 2 failed"
+          echo "--- Method 3: Using package.json script ---"
+          pnpm run db:generate 2>&1 || echo "Method 3 failed - script not available"
+          echo "🔍 === PRISMA 詳細診断終了 ==="
 
       - name: Generate required files
         run: pnpm codegen && pnpm gen:messages
