@@ -76,12 +76,13 @@ typings/
 # Atlas (disabled)
 ../../atlas.hcl.disabled
 
-# Workspace configuration
-../../pnpm-workspace.yaml
+# Workspace configuration - 🚨 除外しない（モノレポ必須）
+# ../../pnpm-workspace.yaml  # ← コメントアウト
+# ../../pnpm-lock.yaml       # ← コメントアウト
 
-# ※ 重要: 以下のファイルは除外しないこと
-# !package.json
-# !pnpm-lock.yaml
-# !next.config.js
-# !tsconfig.json
-# pnpm-lock.yamlは除外しない（Vercelのmonorepo対応に必要）
+# ✅ 重要: モノレポ対応に必須のファイルは明示的に包含
+!package.json
+!pnpm-lock.yaml
+!next.config.js
+!tsconfig.json
+!../../pnpm-workspace.yaml

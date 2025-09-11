@@ -126,6 +126,14 @@ jobs:
     outputs:
       preview-url: ${{ steps.deploy.outputs.preview-url }}
       prod-url: ${{ steps.deploy.outputs.prod-url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: apps/frontend
     steps:
       - uses: actions/checkout@v4
 
@@ -138,50 +146,44 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Install dependencies
+      # 依存関係はモノレポのルートで解決（lockfile一貫性のため）
+      - name: Install dependencies (root)
+        working-directory: .
         run: pnpm install --frozen-lockfile
 
+      # コード生成（ルートから実行）
       - name: Generate required files
+        working-directory: .
         run: pnpm codegen && pnpm gen:messages
 
-      # 👇 既存プロジェクトへのリンクを確実に固定
-      - name: Vercel pull (リンク固定＋環境取得)
-        working-directory: apps/frontend
-        env:
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        run: |
-          npx vercel@latest pull --yes \
-            --environment=preview \
-            --scope ${{ secrets.VERCEL_TEAM_SLUG }} \
-            --token ${{ secrets.VERCEL_TOKEN }}
+      # ✅ プロジェクトリンクを apps/frontend 直下に固定
+      - name: Vercel link (bind project)
+        run: npx vercel@latest link --yes --project "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN"
 
-      - name: Deploy with Vercel CLI (Vercel側リモートビルド)
+      # ✅ 環境の取り込み（.vercel/* と環境変数）
+      - name: Vercel pull (preview)
+        if: github.event_name == 'pull_request'
+        run: npx vercel@latest pull --yes --environment=preview --token "$VERCEL_TOKEN"
+
+      - name: Vercel pull (production)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npx vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN"
+
+      # 🚀 リモートビルドでデプロイ
+      - name: Deploy with Vercel CLI (remote build)
         id: deploy
-        working-directory: apps/frontend
-        env:
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        if: github.event_name == 'pull_request'
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "🔄 プレビュー環境用デプロイ開始（Vercel側リモートビルド）"
-            
-            DEPLOY_URL=$(npx vercel@latest deploy --yes \
-              --scope ${{ secrets.VERCEL_TEAM_SLUG }} \
-              --token ${{ secrets.VERCEL_TOKEN }})
-            
-            echo "preview-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
-            echo "✅ プレビューデプロイ完了: $DEPLOY_URL"
-          else
-            echo "⚠️ 本番環境デプロイは一時的にスキップ（環境準備中）"
-            echo "prod-url=https://production-url-will-be-set-later" >> $GITHUB_OUTPUT
-            # 将来的に本番デプロイが必要な場合は以下を有効化:
-            # DEPLOY_URL=$(npx vercel@latest deploy --prod --yes \
-            #   --scope ${{ secrets.VERCEL_TEAM_SLUG }} \
-            #   --token ${{ secrets.VERCEL_TOKEN }})
-            # echo "prod-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
-            # echo "✅ 本番デプロイ完了: $DEPLOY_URL"
-          fi
+          echo "🔄 プレビュー環境用デプロイ開始（Vercel側リモートビルド）"
+          DEPLOY_URL=$(npx vercel@latest deploy --yes --token "$VERCEL_TOKEN")
+          echo "preview-url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          echo "✅ プレビューデプロイ完了: $DEPLOY_URL"
+
+      - name: Skip production deploy for now
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "⚠️ 本番デプロイは一時的にスキップ中"
+          echo "prod-url=https://production-url-will-be-set-later" >> "$GITHUB_OUTPUT"
 
       - name: PRにプレビューURLをコメント
         if: github.event_name == 'pull_request'
