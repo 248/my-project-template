@@ -189,7 +189,7 @@ importers:
         specifier: ^1.37.0
         version: 1.37.0
       '@prisma/client':
-        specifier: ^6.15.0
+        specifier: 6.15.0
         version: 6.15.0(prisma@6.15.0)(typescript@5.9.2)
       '@template/api-contracts-ts':
         specifier: workspace:*
@@ -4706,6 +4706,7 @@ packages:
       {
         integrity: sha512-ETExA5eiNyBaDUAyKws0jyA1gNlT4vwjyXRBLck/upJTdTXu+kuNWqC1DHNCvkfnfNPON1REzKysr+6NKHayRQ==,
       }
+    requiresBuild: true
     dependencies:
       '@babel/runtime-corejs3': 7.28.3
       '@swagger-api/apidom-ast': 1.0.0-beta.47
