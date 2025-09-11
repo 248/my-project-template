@@ -130,10 +130,8 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-    defaults:
-      run:
-        shell: bash
-        working-directory: apps/frontend
+    # Vercel側Root Directory設定（apps/frontend）を活用
+    # CLI常にルート実行でRoot Directory設定に委ねる（方針A）
     steps:
       - uses: actions/checkout@v4
 
@@ -156,25 +154,41 @@ jobs:
         working-directory: .
         run: pnpm codegen && pnpm gen:messages
 
-      # ✅ プロジェクトリンクを apps/frontend 直下に固定
-      - name: Vercel link (bind project)
+      # パス検証（リポジトリルートから実行）
+      - name: Assert PWD and files (repo root)
+        working-directory: .
+        run: |
+          echo "PWD=$(pwd)"
+          ls -la
+          test -d apps/frontend || (echo "apps/frontend がありません" && exit 1)
+          test -f apps/frontend/package.json || (echo "apps/frontend/package.json がありません" && exit 1)
+          echo "✅ Working directory validation completed"
+
+      # ✅ プロジェクトリンクをリポジトリ直下に固定（方針A）
+      - name: Vercel link (bind project at repo root)
+        working-directory: .
         run: npx vercel@latest link --yes --project "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN"
 
-      # ✅ 環境の取り込み（.vercel/* と環境変数）
+      # ✅ 環境の取り込み（リポジトリルートから実行）
       - name: Vercel pull (preview)
         if: github.event_name == 'pull_request'
+        working-directory: .
         run: npx vercel@latest pull --yes --environment=preview --token "$VERCEL_TOKEN"
 
       - name: Vercel pull (production)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: .
         run: npx vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN"
 
-      # 🚀 リモートビルドでデプロイ
+      # 🚀 リモートビルドでデプロイ（リポジトリルートから実行）
       - name: Deploy with Vercel CLI (remote build)
         id: deploy
         if: github.event_name == 'pull_request'
+        working-directory: .
         run: |
           echo "🔄 プレビュー環境用デプロイ開始（Vercel側リモートビルド）"
+          echo "Debug: PWD=$(pwd)"
+          echo "Debug: .vercel exists? $(test -d .vercel && echo 'YES' || echo 'NO')"
           DEPLOY_URL=$(npx vercel@latest deploy --yes --token "$VERCEL_TOKEN")
           echo "preview-url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
           echo "✅ プレビューデプロイ完了: $DEPLOY_URL"

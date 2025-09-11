@@ -125,3 +125,5 @@ atlas/migrations/*.lock
 
 tmp
 html/
+
+.vercel
