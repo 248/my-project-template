@@ -16,6 +16,14 @@ on:
           - 'true'
           - 'false'
 
+# GitHub Actions権限設定
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read
+  checks: read
+
 # 段階的移行用の環境変数（GitHub Settings > Variables で設定）
 env:
   # false: テストをスキップしてデプロイ / true: テスト合格時のみデプロイ
