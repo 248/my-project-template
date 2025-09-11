@@ -111,7 +111,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: コード生成
-        run: pnpm codegen && pnpm gen:messages
+        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
 
       - name: 型チェック
         run: pnpm type-check
@@ -188,7 +188,7 @@ jobs:
       # コード生成（ルートから実行）
       - name: Generate required files
         working-directory: .
-        run: pnpm codegen && pnpm gen:messages
+        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
 
       # パス検証（リポジトリルートから実行）
       - name: Assert PWD and files (repo root)
@@ -278,7 +278,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate required files
-        run: pnpm codegen && pnpm gen:messages
+        run: pnpm codegen && pnpm gen:messages && pnpm db:generate
 
       - name: Build backend
         run: pnpm build:backend
