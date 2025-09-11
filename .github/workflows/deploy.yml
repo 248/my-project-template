@@ -140,16 +140,34 @@ jobs:
           ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
 
       - name: Generate Prisma Client
-        working-directory: apps/backend
-        env:
-          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
-          echo "🔧 Generating Prisma Client from backend workspace..."
-          echo "📁 Current working directory: $(pwd)"
-          echo "📄 Schema path: ../../db/schema.prisma"
-          test -f "../../db/schema.prisma" || (echo "❌ Schema file not found" && exit 1)
-          pnpm exec prisma generate --schema ../../db/schema.prisma
-          echo "✅ Prisma Client generation completed"
+          echo "🔧 Prisma Client生成開始 - 詳細デバッグログ付き"
+          echo "📄 Schema validation:"
+          test -f "db/schema.prisma" && echo "✅ Schema exists" || (echo "❌ Schema missing" && exit 1)
+
+          echo "🔍 実行環境詳細:"
+          echo "PWD: $(pwd)"
+          echo "NODE_PATH: $NODE_PATH"
+          echo "PNPM_HOME: $PNPM_HOME"
+
+          echo "📦 Prisma依存関係確認:"
+          pnpm --filter @template/backend list | grep prisma || echo "prisma not found in filter"
+
+          echo "🔧 方法1: workspace filter経由実行"
+          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma --verbose || {
+            echo "❌ 方法1失敗 - 方法2を試行"
+            echo "🔧 方法2: 環境変数無効化+直接実行"
+            unset PRISMA_GENERATE_SKIP_AUTOINSTALL
+            cd apps/backend
+            pnpm exec prisma generate --schema ../../db/schema.prisma --verbose || {
+              echo "❌ 方法2失敗 - 方法3を試行"
+              echo "🔧 方法3: グローバルインストール+実行"
+              cd ../..
+              pnpm add -g prisma@6.15.0
+              prisma generate --schema db/schema.prisma --verbose
+            }
+          }
+          echo "✅ Prisma Client生成完了"
 
       - name: Generate code (OpenAPI + Messages)
         run: pnpm codegen && pnpm gen:messages
@@ -247,16 +265,34 @@ jobs:
           ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
 
       - name: Generate Prisma Client
-        working-directory: apps/backend
-        env:
-          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
-          echo "🔧 Generating Prisma Client from backend workspace..."
-          echo "📁 Current working directory: $(pwd)"
-          echo "📄 Schema path: ../../db/schema.prisma"
-          test -f "../../db/schema.prisma" || (echo "❌ Schema file not found" && exit 1)
-          pnpm exec prisma generate --schema ../../db/schema.prisma
-          echo "✅ Prisma Client generation completed"
+          echo "🔧 Prisma Client生成開始 - 詳細デバッグログ付き"
+          echo "📄 Schema validation:"
+          test -f "db/schema.prisma" && echo "✅ Schema exists" || (echo "❌ Schema missing" && exit 1)
+
+          echo "🔍 実行環境詳細:"
+          echo "PWD: $(pwd)"
+          echo "NODE_PATH: $NODE_PATH"
+          echo "PNPM_HOME: $PNPM_HOME"
+
+          echo "📦 Prisma依存関係確認:"
+          pnpm --filter @template/backend list | grep prisma || echo "prisma not found in filter"
+
+          echo "🔧 方法1: workspace filter経由実行"
+          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma --verbose || {
+            echo "❌ 方法1失敗 - 方法2を試行"
+            echo "🔧 方法2: 環境変数無効化+直接実行"
+            unset PRISMA_GENERATE_SKIP_AUTOINSTALL
+            cd apps/backend
+            pnpm exec prisma generate --schema ../../db/schema.prisma --verbose || {
+              echo "❌ 方法2失敗 - 方法3を試行"
+              echo "🔧 方法3: グローバルインストール+実行"
+              cd ../..
+              pnpm add -g prisma@6.15.0
+              prisma generate --schema db/schema.prisma --verbose
+            }
+          }
+          echo "✅ Prisma Client生成完了"
 
       # コード生成（ルートから実行）
       - name: Generate required files
@@ -370,16 +406,34 @@ jobs:
           ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
 
       - name: Generate Prisma Client
-        working-directory: apps/backend
-        env:
-          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
         run: |
-          echo "🔧 Generating Prisma Client from backend workspace..."
-          echo "📁 Current working directory: $(pwd)"
-          echo "📄 Schema path: ../../db/schema.prisma"
-          test -f "../../db/schema.prisma" || (echo "❌ Schema file not found" && exit 1)
-          pnpm exec prisma generate --schema ../../db/schema.prisma
-          echo "✅ Prisma Client generation completed"
+          echo "🔧 Prisma Client生成開始 - 詳細デバッグログ付き"
+          echo "📄 Schema validation:"
+          test -f "db/schema.prisma" && echo "✅ Schema exists" || (echo "❌ Schema missing" && exit 1)
+
+          echo "🔍 実行環境詳細:"
+          echo "PWD: $(pwd)"
+          echo "NODE_PATH: $NODE_PATH"
+          echo "PNPM_HOME: $PNPM_HOME"
+
+          echo "📦 Prisma依存関係確認:"
+          pnpm --filter @template/backend list | grep prisma || echo "prisma not found in filter"
+
+          echo "🔧 方法1: workspace filter経由実行"
+          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma --verbose || {
+            echo "❌ 方法1失敗 - 方法2を試行"
+            echo "🔧 方法2: 環境変数無効化+直接実行"
+            unset PRISMA_GENERATE_SKIP_AUTOINSTALL
+            cd apps/backend
+            pnpm exec prisma generate --schema ../../db/schema.prisma --verbose || {
+              echo "❌ 方法2失敗 - 方法3を試行"
+              echo "🔧 方法3: グローバルインストール+実行"
+              cd ../..
+              pnpm add -g prisma@6.15.0
+              prisma generate --schema db/schema.prisma --verbose
+            }
+          }
+          echo "✅ Prisma Client生成完了"
 
       - name: Generate required files
         run: pnpm codegen && pnpm gen:messages
