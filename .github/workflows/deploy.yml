@@ -111,7 +111,6 @@ jobs:
       GATE_DEPLOY: ${{ github.event_name == 'pull_request' && 'false' || 'true' }}
       PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true' # Prisma自動インストール無効
       CI: 'true'
-      NODE_ENV: 'production'
     steps:
       - uses: actions/checkout@v4
 
