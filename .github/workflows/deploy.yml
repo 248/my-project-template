@@ -115,8 +115,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
-        working-directory: apps/backend
-        run: pnpm exec prisma generate --schema ../../db/schema.prisma
+        run: pnpm exec prisma generate --schema db/schema.prisma
 
       - name: Generate code (OpenAPI + Messages)
         run: pnpm codegen && pnpm gen:messages
@@ -201,8 +200,7 @@ jobs:
 
       # Prisma Client生成
       - name: Generate Prisma Client
-        working-directory: apps/backend
-        run: pnpm exec prisma generate --schema ../../db/schema.prisma
+        run: pnpm exec prisma generate --schema db/schema.prisma
 
       # コード生成（ルートから実行）
       - name: Generate required files
@@ -303,8 +301,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
-        working-directory: apps/backend
-        run: pnpm exec prisma generate --schema ../../db/schema.prisma
+        run: pnpm exec prisma generate --schema db/schema.prisma
 
       - name: Generate required files
         run: pnpm codegen && pnpm gen:messages
