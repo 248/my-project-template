@@ -154,17 +154,17 @@ jobs:
           pnpm --filter @template/backend list | grep prisma || echo "prisma not found in filter"
 
           echo "🔧 方法1: workspace filter経由実行"
-          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma --verbose || {
+          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma || {
             echo "❌ 方法1失敗 - 方法2を試行"
             echo "🔧 方法2: 環境変数無効化+直接実行"
             unset PRISMA_GENERATE_SKIP_AUTOINSTALL
             cd apps/backend
-            pnpm exec prisma generate --schema ../../db/schema.prisma --verbose || {
+            pnpm exec prisma generate --schema ../../db/schema.prisma || {
               echo "❌ 方法2失敗 - 方法3を試行"
               echo "🔧 方法3: グローバルインストール+実行"
               cd ../..
               pnpm add -g prisma@6.15.0
-              prisma generate --schema db/schema.prisma --verbose
+              prisma generate --schema db/schema.prisma
             }
           }
           echo "✅ Prisma Client生成完了"
@@ -279,17 +279,17 @@ jobs:
           pnpm --filter @template/backend list | grep prisma || echo "prisma not found in filter"
 
           echo "🔧 方法1: workspace filter経由実行"
-          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma --verbose || {
+          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma || {
             echo "❌ 方法1失敗 - 方法2を試行"
             echo "🔧 方法2: 環境変数無効化+直接実行"
             unset PRISMA_GENERATE_SKIP_AUTOINSTALL
             cd apps/backend
-            pnpm exec prisma generate --schema ../../db/schema.prisma --verbose || {
+            pnpm exec prisma generate --schema ../../db/schema.prisma || {
               echo "❌ 方法2失敗 - 方法3を試行"
               echo "🔧 方法3: グローバルインストール+実行"
               cd ../..
               pnpm add -g prisma@6.15.0
-              prisma generate --schema db/schema.prisma --verbose
+              prisma generate --schema db/schema.prisma
             }
           }
           echo "✅ Prisma Client生成完了"
@@ -420,17 +420,17 @@ jobs:
           pnpm --filter @template/backend list | grep prisma || echo "prisma not found in filter"
 
           echo "🔧 方法1: workspace filter経由実行"
-          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma --verbose || {
+          pnpm --filter @template/backend exec prisma generate --schema db/schema.prisma || {
             echo "❌ 方法1失敗 - 方法2を試行"
             echo "🔧 方法2: 環境変数無効化+直接実行"
             unset PRISMA_GENERATE_SKIP_AUTOINSTALL
             cd apps/backend
-            pnpm exec prisma generate --schema ../../db/schema.prisma --verbose || {
+            pnpm exec prisma generate --schema ../../db/schema.prisma || {
               echo "❌ 方法2失敗 - 方法3を試行"
               echo "🔧 方法3: グローバルインストール+実行"
               cd ../..
               pnpm add -g prisma@6.15.0
-              prisma generate --schema db/schema.prisma --verbose
+              prisma generate --schema db/schema.prisma
             }
           }
           echo "✅ Prisma Client生成完了"
