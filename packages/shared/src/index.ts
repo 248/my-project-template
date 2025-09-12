@@ -1,11 +1,11 @@
 // 共通型定義やユーティリティ関数をエクスポート
 // 言語非依存の共通ユーティリティのみを含める（軽量・純粋）
 
-export * from './types'
-export * from './utils'
-
 // Phase 4: 統一APIレスポンス型（優先）
 export * from './api/types'
+
+export * from './types'
+export * from './utils'
 
 // Phase 4: メッセージ外部化システム
 export * from './messages/keys'

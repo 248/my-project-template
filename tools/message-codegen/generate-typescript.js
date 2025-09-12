@@ -257,42 +257,10 @@ export interface MessageGetter {
 }
 
 /**
- * API Response types (enhanced with registry data)
- */
-export interface ApiResponseWithCode {
-  success: boolean
-  code: MessageKey
-  message?: string // Optional for backward compatibility
-  data?: unknown
-}
-
-export interface ApiErrorResponse {
-  success: false
-  code: Extract<MessageKey, \`error.\${string}\` | \`auth.\${string}\` | \`validation.\${string}\`>
-  message?: string
-  details?: unknown
-}
-
-export interface ApiSuccessResponse<T = unknown> {
-  success: true
-  code: Extract<MessageKey, \`success.\${string}\`>
-  message?: string
-  data?: T
-}
-
-/**
- * Validation error types
- */
-export interface ValidationErrorDetail {
-  field: string
-  code: Extract<MessageKey, \`validation.\${string}\`>
-  message: string
-}
-
-export interface ValidationErrorResponse extends ApiErrorResponse {
-  code: 'error.validation_failed'
-  errors: ValidationErrorDetail[]
-}`
+ * Note: API Response types are defined in '../api/types.ts' 
+ * to avoid duplication and maintain consistency across the application.
+ * This ensures a single source of truth for API response structures.
+ */`
 
   fs.writeFileSync(typesPath, typesCode, 'utf8')
   console.log(`✅ Updated TypeScript types: ${typesPath}`)

@@ -1,0 +1,594 @@
+name: Deploy CI/CD
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE/**'
+      - '.github/CODEOWNERS'
+      - '.github/FUNDING.yml'
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE/**'
+      - '.github/CODEOWNERS'
+      - '.github/FUNDING.yml'
+  workflow_dispatch:
+    inputs:
+      skip_approval:
+        description: '本番デプロイの承認をスキップ'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+# 競合デプロイ防止（ブランチ単位で最新のみ実行）
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# 最小権限設定（必要な箇所で個別に昇格）
+permissions:
+  contents: read
+
+# 段階的移行用の環境変数（GitHub Settings > Variables で設定）
+env:
+  # false: テストをスキップしてデプロイ / true: テスト合格時のみデプロイ
+  GATE_DEPLOY: ${{ vars.GATE_DEPLOY || 'false' }}
+  # 依存関係チェック用
+  PNPM_VERSION: '8.15.0'
+  NODE_VERSION: '20'
+
+jobs:
+  # 変更検出ジョブ - どのパッケージが変更されたか判定
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.changes.outputs.frontend }}
+      backend: ${{ steps.changes.outputs.backend }}
+      packages: ${{ steps.changes.outputs.packages }}
+      infra: ${{ steps.changes.outputs.infra }}
+      docs-only: ${{ steps.changes.outputs.docs-only }}
+      has_app_changes: ${{ steps.set.outputs.has_app_changes }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'apps/frontend/**'
+              - 'packages/ui/**'
+              - 'packages/design-system/**'
+              - 'packages/api-contracts/**'
+            backend:
+              - 'apps/backend/**'
+              - 'packages/api-contracts/**'
+              - 'db/**'
+            packages:
+              - 'packages/**'
+            infra:
+              - '.github/workflows/**'
+              - 'turbo.json'
+              - 'package.json'
+              - 'pnpm-workspace.yaml'
+            docs-only:
+              - 'docs/**'
+              - '**/*.md'
+              - 'LICENSE'
+              - '.github/ISSUE_TEMPLATE/**'
+              - '.github/PULL_REQUEST_TEMPLATE/**'
+              - '.github/CODEOWNERS'
+              - '.github/FUNDING.yml'
+              - '.kiro/**/*.md'
+
+      - name: Compose has_app_changes
+        id: set
+        run: |
+          changed=$([ "${{ steps.changes.outputs.frontend }}" = "true" ] || \
+                    [ "${{ steps.changes.outputs.backend  }}" = "true" ] || \
+                    [ "${{ steps.changes.outputs.packages }}" = "true" ] || \
+                    [ "${{ steps.changes.outputs.infra    }}" = "true" ] && echo true || echo false)
+          echo "has_app_changes=$changed" >> "$GITHUB_OUTPUT"
+
+  quality-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [detect-changes]
+    # 変更がなければスキップ（元の条件を踏襲）
+    if: needs.detect-changes.outputs.has_app_changes == 'true'
+    env:
+      CI: 'true'
+      # PRでは緩め、mainへのpushでは厳格（従来ロジックを簡潔化）
+      GATE_DEPLOY: ${{ vars.GATE_DEPLOY != '' && vars.GATE_DEPLOY || (github.event_name == 'pull_request' && 'false' || 'true') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies (workspace root)
+        run: pnpm install --frozen-lockfile
+
+      # --- ここが要点：apps/backend で1回だけ Prisma Client を生成 ---
+      - name: Prisma generate (apps/backend → ../../db/schema.prisma)
+        working-directory: apps/backend
+        env:
+          # 生成時の自動インストールは抑止（依存は上の pnpm install で解決済み）
+          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
+        run: |
+          echo "🔧 prisma generate 開始"
+          pnpm exec prisma generate --schema ../../db/schema.prisma
+          echo "✅ prisma generate 完了"
+
+      # コード生成（必要最小限）
+      - name: Codegen (OpenAPI / Messages)
+        run: pnpm codegen && pnpm gen:messages
+
+      # 型チェック（PR時は許容 / 本番系は失敗にする）
+      - name: Type check
+        run: pnpm type-check
+        continue-on-error: ${{ env.GATE_DEPLOY != 'true' }}
+
+      # Lint（警告も失敗扱い・ただしPRでは許容）
+      - name: Lint
+        run: pnpm lint --max-warnings=0
+        continue-on-error: ${{ env.GATE_DEPLOY != 'true' }}
+
+  # テスト実行
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [quality-check]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: テスト実行
+        run: |
+          echo "テストはまだ実装されていません - スキップ"
+          # 将来的にテストを追加したら以下を有効化
+          # pnpm test:run
+        continue-on-error: true
+
+  # フロントエンドのデプロイ（Vercel）
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write # PRコメント用
+    needs: [detect-changes, quality-check, test]
+    # フロントエンドまたは共通パッケージが変更された場合のみ実行
+    if: |
+      (needs.detect-changes.outputs.frontend == 'true' || 
+       needs.detect-changes.outputs.packages == 'true' ||
+       needs.detect-changes.outputs.infra == 'true') &&
+      (github.event_name == 'pull_request' ||
+       (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+        (vars.GATE_DEPLOY != 'true' || needs.test.result == 'success')))
+    outputs:
+      preview-url: ${{ steps.deploy.outputs.preview-url }}
+      prod-url: ${{ steps.deploy.outputs.prod-url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    # Vercel側Root Directory設定（apps/frontend）を活用
+    # CLI常にルート実行でRoot Directory設定に委ねる（方針A）
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      # 依存関係はモノレポのルートで解決（lockfile一貫性のため）
+      - name: Install dependencies (root)
+        working-directory: .
+        run: pnpm install --frozen-lockfile
+
+      # Prisma Client生成
+      - name: Ensure backend dependencies
+        run: pnpm --filter @template/backend install --frozen-lockfile
+
+      - name: Assert Prisma deps & environment
+        run: |
+          echo "🔍 Environment & tool versions:"
+          node -v && pnpm -v
+          echo "🔍 Verifying Prisma dependencies in backend workspace..."
+          pnpm --filter @template/backend ls @prisma/client --depth 0 || echo "❌ @prisma/client not found in backend"
+          pnpm --filter @template/backend ls prisma --depth 0 || echo "❌ prisma CLI not found in backend"
+          echo "📍 Backend working directory check:"
+          ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
+
+      - name: Prisma Debug & Generate
+        working-directory: apps/backend
+        env:
+          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
+        run: |
+          echo "🔍 === PRISMA 詳細診断開始 ==="
+          echo "📍 Current PWD: $(pwd)"
+          echo "📍 Repository structure:"
+          find /home/runner/work/my-project-template/my-project-template -name "schema.prisma" -type f 2>/dev/null || echo "No schema.prisma found"
+          echo "📍 Current directory contents:"
+          ls -la .
+          echo "📍 Parent directories:"
+          ls -la ../
+          ls -la ../../
+          echo "📍 Database directory check:"
+          ls -la ../../db/ 2>/dev/null || echo "No db directory found"
+          echo "📍 Schema file verification:"
+          [ -f ../../db/schema.prisma ] && echo "✅ Schema exists at ../../db/schema.prisma" || echo "❌ Schema missing at ../../db/schema.prisma"
+          [ -f ../db/schema.prisma ] && echo "✅ Schema exists at ../db/schema.prisma" || echo "❌ Schema missing at ../db/schema.prisma"
+          [ -f db/schema.prisma ] && echo "✅ Schema exists at db/schema.prisma" || echo "❌ Schema missing at db/schema.prisma"
+          echo "📍 Prisma CLI check:"
+          pnpm exec prisma --version || echo "Prisma CLI not available"
+          echo "📍 Package.json scripts:"
+          cat package.json | grep -A 10 -B 2 "scripts" || echo "No scripts found"
+          echo "📁 生成先ディレクトリ作成: mkdir -p generated/prisma"
+          mkdir -p generated/prisma
+          echo "🔧 Attempting Prisma generate with different paths:"
+          echo "--- Method 1: ../../db/schema.prisma ---"
+          pnpm exec prisma generate --schema ../../db/schema.prisma 2>&1 || echo "Method 1 failed"
+          echo "--- Method 2: ../db/schema.prisma ---"  
+          pnpm exec prisma generate --schema ../db/schema.prisma 2>&1 || echo "Method 2 failed"
+          echo "--- Method 3: Using package.json script ---"
+          pnpm run db:generate 2>&1 || echo "Method 3 failed - script not available"
+          echo "🔍 === PRISMA 詳細診断終了 ==="
+
+      # コード生成（ルートから実行）
+      - name: Generate required files
+        working-directory: .
+        run: pnpm codegen && pnpm gen:messages
+
+      # パス検証（リポジトリルートから実行）
+      - name: Assert PWD and files (repo root)
+        working-directory: .
+        run: |
+          echo "PWD=$(pwd)"
+          ls -la
+          test -d apps/frontend || (echo "apps/frontend がありません" && exit 1)
+          test -f apps/frontend/package.json || (echo "apps/frontend/package.json がありません" && exit 1)
+          echo "✅ Working directory validation completed"
+
+      # ✅ プロジェクトリンクをリポジトリ直下に固定（方針A）
+      - name: Vercel link (bind project at repo root)
+        working-directory: .
+        run: npx vercel@latest link --yes --project "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN"
+
+      # ✅ 環境の取り込み（リポジトリルートから実行）
+      - name: Vercel pull (preview)
+        if: github.event_name == 'pull_request'
+        working-directory: .
+        run: npx vercel@latest pull --yes --environment=preview --token "$VERCEL_TOKEN"
+
+      - name: Vercel pull (production)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: .
+        run: npx vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN"
+
+      # 🚀 リモートビルドでデプロイ（リポジトリルートから実行）
+      - name: Deploy with Vercel CLI (remote build)
+        id: deploy
+        if: github.event_name == 'pull_request'
+        working-directory: .
+        run: |
+          echo "🔄 プレビュー環境用デプロイ開始（Vercel側リモートビルド）"
+          echo "Debug: PWD=$(pwd)"
+          echo "Debug: .vercel exists? $(test -d .vercel && echo 'YES' || echo 'NO')"
+          DEPLOY_URL=$(npx vercel@latest deploy --yes --token "$VERCEL_TOKEN")
+          echo "preview-url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          echo "✅ プレビューデプロイ完了: $DEPLOY_URL"
+
+      - name: Skip production deploy for now
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "⚠️ 本番デプロイは一時的にスキップ中"
+          echo "prod-url=https://production-url-will-be-set-later" >> "$GITHUB_OUTPUT"
+
+      - name: PRにプレビューURLをコメント
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const url = '${{ steps.deploy.outputs.preview-url }}';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **フロントエンドのプレビュー環境がデプロイされました！**\n\n👉 ${url}`
+            });
+
+  # フロントエンドのURLを解決（フロント未変更でも、過去コメントから取得）
+  resolve-frontend-url:
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend, detect-changes]
+    # PRかつ「アプリ関連の変更（frontend/backend/packages/infra）」がある場合のみ実行（docs-onlyはスキップ）
+    if: |
+      github.event_name == 'pull_request' && (
+        needs.detect-changes.outputs.frontend == 'true' ||
+        needs.detect-changes.outputs.backend  == 'true' ||
+        needs.detect-changes.outputs.packages == 'true' ||
+        needs.detect-changes.outputs.infra    == 'true'
+      )
+    outputs:
+      url: ${{ steps.resolve.outputs.url }}
+      origin: ${{ steps.resolve.outputs.origin }}
+    steps:
+      - name: Resolve preview URL from outputs or PR comments
+        id: resolve
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const direct = `${{ needs.deploy-frontend.outputs.preview-url }}`.trim();
+            let url = direct;
+            if (!url) {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 50,
+              });
+              // 最新のプレビューURLコメントを後方から探索
+              for (let i = comments.length - 1; i >= 0; i--) {
+                const body = comments[i].body || '';
+                if (body.includes('フロントエンドのプレビュー環境がデプロイされました')) {
+                  const match = body.match(/https?:\/\/[^\s)]+/);
+                  if (match) {
+                    url = match[0];
+                    break;
+                  }
+                }
+              }
+            }
+            if (!url) {
+              core.warning('プレビューURLが見つかりませんでした。ローカル既定を使用します。');
+              url = 'http://localhost:3000';
+            }
+            // オリジンへ正規化
+            let origin = url;
+            try { origin = new URL(url).origin; } catch (e) { core.warning('URL正規化に失敗: ' + e.message); }
+            core.setOutput('url', url);
+            core.setOutput('origin', origin);
+
+  # フロントのみ変更時は、Workersを再デプロイせず CORS_ORIGIN だけ同期
+  sync-cors-origin:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, resolve-frontend-url]
+    if: needs.detect-changes.outputs.frontend == 'true' && needs.detect-changes.outputs.backend != 'true' && github.event_name == 'pull_request'
+    steps:
+      - name: Sync CORS_ORIGIN and redeploy backend (Preview)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: ./apps/backend
+          packageManager: pnpm
+          wranglerVersion: 4.34.0
+          command: deploy --env preview
+          environment: preview
+          vars: |
+            CORS_ORIGIN
+        env:
+          # 既存のワーカーを再デプロイしてCORS_ORIGINを反映
+          CORS_ORIGIN: ${{ needs.resolve-frontend-url.outputs.origin || 'http://localhost:3000' }}
+
+  # バックエンドのデプロイ（Cloudflare Workers）
+  deploy-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write # PRコメント用
+    needs:
+      [
+        detect-changes,
+        quality-check,
+        test,
+        deploy-frontend,
+        resolve-frontend-url,
+      ]
+    # フロントエンドが成功し、バックエンドまたは共通パッケージが変更された場合のみ実行
+    if: |
+      (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped') &&
+      (needs.detect-changes.outputs.backend == 'true' || 
+       needs.detect-changes.outputs.packages == 'true' ||
+       needs.detect-changes.outputs.infra == 'true') &&
+      (github.event_name == 'pull_request' ||
+       (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+        (vars.GATE_DEPLOY != 'true' || needs.test.result == 'success')))
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Ensure backend dependencies
+        run: pnpm --filter @template/backend install --frozen-lockfile
+
+      - name: Assert Prisma deps & environment
+        run: |
+          echo "🔍 Environment & tool versions:"
+          node -v && pnpm -v
+          echo "🔍 Verifying Prisma dependencies in backend workspace..."
+          pnpm --filter @template/backend ls @prisma/client --depth 0 || echo "❌ @prisma/client not found in backend"
+          pnpm --filter @template/backend ls prisma --depth 0 || echo "❌ prisma CLI not found in backend"
+          echo "📍 Backend working directory check:"
+          ls -la apps/backend/node_modules/@prisma/client 2>/dev/null && echo "✅ @prisma/client symlink exists" || echo "❌ @prisma/client symlink missing"
+
+      - name: Prisma Debug & Generate
+        working-directory: apps/backend
+        env:
+          PRISMA_GENERATE_SKIP_AUTOINSTALL: 'true'
+        run: |
+          echo "🔍 === PRISMA 詳細診断開始 ==="
+          echo "📍 Current PWD: $(pwd)"
+          echo "📍 Repository structure:"
+          find /home/runner/work/my-project-template/my-project-template -name "schema.prisma" -type f 2>/dev/null || echo "No schema.prisma found"
+          echo "📍 Current directory contents:"
+          ls -la .
+          echo "📍 Parent directories:"
+          ls -la ../
+          ls -la ../../
+          echo "📍 Database directory check:"
+          ls -la ../../db/ 2>/dev/null || echo "No db directory found"
+          echo "📍 Schema file verification:"
+          [ -f ../../db/schema.prisma ] && echo "✅ Schema exists at ../../db/schema.prisma" || echo "❌ Schema missing at ../../db/schema.prisma"
+          [ -f ../db/schema.prisma ] && echo "✅ Schema exists at ../db/schema.prisma" || echo "❌ Schema missing at ../db/schema.prisma"
+          [ -f db/schema.prisma ] && echo "✅ Schema exists at db/schema.prisma" || echo "❌ Schema missing at db/schema.prisma"
+          echo "📍 Prisma CLI check:"
+          pnpm exec prisma --version || echo "Prisma CLI not available"
+          echo "📍 Package.json scripts:"
+          cat package.json | grep -A 10 -B 2 "scripts" || echo "No scripts found"
+          echo "📁 生成先ディレクトリ作成: mkdir -p generated/prisma"
+          mkdir -p generated/prisma
+          echo "🔧 Attempting Prisma generate with different paths:"
+          echo "--- Method 1: ../../db/schema.prisma ---"
+          pnpm exec prisma generate --schema ../../db/schema.prisma 2>&1 || echo "Method 1 failed"
+          echo "--- Method 2: ../db/schema.prisma ---"  
+          pnpm exec prisma generate --schema ../db/schema.prisma 2>&1 || echo "Method 2 failed"
+          echo "--- Method 3: Using package.json script ---"
+          pnpm run db:generate 2>&1 || echo "Method 3 failed - script not available"
+          echo "🔍 === PRISMA 詳細診断終了 ==="
+
+      - name: Generate required files
+        run: pnpm codegen && pnpm gen:messages
+
+      - name: Build backend
+        run: pnpm build:backend
+
+      # プレビュー環境へのデプロイ（動的CORS_ORIGIN設定）
+      - name: Deploy to Cloudflare Workers (Preview)
+        id: cf-deploy
+        if: github.event_name == 'pull_request'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: ./apps/backend
+          packageManager: pnpm # ← npm を使わせない
+          wranglerVersion: 4.34.0 # ← 4系でピン留め（例）
+          command: deploy --env preview
+          environment: preview
+          vars: |
+            CORS_ORIGIN
+        env:
+          # フロントが未更新でも、過去のPRコメントから解決したオリジンを使用
+          CORS_ORIGIN: ${{ needs.resolve-frontend-url.outputs.origin || 'http://localhost:3000' }}
+
+      # 本番環境へのデプロイ（一時的にスキップ - GUI設定CORS_ORIGIN使用予定）
+      - name: Deploy to Cloudflare Workers (Production)
+        if: false # 本番環境準備中のため一時的にスキップ
+        # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: ./apps/backend
+          packageManager: pnpm
+          wranglerVersion: 4.34.0
+          command: deploy --env production
+          # Note: 本番環境のCORS_ORIGINはCloudflare GUI（Dashboard）から事前設定済み
+
+      - name: PRにAPIエンドポイントをコメント
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const url = '${{ steps.cf-deploy.outputs.deployment-url }}';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🔧 **バックエンドAPIがプレビュー環境にデプロイされました！**\n\n👉 ${url}`
+            });
+
+  # 本番デプロイの承認ステップ（現在は準備中のためスキップ）
+  production-approval:
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend, deploy-backend]
+    if: false # 本番環境準備中のため一時的にスキップ
+    # if: |
+    #   github.event_name == 'push' &&
+    #   github.ref == 'refs/heads/main' &&
+    #   github.event.inputs.skip_approval != 'true'
+    environment:
+      name: production
+      url: ${{ needs.deploy-frontend.outputs.prod-url }}
+    steps:
+      - name: 本番デプロイ承認完了
+        run: |
+          echo "✅ 本番環境へのデプロイが承認されました"
+          echo "Frontend: ${{ needs.deploy-frontend.outputs.prod-url }}"
+          echo "Backend: https://my-project-template-api-production.workers.dev"
+
+  # デプロイ成功通知
+  notify-success:
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend, deploy-backend]
+    if: success()
+    steps:
+      - name: Slack通知（オプション）
+        if: vars.SLACK_WEBHOOK_URL != ''
+        run: |
+          echo "デプロイ成功をSlackに通知"
+          # curl -X POST ${{ vars.SLACK_WEBHOOK_URL }} ...
+
+      - name: デプロイサマリー
+        run: |
+          echo "## 🎉 デプロイ完了"
+          echo ""
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "### プレビュー環境"
+            echo "- Frontend: ${{ needs.deploy-frontend.outputs.preview-url }}"
+            echo "- Backend: https://my-project-template-api-preview.workers.dev"
+          else
+            echo "### 本番環境"
+            echo "- Frontend: ${{ needs.deploy-frontend.outputs.prod-url }}"
+            echo "- Backend: https://my-project-template-api-production.workers.dev"
+          fi

@@ -9,7 +9,7 @@ const WorkerEnvSchema = z.object({
   // データベース接続
   DATABASE_URL: z.string().url('DATABASE_URLが無効なURL形式です'),
 
-  // CORS設定
+  // CORS設定（カンマ区切り複数・ワイルドカード可）
   CORS_ORIGIN: z.string().optional(),
 
   // JWT認証設定（本番では必須）

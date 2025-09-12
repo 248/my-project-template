@@ -40,32 +40,50 @@ app.use(
   '*',
   cors({
     origin: (origin, c) => {
-      // 型安全な環境変数解析
-      const safeEnv = parseWorkerEnvSafe(c.env)
-      let corsOrigins: string[] = []
+      // CORSはparseの副作用を避けるため raw env を直接参照
+      const raw = (c.env as Record<string, unknown>) || {}
+      const corsOriginVar = (raw['CORS_ORIGIN'] as string | undefined)?.trim()
 
-      if (safeEnv?.CORS_ORIGIN) {
-        // CORS_ORIGINが設定されている場合（複数オリジン対応）
-        corsOrigins = safeEnv.CORS_ORIGIN.split(',').map((o: string) =>
-          o.trim()
-        )
+      let corsOrigins: string[] = []
+      if (corsOriginVar && corsOriginVar.length > 0) {
+        // CORS_ORIGINが設定されている場合（カンマ区切り複数・ワイルドカード可）
+        corsOrigins = corsOriginVar
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
       } else {
         console.warn('警告: CORS_ORIGINが設定されていません')
-        corsOrigins = [] // 明示的に空配列（全拒否）
+        corsOrigins = [] // 明示的に全拒否
       }
 
       // デバッグログ
       console.log('🔍 CORS Debug:', {
-        origin: origin,
-        corsOrigin: safeEnv?.CORS_ORIGIN,
+        requestOrigin: origin,
+        CORS_ORIGIN: corsOriginVar,
         allowedOrigins: corsOrigins,
       })
 
       // リクエストにoriginがない場合（例: Postman、サーバー間通信）は許可
       if (!origin) return origin
 
-      // 許可されたオリジンかチェック
-      const isAllowed = corsOrigins.includes(origin)
+      // 末尾スラッシュの差異を吸収
+      const normalize = (u: string) => u.replace(/\/+$/, '')
+
+      // 許可されたオリジンかチェック（ワイルドカード *.vercel.app 等）
+      const isAllowed = corsOrigins.some(allowed => {
+        if (!allowed) return false
+        if (allowed.includes('*')) {
+          const pattern = new RegExp(
+            '^' +
+              allowed
+                .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+                .replace(/\\\*/g, '.*') +
+              '$'
+          )
+          return pattern.test(origin)
+        }
+        return normalize(allowed) === normalize(origin)
+      })
       console.log('🔍 CORS Result:', { origin, isAllowed })
       return isAllowed ? origin : null
     },

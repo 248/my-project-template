@@ -11,13 +11,8 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "quality-check": "npm run type-check && npm run lint && npm run format:check",
+    "quality-check": "pnpm type-check && pnpm lint && pnpm format:check",
     "clean": "rm -rf .next dist",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
     "postinstall": "echo 'Frontend setup completed'"
   },
   "dependencies": {
