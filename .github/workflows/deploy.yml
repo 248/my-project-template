@@ -333,6 +333,74 @@ jobs:
               body: `🚀 **フロントエンドのプレビュー環境がデプロイされました！**\n\n👉 ${url}`
             });
 
+  # フロントエンドのURLを解決（フロント未変更でも、過去コメントから取得）
+  resolve-frontend-url:
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend]
+    if: github.event_name == 'pull_request'
+    outputs:
+      url: ${{ steps.resolve.outputs.url }}
+      origin: ${{ steps.resolve.outputs.origin }}
+    steps:
+      - name: Resolve preview URL from outputs or PR comments
+        id: resolve
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const direct = `${{ needs.deploy-frontend.outputs.preview-url }}`.trim();
+            let url = direct;
+            if (!url) {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 50,
+              });
+              // 最新のプレビューURLコメントを後方から探索
+              for (let i = comments.length - 1; i >= 0; i--) {
+                const body = comments[i].body || '';
+                if (body.includes('フロントエンドのプレビュー環境がデプロイされました')) {
+                  const match = body.match(/https?:\/\/[^\s)]+/);
+                  if (match) {
+                    url = match[0];
+                    break;
+                  }
+                }
+              }
+            }
+            if (!url) {
+              core.warning('プレビューURLが見つかりませんでした。ローカル既定を使用します。');
+              url = 'http://localhost:3000';
+            }
+            // オリジンへ正規化
+            let origin = url;
+            try { origin = new URL(url).origin; } catch (e) { core.warning('URL正規化に失敗: ' + e.message); }
+            core.setOutput('url', url);
+            core.setOutput('origin', origin);
+
+  # フロントのみ変更時は、Workersを再デプロイせず CORS_ORIGIN だけ同期
+  sync-cors-origin:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, resolve-frontend-url]
+    if: needs.detect-changes.outputs.frontend == 'true' && needs.detect-changes.outputs.backend != 'true' && github.event_name == 'pull_request'
+    steps:
+      - name: Sync CORS_ORIGIN and redeploy backend (Preview)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: ./apps/backend
+          packageManager: pnpm
+          wranglerVersion: 4.34.0
+          command: deploy --env preview
+          environment: preview
+          vars: |
+            CORS_ORIGIN
+        env:
+          # 既存のワーカーを再デプロイしてCORS_ORIGINを反映
+          CORS_ORIGIN: ${{ needs.resolve-frontend-url.outputs.origin || 'http://localhost:3000' }}
+
   # バックエンドのデプロイ（Cloudflare Workers）
   deploy-backend:
     runs-on: ubuntu-latest
@@ -340,7 +408,14 @@ jobs:
     permissions:
       contents: read
       pull-requests: write # PRコメント用
-    needs: [detect-changes, quality-check, test, deploy-frontend]
+    needs:
+      [
+        detect-changes,
+        quality-check,
+        test,
+        deploy-frontend,
+        resolve-frontend-url,
+      ]
     # フロントエンドが成功し、バックエンドまたは共通パッケージが変更された場合のみ実行
     if: |
       (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped') &&
@@ -435,8 +510,8 @@ jobs:
           vars: |
             CORS_ORIGIN
         env:
-          # VercelのプレビューURLは末尾スラッシュ無しのオリジン形式に正規化して渡す
-          CORS_ORIGIN: ${{ needs.deploy-frontend.outputs.preview-url || 'http://localhost:3000' }}
+          # フロントが未更新でも、過去のPRコメントから解決したオリジンを使用
+          CORS_ORIGIN: ${{ needs.resolve-frontend-url.outputs.origin || 'http://localhost:3000' }}
 
       # 本番環境へのデプロイ（一時的にスキップ - GUI設定CORS_ORIGIN使用予定）
       - name: Deploy to Cloudflare Workers (Production)
