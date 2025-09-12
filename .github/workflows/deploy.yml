@@ -419,7 +419,7 @@ jobs:
       - name: Build backend
         run: pnpm build:backend
 
-      # プレビュー環境へのデプロイ（動的FRONTEND_URL設定）
+      # プレビュー環境へのデプロイ（動的CORS_ORIGIN設定）
       - name: Deploy to Cloudflare Workers (Preview)
         id: cf-deploy
         if: github.event_name == 'pull_request'
@@ -433,11 +433,12 @@ jobs:
           command: deploy --env preview
           environment: preview
           vars: |
-            FRONTEND_URL
+            CORS_ORIGIN
         env:
-          FRONTEND_URL: ${{ needs.deploy-frontend.outputs.preview-url || 'http://localhost:3000' }}
+          # VercelのプレビューURLは末尾スラッシュ無しのオリジン形式に正規化して渡す
+          CORS_ORIGIN: ${{ needs.deploy-frontend.outputs.preview-url || 'http://localhost:3000' }}
 
-      # 本番環境へのデプロイ（一時的にスキップ - GUI設定FRONTEND_URL使用予定）
+      # 本番環境へのデプロイ（一時的にスキップ - GUI設定CORS_ORIGIN使用予定）
       - name: Deploy to Cloudflare Workers (Production)
         if: false # 本番環境準備中のため一時的にスキップ
         # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -449,7 +450,7 @@ jobs:
           packageManager: pnpm
           wranglerVersion: 4.34.0
           command: deploy --env production
-          # Note: 本番環境のFRONTEND_URLはCloudflare GUI（Dashboard）から事前設定済み
+          # Note: 本番環境のCORS_ORIGINはCloudflare GUI（Dashboard）から事前設定済み
 
       - name: PRにAPIエンドポイントをコメント
         if: github.event_name == 'pull_request'

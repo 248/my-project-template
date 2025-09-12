@@ -136,14 +136,14 @@ pnpm db:generate
 | `CLERK_SECRET_KEY`         | Secret   | `sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx`        | GUI設定             |
 | `NODE_ENV`                 | Variable | `preview`                                      | GUI設定             |
 | `ENV_NAME`                 | Variable | `preview`                                      | GUI設定             |
-| `FRONTEND_URL`             | Secret   | **動的設定**                                   | **CI/CDが自動設定** |
+| `CORS_ORIGIN`              | Variable | **動的設定**（プレビューURLのオリジン）        | **CI/CDが自動設定** |
 
-**🔧 FRONTEND_URL動的設定**：
-CI/CDパイプラインが**フロントエンドデプロイ成功時**に自動で設定します：
+**🔧 CORS_ORIGIN 動的設定**：
+CI/CDパイプラインが**フロントエンドデプロイ成功時**に自動で設定します（プレビューのオリジン）：
 
 ```yaml
 # GitHub Actions内で自動実行
-echo "${{ needs.deploy-frontend.outputs.url }}" | wrangler secret put FRONTEND_URL --env preview
+echo "${{ needs.deploy-frontend.outputs.url }}" | sed -E 's#(/+$)||$##' | wrangler secret put CORS_ORIGIN --env preview
 ```
 
 #### デプロイ手順
@@ -176,10 +176,10 @@ pnpm deploy:preview
 | `CLERK_SECRET_KEY`         | Secret   | `sk_live_sample_xxxxxxxxxxxxxxxxxx`             | GUI設定  |
 | `NODE_ENV`                 | Variable | `production`                                    | GUI設定  |
 | `ENV_NAME`                 | Variable | `prod`                                          | GUI設定  |
-| `FRONTEND_URL`             | Secret   | **固定URL**（独自ドメイン）                     | GUI設定  |
+| `CORS_ORIGIN`              | Variable | **固定オリジン**（独自ドメイン）                | GUI設定  |
 
-**🔧 FRONTEND_URL固定設定**：
-本番環境では独自ドメインの固定URLをCloudflare GUIで設定します。
+**🔧 CORS_ORIGIN 固定設定**：
+本番環境では独自ドメインの固定オリジンを Cloudflare GUI で設定します。
 
 #### 本番環境有効化手順（将来実施予定）
 

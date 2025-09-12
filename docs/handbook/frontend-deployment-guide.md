@@ -190,7 +190,7 @@ CORS_ORIGIN=http://localhost:3000,http://127.0.0.1:3000
 vercel pull --environment=preview
 vercel build
 DEPLOY_URL=$(vercel deploy --prebuilt)
-echo "$DEPLOY_URL" | wrangler secret put FRONTEND_URL --env preview
+echo "$DEPLOY_URL" | sed -E 's#(/+$)||$##' | wrangler secret put CORS_ORIGIN --env preview
 ```
 
 #### ⚠️ 事前準備不要
@@ -323,12 +323,12 @@ npx vercel@latest deploy  # Vercel側ビルド
 
 #### 本番環境有効化時の設定（将来使用予定）
 
-**事前準備**: Cloudflare Workers本番環境で固定FRONTEND_URLを設定
+**事前準備**: Cloudflare Workers本番環境で固定CORS_ORIGINを設定
 
 ```bash
 # Cloudflare Workers Dashboard → Production Environment Variables
 # 独自ドメインの固定URL設定
-FRONTEND_URL=https://your-domain.com
+CORS_ORIGIN=https://your-domain.com
 ```
 
 #### Production環境用変数設定（将来使用予定）

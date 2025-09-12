@@ -74,17 +74,17 @@
 
 **現在の実装**：
 
-- **プレビュー環境**：フロントエンドURL成功時に動的にCORS設定
-- **本番環境**：一時的にスキップ（Cloudflare GUIで固定URL設定予定）
+- **プレビュー環境**：フロントエンドのプレビューURLから CORS_ORIGIN を動的設定
+- **本番環境**：一時的にスキップ（Cloudflare GUIで固定オリジン設定予定）
 
 `.github/workflows/deploy.yml`の設定状況：
 
 ```yaml
-# プレビュー環境：動的FRONTEND_URL設定
-- name: Set FRONTEND_URL Secret (Preview)
+# プレビュー環境：動的CORS_ORIGIN設定
+- name: Set CORS_ORIGIN (Preview)
   uses: cloudflare/wrangler-action@v3
   command: |
-    echo "${{ needs.deploy-frontend.outputs.url }}" | wrangler secret put FRONTEND_URL --env preview
+    echo "${{ needs.deploy-frontend.outputs.url }}" | sed -E 's#(/+$)||$##' | wrangler secret put CORS_ORIGIN --env preview
 
 # 本番環境：一時的にスキップ
 - name: Deploy to Cloudflare Workers (Production)
@@ -100,7 +100,7 @@
 3. **テスト** - 現在はスキップ（将来実装）
 4. **フロントエンドデプロイ** - Vercel CLI公式フローでプレビュー環境
 5. **バックエンドデプロイ** - **フロントエンド成功時のみ**実行
-   - 動的FRONTEND_URL設定 → Cloudflareプレビューデプロイ
+   - 動的CORS_ORIGIN設定 → Cloudflareプレビューデプロイ
 6. **コメント投稿** - PRにプレビューURLを自動コメント
 
 ### mainブランチへのpush時の動作
