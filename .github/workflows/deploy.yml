@@ -431,7 +431,8 @@ jobs:
           packageManager: pnpm # ← npm を使わせない
           wranglerVersion: 4.34.0 # ← 4系でピン留め（例）
           command: deploy --env preview
-          secrets: |
+          environment: preview
+          vars: |
             FRONTEND_URL
         env:
           FRONTEND_URL: ${{ needs.deploy-frontend.outputs.preview-url || 'http://localhost:3000' }}
