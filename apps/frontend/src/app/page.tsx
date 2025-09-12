@@ -20,10 +20,6 @@ export default async function HomePage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               プロジェクトテンプレートへようこそ
             </h1>
-            {/* CIプレビュー同期テスト（フロントエンドのみの変更） */}
-            <p className="text-sm text-gray-500">
-              プレビュー同期テスト: フロントエンド更新
-            </p>
             <p className="text-lg text-gray-600 mb-8">
               Next.js + Hono + TypeScript + Tailwind CSS + Clerk認証
             </p>
