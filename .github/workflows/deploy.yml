@@ -428,7 +428,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: ./apps/backend
-          wranglerVersion: '3.78.0' # 再現性確保のため固定
+          packageManager: pnpm # ← npm を使わせない
+          wranglerVersion: 4.34.0 # ← 4系でピン留め（例）
           command: deploy --env preview
           secrets: |
             FRONTEND_URL
@@ -444,7 +445,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: ./apps/backend
-          wranglerVersion: '3.78.0' # 再現性確保のため固定
+          packageManager: pnpm
+          wranglerVersion: 4.34.0
           command: deploy --env production
           # Note: 本番環境のFRONTEND_URLはCloudflare GUI（Dashboard）から事前設定済み
 
