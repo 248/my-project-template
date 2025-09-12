@@ -91,23 +91,31 @@
   if: false # 本番環境は未作成のため一時的にスキップ
 ```
 
-## 📊 ワークフローの動作
+## 📊 ワークフローの動作（最新）
 
-### PR作成時の動作（改善版）
+### PR作成時の動作
 
-1. **変更検出** - どのパッケージが変更されたか判定
-2. **品質チェック** - lint/type-check実行（失敗しても続行）
-3. **テスト** - 現在はスキップ（将来実装）
-4. **フロントエンドデプロイ** - Vercel CLI公式フローでプレビュー環境
-5. **バックエンドデプロイ** - **フロントエンド成功時のみ**実行
-   - 動的CORS_ORIGIN設定 → Cloudflareプレビューデプロイ
-6. **コメント投稿** - PRにプレビューURLを自動コメント
+1. **変更検出 (detect-changes)**: frontend / backend / packages / infra / docs-only を判定
+2. **品質チェック (quality-check)**: type-check, lint（GATE_DEPLOYで厳しさ制御）
+3. **テスト (test)**: 現在スキップ（将来有効化）
+4. **フロントエンドデプロイ (deploy-frontend)**: Vercel でプレビューをデプロイ（必要時のみ）
+5. **プレビューURL解決 (resolve-frontend-url)**: deploy-frontend 出力 or PRコメント履歴からURLを取得し、originへ正規化
+6. **フロントのみ更新時の同期 (sync-cors-origin)**: CORS_ORIGIN を更新して Workers をプレビュー環境へ再デプロイ
+7. **バックエンドデプロイ (deploy-backend)**: 上記で得た origin を CORS_ORIGIN として渡しデプロイ（必要時のみ）
+8. **コメント投稿**: PRにプレビューURLを自動コメント
+
+### 分岐ロジックの要点
+
+- **フロントのみ変更**: フロントをデプロイ → resolve-frontend-url → sync-cors-origin（Workers再デプロイ）でCORS追随。バックエンドは未変更ならデプロイしない。
+- **バックエンドのみ変更**: フロントはデプロイせず、resolve-frontend-urlで既存URLを復元し、そのoriginをCORS_ORIGINとして渡してバックエンドをデプロイ。
+- **infraのみ変更**: deploy-frontend / deploy-backend は実行対象（動作確認のため）。sync-cors-origin は走らない。
+- **docsのみ変更**: 全てスキップ（パイプライン高速化）。
 
 ### mainブランチへのpush時の動作
 
 1. **品質チェック** - lint/type-check + **Prisma Client生成**実行
 2. **テスト** - 現在はスキップ
-3. **本番デプロイ** - **現在は一時的にスキップ**（フロントエンド・バックエンド共に）
+3. **本番デプロイ** - **現在は一時的にスキップ**（プレビューのみ対象）
 
 ## 🔄 段階的移行パス
 
