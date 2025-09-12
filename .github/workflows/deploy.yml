@@ -336,8 +336,15 @@ jobs:
   # フロントエンドのURLを解決（フロント未変更でも、過去コメントから取得）
   resolve-frontend-url:
     runs-on: ubuntu-latest
-    needs: [deploy-frontend]
-    if: github.event_name == 'pull_request'
+    needs: [deploy-frontend, detect-changes]
+    # PRかつ「アプリ関連の変更（frontend/backend/packages/infra）」がある場合のみ実行（docs-onlyはスキップ）
+    if: |
+      github.event_name == 'pull_request' && (
+        needs.detect-changes.outputs.frontend == 'true' ||
+        needs.detect-changes.outputs.backend  == 'true' ||
+        needs.detect-changes.outputs.packages == 'true' ||
+        needs.detect-changes.outputs.infra    == 'true'
+      )
     outputs:
       url: ${{ steps.resolve.outputs.url }}
       origin: ${{ steps.resolve.outputs.origin }}
