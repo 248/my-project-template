@@ -4,10 +4,11 @@ main = "src/worker.ts"
 compatibility_date = "2024-11-27"
 compatibility_flags = ["nodejs_compat"]
 
+keep_vars = true  # ← Dashboard側の未指定Varsを消さない
+
 # プレビュー環境
 [env.preview]
 name = "my-project-template-api-preview"
-keep_vars = true  # GUI設定の環境変数を保護
 
 [env.preview.vars]
 NODE_ENV = "preview"
@@ -16,7 +17,6 @@ NODE_ENV = "preview"
 # 本番環境
 [env.production] 
 name = "my-project-template-api-production"
-keep_vars = true  # GUI設定の環境変数を保護
 
 [env.production.vars]
 NODE_ENV = "production"

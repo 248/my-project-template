@@ -38,6 +38,19 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const isVercelPreview = process.env['VERCEL_ENV'] === 'preview'
   const useRelaxedCSP = isDevelopment || isVercelPreview
 
+  // APIベースURLのオリジンをCSPに追加（環境変数があれば）
+  // 例: https://my-project-template-api-preview.aestivalis01.workers.dev
+  let apiOrigin = ''
+  try {
+    const apiBase = process.env['NEXT_PUBLIC_API_BASE_URL']
+    if (apiBase) {
+      apiOrigin = new URL(apiBase).origin
+    }
+  } catch {
+    // 無効なURLは無視
+    apiOrigin = ''
+  }
+
   response.headers.set(
     'Content-Security-Policy',
     [
@@ -45,9 +58,14 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
       useRelaxedCSP
         ? `script-src 'self' 'unsafe-eval' 'unsafe-inline' 'nonce-${nonce}' https://*.clerk.dev https://*.clerk.com https://*.clerk.accounts.dev`
         : `script-src 'self' 'strict-dynamic' 'nonce-${nonce}' https://*.clerk.dev https://*.clerk.com https://*.clerk.accounts.dev`,
+      // プレビュー/開発ではローカルも許可。本番は厳格に。
       useRelaxedCSP
-        ? `connect-src 'self' http://localhost:8787 http://127.0.0.1:8787 https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`
-        : `connect-src 'self' https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`,
+        ? `connect-src 'self' ${apiOrigin || ''} http://localhost:8787 http://127.0.0.1:8787 https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`
+            .replace(/\s+/g, ' ')
+            .trim()
+        : `connect-src 'self' ${apiOrigin || ''} https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`
+            .replace(/\s+/g, ' ')
+            .trim(),
       `worker-src 'self' blob:`,
       `frame-src https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev${isVercelPreview ? ' https://vercel.live' : ''}`,
       `img-src 'self' data: https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://img.clerk.com`,

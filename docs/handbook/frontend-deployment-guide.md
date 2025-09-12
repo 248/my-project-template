@@ -704,12 +704,25 @@ graph LR
 
 ### CSP (Content Security Policy)
 
-`vercel.json`でセキュリティヘッダー設定済み:
+- 方針: CSP は `apps/frontend/src/middleware.ts` で「動的に」一元配信します。`vercel.json` には CSP を設定しません（削除済み）。
+- 目的: リクエスト毎の `nonce` と、環境に応じた `connect-src`（例: `NEXT_PUBLIC_API_BASE_URL` のオリジン）を正確に許可するため。
 
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- `X-XSS-Protection: 1; mode=block`
-- 厳密なCSPポリシー
+運用ポイント:
+
+- 毎リクエスト nonce を生成し、`x-nonce` をリクエストヘッダとして下流へ伝搬。
+- `app/layout.tsx` で `headers().get('x-nonce')` を取得し、`<ClerkProvider nonce={...}>` や自前 `<Script nonce>` に付与。
+- `connect-src` は `self` と Clerk 関連に加えて、`NEXT_PUBLIC_API_BASE_URL` のオリジンを必ず含める（開発/プレビューでは `localhost:8787` なども許可）。
+- プレビュー環境は `VERCEL_ENV=preview` を見て緩和ポリシー、プロダクションは厳格化。
+
+注意事項（よくある躓き）:
+
+- `vercel.json` に `Content-Security-Policy` を置くと「二重CSP」になり、ブラウザは交差（より厳しい方）で評価→未許可接続や nonce 不一致でブロックされます。
+- `nonce-{NONCE}` のようなプレースホルダは Vercel 側で置換されず無効なソース扱いとなるため使用しないでください。
+- Workers 側の CORS は別制御です。`CORS_ORIGIN` に Vercel のプレビューURL（複数可、カンマ区切り）を必ず設定してください。
+
+関連ヘッダー:
+
+- `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy` は引き続き `vercel.json` で配信して構いません（重複リスクが低いため）。
 
 ### 認証セキュリティ
 
