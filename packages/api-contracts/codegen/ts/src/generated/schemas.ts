@@ -1,5 +1,5 @@
 // Auto-generated Zod schemas from OpenAPI spec
-// Generated at: 2025-09-10T00:09:45.742Z
+// NOTE: Deterministic output — no timestamps for stable diffs
 
 import { z } from 'zod'
 

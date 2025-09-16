@@ -145,8 +145,12 @@ jobs:
         run: |
           set -e
           git update-index -q --refresh
-          if ! git diff --quiet -- packages/api-contracts/codegen packages/shared/src/messages; then
-            echo "❌ Generated files are out of sync. Run 'pnpm codegen && pnpm gen:messages' and commit the results." >&2
+          # Filter out timestamp-only diffs (e.g., "// Generated at: ...")
+          FILTERED=$(git --no-pager diff -- packages/api-contracts/codegen packages/shared/src/messages \
+            | sed -E '/^[+-]\\/\\/ Generated at:/d' \
+            | grep -E '^[+-][^+-]') || true
+          if [ -n "$FILTERED" ]; then
+            echo "❌ Generated files are out of sync (excluding timestamp headers)." >&2
             echo "Changed files:" >&2
             git --no-pager diff --name-only -- packages/api-contracts/codegen packages/shared/src/messages >&2 || true
             exit 1
@@ -297,8 +301,11 @@ jobs:
         run: |
           set -e
           git update-index -q --refresh
-          if ! git diff --quiet -- packages/api-contracts/codegen packages/shared/src/messages; then
-            echo "❌ Generated files are out of sync. Run 'pnpm codegen && pnpm gen:messages' and commit the results." >&2
+          FILTERED=$(git --no-pager diff -- packages/api-contracts/codegen packages/shared/src/messages \
+            | sed -E '/^[+-]\\/\\/ Generated at:/d' \
+            | grep -E '^[+-][^+-]') || true
+          if [ -n "$FILTERED" ]; then
+            echo "❌ Generated files are out of sync (excluding timestamp headers)." >&2
             echo "Changed files:" >&2
             git --no-pager diff --name-only -- packages/api-contracts/codegen packages/shared/src/messages >&2 || true
             exit 1
@@ -544,8 +551,11 @@ jobs:
         run: |
           set -e
           git update-index -q --refresh
-          if ! git diff --quiet -- packages/api-contracts/codegen packages/shared/src/messages; then
-            echo "❌ Generated files are out of sync. Run 'pnpm codegen && pnpm gen:messages' and commit the results." >&2
+          FILTERED=$(git --no-pager diff -- packages/api-contracts/codegen packages/shared/src/messages \
+            | sed -E '/^[+-]\\/\\/ Generated at:/d' \
+            | grep -E '^[+-][^+-]') || true
+          if [ -n "$FILTERED" ]; then
+            echo "❌ Generated files are out of sync (excluding timestamp headers)." >&2
             echo "Changed files:" >&2
             git --no-pager diff --name-only -- packages/api-contracts/codegen packages/shared/src/messages >&2 || true
             exit 1

@@ -1,5 +1,5 @@
 // Auto-generated type-safe API client from OpenAPI spec
-// Generated at: 2025-09-10T00:09:45.744Z
+// NOTE: Deterministic output — no timestamps for stable diffs
 
 import createClient from 'openapi-fetch'
 import type { paths } from './types'
