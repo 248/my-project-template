@@ -724,6 +724,36 @@ graph LR
 
 - `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy` は引き続き `vercel.json` で配信して構いません（重複リスクが低いため）。
 
+#### 段階的CSP強化（Report-Only 運用）
+
+- 本番環境では、実効CSPに加えて「より厳格なCSP」を `Content-Security-Policy-Report-Only` として併配信します。
+  - 実装箇所: `apps/frontend/src/middleware.ts`
+  - レポート送信先: `POST /api/csp-report`（実装: `apps/frontend/src/app/api/csp-report/route.ts`）
+- 目的: 互換性を保ったまま、将来的に `style-src` から `'unsafe-inline'` を外すための影響範囲を把握する。
+
+使い方（確認手順）:
+
+- ローカル: `pnpm dev` 実行ターミナルに `CSP Report:` ログが出力されます。
+- Vercel: プロジェクトの Logs（Edge/Serverless）で `/api/csp-report` 実行ログを確認します。
+- ブラウザ: DevTools Console に Report-Only のCSP違反が表示されます（本番相当）。
+
+見るべきポイント:
+
+- `violated-directive` と `blocked-uri` を確認し、以下のいずれかで解消します。
+  - インラインスタイル/スクリプトに `nonce` を付与（例: `<style nonce={nonce}>`）。
+  - 必要なCDNドメインを各ディレクティブ（`style-src`/`font-src`/`img-src`/`connect-src` 等）に追加。
+
+切り替えの目安（本番強化への昇格）:
+
+- 24〜48時間、Report-Only の違反が0件（または許容範囲）であることを確認。
+- `apps/frontend/src/middleware.ts` の本番CSPから `style-src` の `'unsafe-inline'` を削除し、`'nonce-…'` のみで運用。
+- 安定後、Report-Only の配信を停止してもよい（継続監視したい場合は残す）。
+
+Clerk/Fontsに関する注意:
+
+- Clerkのウィジェットで外部スタイル/フォントを使用するため、`style-src` に `https://clerk.com` / `https://*.clerk.dev` / `https://*.clerk.accounts.dev` / `https://*.clerk.com`、`font-src` に `https://fonts.gstatic.com` を許可しています。
+- Google Fonts を使う場合は `style-src: https://fonts.googleapis.com` と `font-src: https://fonts.gstatic.com` を維持してください。
+
 ### 認証セキュリティ
 
 - Clerk JWTトークン検証

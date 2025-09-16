@@ -51,33 +51,56 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     apiOrigin = ''
   }
 
-  response.headers.set(
-    'Content-Security-Policy',
-    [
+  const enforcedDirectives = [
+    `default-src 'self'`,
+    useRelaxedCSP
+      ? `script-src 'self' 'unsafe-eval' 'unsafe-inline' 'nonce-${nonce}' https://*.clerk.dev https://*.clerk.com https://*.clerk.accounts.dev`
+      : `script-src 'self' 'strict-dynamic' 'nonce-${nonce}' https://*.clerk.dev https://*.clerk.com https://*.clerk.accounts.dev`,
+    // プレビュー/開発ではローカルも許可。本番は厳格に。
+    useRelaxedCSP
+      ? `connect-src 'self' ${apiOrigin || ''} http://localhost:8787 http://127.0.0.1:8787 https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`
+          .replace(/\s+/g, ' ')
+          .trim()
+      : `connect-src 'self' ${apiOrigin || ''} https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`
+          .replace(/\s+/g, ' ')
+          .trim(),
+    `worker-src 'self' blob:`,
+    `frame-src https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev${isVercelPreview ? ' https://vercel.live' : ''}`,
+    `img-src 'self' data: blob: https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://img.clerk.com`,
+    // 現状は互換優先で 'unsafe-inline' を許可（Report-Only で外す計画）
+    `style-src 'self' 'unsafe-inline' https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://*.clerk.com https://fonts.googleapis.com`,
+    `font-src 'self' data: https://fonts.gstatic.com https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://*.clerk.com`,
+    `base-uri 'self'`,
+    `object-src 'none'`,
+  ]
+
+  response.headers.set('Content-Security-Policy', enforcedDirectives.join('; '))
+
+  // 本番では段階的強化: Report-Only で厳格版を並行配信
+  if (!useRelaxedCSP) {
+    const reportOnlyDirectives = [
       `default-src 'self'`,
-      useRelaxedCSP
-        ? `script-src 'self' 'unsafe-eval' 'unsafe-inline' 'nonce-${nonce}' https://*.clerk.dev https://*.clerk.com https://*.clerk.accounts.dev`
-        : `script-src 'self' 'strict-dynamic' 'nonce-${nonce}' https://*.clerk.dev https://*.clerk.com https://*.clerk.accounts.dev`,
-      // プレビュー/開発ではローカルも許可。本番は厳格に。
-      useRelaxedCSP
-        ? `connect-src 'self' ${apiOrigin || ''} http://localhost:8787 http://127.0.0.1:8787 https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`
-            .replace(/\s+/g, ' ')
-            .trim()
-        : `connect-src 'self' ${apiOrigin || ''} https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`
-            .replace(/\s+/g, ' ')
-            .trim(),
+      // スクリプトは厳格（unsafe系なし）
+      `script-src 'self' 'strict-dynamic' 'nonce-${nonce}' https://*.clerk.dev https://*.clerk.com https://*.clerk.accounts.dev`,
+      // スタイルは nonce のみ（'unsafe-inline' を外す）
+      `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://*.clerk.com`,
+      `font-src 'self' data: https://fonts.gstatic.com`,
+      `img-src 'self' data: blob:`,
+      `connect-src 'self' ${apiOrigin || ''} https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`
+        .replace(/\s+/g, ' ')
+        .trim(),
+      `frame-src https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev`,
       `worker-src 'self' blob:`,
-      `frame-src https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev${isVercelPreview ? ' https://vercel.live' : ''}`,
-      `img-src 'self' data: blob: https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://img.clerk.com`,
-      // Clerkウィジェット/Google Fonts等の外部スタイルを許可
-      // 注意: style-src に nonce を含めると 'unsafe-inline' が無効化されるため、現状は nonce を付けない
-      `style-src 'self' 'unsafe-inline' https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://*.clerk.com https://fonts.googleapis.com`,
-      // 外部フォント配信元を許可
-      `font-src 'self' data: https://fonts.gstatic.com https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://*.clerk.com`,
       `base-uri 'self'`,
       `object-src 'none'`,
-    ].join('; ')
-  )
+      // ブラウザ対応のため report-uri を使用（簡易収集用）
+      `report-uri /api/csp-report`,
+    ]
+    response.headers.set(
+      'Content-Security-Policy-Report-Only',
+      reportOnlyDirectives.join('; ')
+    )
+  }
 
   return response
 })
