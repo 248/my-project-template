@@ -89,8 +89,8 @@ apps/frontend/
 
 ```json
 {
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && pnpm codegen && pnpm gen:messages && cd apps/frontend && pnpm build"
+  "installCommand": "pnpm -w install --frozen-lockfile",
+  "buildCommand": "pnpm -w run codegen && pnpm -w run gen:messages && pnpm --filter @template/frontend build"
 }
 ```
 

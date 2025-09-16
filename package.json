@@ -62,8 +62,8 @@
     "clean": "pnpm -r clean",
     "build:frontend": "pnpm --filter @template/frontend build",
     "build:backend": "pnpm --filter @template/backend build",
-    "deploy:vercel:production": "cd apps/frontend && vercel --prod",
-    "deploy:vercel:preview": "cd apps/frontend && vercel",
+    "deploy:vercel:production": "pnpm --filter @template/frontend exec vercel --prod",
+    "deploy:vercel:preview": "pnpm --filter @template/frontend exec vercel",
     "deploy:workers:preview": "pnpm --filter @template/backend deploy:preview",
     "deploy:workers:production": "pnpm --filter @template/backend deploy:production"
   },

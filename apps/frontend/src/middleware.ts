@@ -18,7 +18,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   // nonce生成（全リクエストで実行）- Web Crypto API使用
   const array = new Uint8Array(16)
   crypto.getRandomValues(array)
-  const nonce = btoa(String.fromCharCode.apply(null, Array.from(array)))
+  const nonce = btoa(String.fromCharCode(...array))
 
   // リクエストヘッダーにnonceを追加（下流に渡すため）
   const requestHeaders = new Headers(req.headers)
@@ -68,8 +68,12 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
             .trim(),
       `worker-src 'self' blob:`,
       `frame-src https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev${isVercelPreview ? ' https://vercel.live' : ''}`,
-      `img-src 'self' data: https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://img.clerk.com`,
-      `style-src 'self' 'unsafe-inline'`,
+      `img-src 'self' data: blob: https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://img.clerk.com`,
+      // Clerkウィジェット/Google Fonts等の外部スタイルを許可
+      // 注意: style-src に nonce を含めると 'unsafe-inline' が無効化されるため、現状は nonce を付けない
+      `style-src 'self' 'unsafe-inline' https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://*.clerk.com https://fonts.googleapis.com`,
+      // 外部フォント配信元を許可
+      `font-src 'self' data: https://fonts.gstatic.com https://clerk.com https://*.clerk.dev https://*.clerk.accounts.dev https://*.clerk.com`,
       `base-uri 'self'`,
       `object-src 'none'`,
     ].join('; ')

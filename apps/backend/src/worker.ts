@@ -29,6 +29,9 @@ const app = new OpenAPIHono<{
   Bindings: Env
 }>()
 
+// CORSのワイルドカード判定用パターンキャッシュ（モジュールスコープで共有）
+const corsPatternCache = new Map<string, RegExp>()
+
 // ミドルウェア設定
 app.use('*', honoLogger())
 app.use('*', timing())
@@ -73,13 +76,17 @@ app.use(
       const isAllowed = corsOrigins.some(allowed => {
         if (!allowed) return false
         if (allowed.includes('*')) {
-          const pattern = new RegExp(
-            '^' +
+          let pattern = corsPatternCache.get(allowed)
+          if (!pattern) {
+            const patternString =
+              '^' +
               allowed
                 .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
                 .replace(/\\\*/g, '.*') +
               '$'
-          )
+            pattern = new RegExp(patternString)
+            corsPatternCache.set(allowed, pattern)
+          }
           return pattern.test(origin)
         }
         return normalize(allowed) === normalize(origin)
