@@ -7,6 +7,9 @@ settings:
 importers:
   .:
     dependencies:
+      '@prisma/client':
+        specifier: 6.15.0
+        version: 6.15.0(prisma@6.15.0)(typescript@5.9.2)
       next:
         specifier: 15.5.2
         version: 15.5.2(react-dom@19.1.1)(react@19.1.1)
@@ -189,7 +192,7 @@ importers:
         specifier: ^1.37.0
         version: 1.37.0
       '@prisma/client':
-        specifier: ^6.15.0
+        specifier: 6.15.0
         version: 6.15.0(prisma@6.15.0)(typescript@5.9.2)
       '@template/api-contracts-ts':
         specifier: workspace:*
@@ -215,9 +218,6 @@ importers:
       pino-pretty:
         specifier: ^13.1.1
         version: 13.1.1
-      prisma:
-        specifier: ^6.15.0
-        version: 6.15.0(typescript@5.9.2)
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -237,6 +237,9 @@ importers:
       '@types/node':
         specifier: ^22.8.6
         version: 22.18.0
+      prisma:
+        specifier: 6.15.0
+        version: 6.15.0(typescript@5.9.2)
       tsx:
         specifier: ^4.20.5
         version: 4.20.5
@@ -4059,21 +4062,18 @@ packages:
       empathic: 2.0.0
     transitivePeerDependencies:
       - magicast
-    dev: false
 
   /@prisma/debug@6.15.0:
     resolution:
       {
         integrity: sha512-y7cSeLuQmyt+A3hstAs6tsuAiVXSnw9T55ra77z0nbNkA8Lcq9rNcQg6PI00by/+WnE/aMRJ/W7sZWn2cgIy1g==,
       }
-    dev: false
 
   /@prisma/engines-version@6.15.0-5.85179d7826409ee107a6ba334b5e305ae3fba9fb:
     resolution:
       {
         integrity: sha512-a/46aK5j6L3ePwilZYEgYDPrhBQ/n4gYjLxT5YncUTJJNRnTCVjPF86QdzUOLRdYjCLfhtZp9aum90W0J+trrg==,
       }
-    dev: false
 
   /@prisma/engines@6.15.0:
     resolution:
@@ -4086,7 +4086,6 @@ packages:
       '@prisma/engines-version': 6.15.0-5.85179d7826409ee107a6ba334b5e305ae3fba9fb
       '@prisma/fetch-engine': 6.15.0
       '@prisma/get-platform': 6.15.0
-    dev: false
 
   /@prisma/fetch-engine@6.15.0:
     resolution:
@@ -4097,7 +4096,6 @@ packages:
       '@prisma/debug': 6.15.0
       '@prisma/engines-version': 6.15.0-5.85179d7826409ee107a6ba334b5e305ae3fba9fb
       '@prisma/get-platform': 6.15.0
-    dev: false
 
   /@prisma/get-platform@6.15.0:
     resolution:
@@ -4106,7 +4104,6 @@ packages:
       }
     dependencies:
       '@prisma/debug': 6.15.0
-    dev: false
 
   /@protobufjs/aspromise@1.1.2:
     resolution:
@@ -4563,7 +4560,6 @@ packages:
       {
         integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==,
       }
-    dev: false
 
   /@swagger-api/apidom-ast@1.0.0-beta.47:
     resolution:
@@ -4706,6 +4702,7 @@ packages:
       {
         integrity: sha512-ETExA5eiNyBaDUAyKws0jyA1gNlT4vwjyXRBLck/upJTdTXu+kuNWqC1DHNCvkfnfNPON1REzKysr+6NKHayRQ==,
       }
+    requiresBuild: true
     dependencies:
       '@babel/runtime-corejs3': 7.28.3
       '@swagger-api/apidom-ast': 1.0.0-beta.47
@@ -6983,7 +6980,6 @@ packages:
       perfect-debounce: 1.0.0
       pkg-types: 2.3.0
       rc9: 2.1.2
-    dev: false
 
   /cac@6.7.14:
     resolution:
@@ -7183,7 +7179,6 @@ packages:
       }
     dependencies:
       consola: 3.4.2
-    dev: false
 
   /cjs-module-lexer@1.2.3:
     resolution:
@@ -7381,7 +7376,6 @@ packages:
       {
         integrity: sha512-1NB+BKqhtNipMsov4xI/NnhCKp9XG9NamYp5PVm9klAT0fsrNPjaFICsCFhNhwZJKNh7zB/3q8qXz0E9oaMNtQ==,
       }
-    dev: false
 
   /consola@3.4.2:
     resolution:
@@ -7707,7 +7701,6 @@ packages:
         integrity: sha512-HOJkrhaYsweh+W+e74Yn7YStZOilkoPb6fycpwNLKzSPtruFs48nYis0zy5yJz1+ktUhHxoRDJ27RQAWLIJVJw==,
       }
     engines: { node: '>=16.0.0' }
-    dev: false
 
   /deepmerge@4.3.1:
     resolution:
@@ -7782,7 +7775,6 @@ packages:
       {
         integrity: sha512-ugFTXCtDZunbzasqBxrK93Ik/DRYsO6S/fedkWEMKqt04xZ4csmnmwGDBAb07QWNaGMAmnTIemsYZCksjATwsA==,
       }
-    dev: false
 
   /detect-libc@2.0.4:
     resolution:
@@ -7873,7 +7865,6 @@ packages:
         integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==,
       }
     engines: { node: '>=12' }
-    dev: false
 
   /drange@1.1.1:
     resolution:
@@ -7928,7 +7919,6 @@ packages:
     dependencies:
       '@standard-schema/spec': 1.0.0
       fast-check: 3.23.2
-    dev: false
 
   /electron-to-chromium@1.5.213:
     resolution:
@@ -7963,7 +7953,6 @@ packages:
         integrity: sha512-i6UzDscO/XfAcNYD75CfICkmfLedpyPDdozrLMmQc5ORaQcdMoc21OnlEylMIqI7U8eniKrPMxxtj8k0vhmJhA==,
       }
     engines: { node: '>=14' }
-    dev: false
 
   /end-of-stream@1.1.0:
     resolution:
@@ -9173,7 +9162,6 @@ packages:
     engines: { node: '>=8.0.0' }
     dependencies:
       pure-rand: 6.1.0
-    dev: false
 
   /fast-copy@3.0.2:
     resolution:
@@ -9661,7 +9649,6 @@ packages:
       node-fetch-native: 1.6.7
       nypm: 0.6.1
       pathe: 2.0.3
-    dev: false
 
   /git-raw-commits@4.0.0:
     resolution:
@@ -11640,7 +11627,6 @@ packages:
       {
         integrity: sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q==,
       }
-    dev: false
 
   /node-fetch@2.6.7:
     resolution:
@@ -11758,7 +11744,6 @@ packages:
       pathe: 2.0.3
       pkg-types: 2.3.0
       tinyexec: 1.0.1
-    dev: false
 
   /object-assign@4.1.1:
     resolution:
@@ -12250,7 +12235,6 @@ packages:
       {
         integrity: sha512-xCy9V055GLEqoFaHoC1SoLIaLmWctgCUaBaWxDZ7/Zx4CTyX7cJQLJOok/orfjZAh9kEYpjJa4d0KcJmCbctZA==,
       }
-    dev: false
 
   /pg-int8@1.0.1:
     resolution:
@@ -12402,7 +12386,6 @@ packages:
       confbox: 0.2.2
       exsolve: 1.0.7
       pathe: 2.0.3
-    dev: false
 
   /pluralize@8.0.0:
     resolution:
@@ -12624,7 +12607,6 @@ packages:
       typescript: 5.9.2
     transitivePeerDependencies:
       - magicast
-    dev: false
 
   /prismjs@1.27.0:
     resolution:
@@ -12735,7 +12717,6 @@ packages:
       {
         integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==,
       }
-    dev: false
 
   /querystringify@2.2.0:
     resolution:
@@ -12818,7 +12799,6 @@ packages:
     dependencies:
       defu: 6.1.4
       destr: 2.0.5
-    dev: false
 
   /react-copy-to-clipboard@5.1.0(react@19.1.1):
     resolution:

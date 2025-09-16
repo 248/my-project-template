@@ -127,57 +127,75 @@ pnpm db:generate
 
 **Preview環境用変数設定:**
 
-| Variable Name              | Type     | Value                                          |
-| -------------------------- | -------- | ---------------------------------------------- |
-| `DATABASE_URL`             | Secret   | `postgres://...neon.tech/project-template-dev` |
-| `DB_DRIVER`                | Variable | `neon`                                         |
-| `UPSTASH_REDIS_REST_URL`   | Secret   | `https://xxx-xxx-xxx.upstash.io`               |
-| `UPSTASH_REDIS_REST_TOKEN` | Secret   | `AxxxXxxXxxx_xxxxxxxxxxxxxxxxxx`               |
-| `CLERK_SECRET_KEY`         | Secret   | `sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx`        |
-| `NODE_ENV`                 | Variable | `preview`                                      |
-| `ENV_NAME`                 | Variable | `preview`                                      |
+| Variable Name              | Type     | Value                                          | 設定方法            |
+| -------------------------- | -------- | ---------------------------------------------- | ------------------- |
+| `DATABASE_URL`             | Secret   | `postgres://...neon.tech/project-template-dev` | GUI設定             |
+| `DB_DRIVER`                | Variable | `neon`                                         | GUI設定             |
+| `UPSTASH_REDIS_REST_URL`   | Secret   | `https://xxx-xxx-xxx.upstash.io`               | GUI設定             |
+| `UPSTASH_REDIS_REST_TOKEN` | Secret   | `AxxxXxxXxxx_xxxxxxxxxxxxxxxxxx`               | GUI設定             |
+| `CLERK_SECRET_KEY`         | Secret   | `sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx`        | GUI設定             |
+| `NODE_ENV`                 | Variable | `preview`                                      | GUI設定             |
+| `ENV_NAME`                 | Variable | `preview`                                      | GUI設定             |
+| `CORS_ORIGIN`              | Variable | **動的設定**（プレビューURLのオリジン）        | **CI/CDが自動設定** |
 
-#### デプロイ手順
+**🔧 CORS_ORIGIN 動的設定**：
+CI/CDパイプラインが**フロントエンドデプロイ成功時**に自動で設定します（プレビューのオリジン）：
 
-```bash
-# 1. マイグレーション実行（必要に応じて）
-cd apps/backend
-pnpm db:migrate:deploy
-
-# 2. Preview環境デプロイ
-pnpm deploy:preview
-
-# または
-wrangler deploy --env preview
+```yaml
+# GitHub Actions内で自動実行
+echo "${{ needs.deploy-frontend.outputs.url }}" | sed -E 's#(/+$)||$##' | wrangler secret put CORS_ORIGIN --env preview
 ```
 
-### 4. Production環境デプロイ
-
-#### Production環境用変数設定
-
-| Variable Name              | Type     | Value                                           |
-| -------------------------- | -------- | ----------------------------------------------- |
-| `DATABASE_URL`             | Secret   | `postgres://...neon.tech/project-template-prod` |
-| `DB_DRIVER`                | Variable | `neon`                                          |
-| `UPSTASH_REDIS_REST_URL`   | Secret   | `https://xxx-xxx-xxx.upstash.io`                |
-| `UPSTASH_REDIS_REST_TOKEN` | Secret   | `AxxxXxxXxxx_xxxxxxxxxxxxxxxxxx`                |
-| `CLERK_SECRET_KEY`         | Secret   | `sk_live_sample_xxxxxxxxxxxxxxxxxx`             |
-| `NODE_ENV`                 | Variable | `production`                                    |
-| `ENV_NAME`                 | Variable | `prod`                                          |
-
 #### デプロイ手順
 
+**⚠️ 重要**: Preview環境はCI/CDによる自動デプロイが推奨です。
+
 ```bash
-# 1. マイグレーション実行（本番環境）
-# ⚠️ 重要: 本番デプロイ前に必ずマイグレーション適用
+# 1. プルリクエスト作成 → 自動デプロイ
+git checkout -b feature/your-feature
+git push origin feature/your-feature
+
+# 2. 手動デプロイ（緊急時のみ）
+cd apps/backend
+pnpm db:migrate:deploy  # 必要に応じて
+pnpm deploy:preview
+```
+
+### 4. Production環境デプロイ（現在は一時的にスキップ）
+
+**⚠️ 現在の状況**: 本番環境は未作成のため、CI/CDで一時的にスキップされています。
+
+#### Production環境用変数設定（将来使用予定）
+
+| Variable Name              | Type     | Value                                           | 設定方法 |
+| -------------------------- | -------- | ----------------------------------------------- | -------- |
+| `DATABASE_URL`             | Secret   | `postgres://...neon.tech/project-template-prod` | GUI設定  |
+| `DB_DRIVER`                | Variable | `neon`                                          | GUI設定  |
+| `UPSTASH_REDIS_REST_URL`   | Secret   | `https://xxx-xxx-xxx.upstash.io`                | GUI設定  |
+| `UPSTASH_REDIS_REST_TOKEN` | Secret   | `AxxxXxxXxxx_xxxxxxxxxxxxxxxxxx`                | GUI設定  |
+| `CLERK_SECRET_KEY`         | Secret   | `sk_live_sample_xxxxxxxxxxxxxxxxxx`             | GUI設定  |
+| `NODE_ENV`                 | Variable | `production`                                    | GUI設定  |
+| `ENV_NAME`                 | Variable | `prod`                                          | GUI設定  |
+| `CORS_ORIGIN`              | Variable | **固定オリジン**（独自ドメイン）                | GUI設定  |
+
+**🔧 CORS_ORIGIN 固定設定**：
+本番環境では独自ドメインの固定オリジンを Cloudflare GUI で設定します。
+
+#### 本番環境有効化手順（将来実施予定）
+
+```bash
+# 1. CI/CDワークフロー修正
+# .github/workflows/deploy.yml内の以下を変更：
+# if: false  # 本番環境は未作成のため一時的にスキップ
+# ↓
+# if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+# 2. マイグレーション実行（本番環境）
 cd apps/backend
 pnpm db:migrate:deploy
 
-# 2. Production環境デプロイ
+# 3. Production環境デプロイ
 pnpm deploy:production
-
-# または
-wrangler deploy --env production
 ```
 
 ## 🔍 動作確認

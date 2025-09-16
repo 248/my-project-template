@@ -207,7 +207,7 @@ try {
   
   const schemas = api.components?.schemas || {}
   let schemasContent = `// Auto-generated Zod schemas from OpenAPI spec
-// Generated at: ${new Date().toISOString()}
+// NOTE: Deterministic output — no timestamps for stable diffs
 
 import { z } from 'zod'
 
@@ -263,7 +263,7 @@ import { z } from 'zod'
   console.log('🌐 Generating API client from OpenAPI paths...')
   
   let clientContent = `// Auto-generated type-safe API client from OpenAPI spec
-// Generated at: ${new Date().toISOString()}
+// NOTE: Deterministic output — no timestamps for stable diffs
 
 import createClient from 'openapi-fetch'
 import type { paths } from './types'
