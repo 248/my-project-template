@@ -45,6 +45,11 @@
 
 - `GATE_DEPLOY` - `false`（初期値）または `true`（テスト必須化）
 
+推奨運用（段階導入）:
+
+- PR/Preview: `GATE_DEPLOY=false`（型・Lintは継続、テストは将来必須化）
+- main: `GATE_DEPLOY=true`（本番系は失敗で停止）
+
 ### 3. CODEOWNERS の更新
 
 `.github/CODEOWNERS`ファイルのユーザー名を更新：

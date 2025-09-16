@@ -141,6 +141,17 @@ jobs:
       - name: Codegen (OpenAPI / Messages)
         run: pnpm codegen && pnpm gen:messages
 
+      - name: Verify generated artifacts in sync (codegen/messages)
+        run: |
+          set -e
+          git update-index -q --refresh
+          if ! git diff --quiet -- packages/api-contracts/codegen packages/shared/src/messages; then
+            echo "❌ Generated files are out of sync. Run 'pnpm codegen && pnpm gen:messages' and commit the results." >&2
+            echo "Changed files:" >&2
+            git --no-pager diff --name-only -- packages/api-contracts/codegen packages/shared/src/messages >&2 || true
+            exit 1
+          fi
+
       # 型チェック（PR時は許容 / 本番系は失敗にする）
       - name: Type check
         run: pnpm type-check
@@ -215,6 +226,13 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
+      - name: Check required secrets (Vercel)
+        run: |
+          set -e
+          test -n "${VERCEL_TOKEN}" || (echo "VERCEL_TOKEN is missing" >&2; exit 1)
+          test -n "${VERCEL_ORG_ID}" || (echo "VERCEL_ORG_ID is missing" >&2; exit 1)
+          test -n "${VERCEL_PROJECT_ID}" || (echo "VERCEL_PROJECT_ID is missing" >&2; exit 1)
+
       # 依存関係はモノレポのルートで解決（lockfile一貫性のため）
       - name: Install dependencies (root)
         working-directory: .
@@ -274,6 +292,18 @@ jobs:
         working-directory: .
         run: pnpm codegen && pnpm gen:messages
 
+      - name: Verify generated artifacts in sync (codegen/messages)
+        working-directory: .
+        run: |
+          set -e
+          git update-index -q --refresh
+          if ! git diff --quiet -- packages/api-contracts/codegen packages/shared/src/messages; then
+            echo "❌ Generated files are out of sync. Run 'pnpm codegen && pnpm gen:messages' and commit the results." >&2
+            echo "Changed files:" >&2
+            git --no-pager diff --name-only -- packages/api-contracts/codegen packages/shared/src/messages >&2 || true
+            exit 1
+          fi
+
       # パス検証（リポジトリルートから実行）
       - name: Assert PWD and files (repo root)
         working-directory: .
@@ -287,18 +317,18 @@ jobs:
       # ✅ プロジェクトリンクをリポジトリ直下に固定（方針A）
       - name: Vercel link (bind project at repo root)
         working-directory: .
-        run: npx vercel@latest link --yes --project "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN"
+        run: pnpm exec vercel link --yes --project "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN"
 
       # ✅ 環境の取り込み（リポジトリルートから実行）
       - name: Vercel pull (preview)
         if: github.event_name == 'pull_request'
         working-directory: .
-        run: npx vercel@latest pull --yes --environment=preview --token "$VERCEL_TOKEN"
+        run: pnpm exec vercel pull --yes --environment=preview --token "$VERCEL_TOKEN"
 
       - name: Vercel pull (production)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         working-directory: .
-        run: npx vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN"
+        run: pnpm exec vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
 
       # 🚀 リモートビルドでデプロイ（リポジトリルートから実行）
       - name: Deploy with Vercel CLI (remote build)
@@ -309,7 +339,7 @@ jobs:
           echo "🔄 プレビュー環境用デプロイ開始（Vercel側リモートビルド）"
           echo "Debug: PWD=$(pwd)"
           echo "Debug: .vercel exists? $(test -d .vercel && echo 'YES' || echo 'NO')"
-          DEPLOY_URL=$(npx vercel@latest deploy --yes --token "$VERCEL_TOKEN")
+          DEPLOY_URL=$(pnpm exec vercel deploy --yes --token "$VERCEL_TOKEN")
           echo "preview-url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
           echo "✅ プレビューデプロイ完了: $DEPLOY_URL"
 
@@ -392,6 +422,12 @@ jobs:
     needs: [detect-changes, resolve-frontend-url]
     if: needs.detect-changes.outputs.frontend == 'true' && needs.detect-changes.outputs.backend != 'true' && github.event_name == 'pull_request'
     steps:
+      - name: Check required secrets (Cloudflare)
+        run: |
+          set -e
+          test -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" || (echo "CLOUDFLARE_API_TOKEN is missing" >&2; exit 1)
+          test -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" || (echo "CLOUDFLARE_ACCOUNT_ID is missing" >&2; exit 1)
+
       - name: Sync CORS_ORIGIN and redeploy backend (Preview)
         uses: cloudflare/wrangler-action@v3
         with:
@@ -443,6 +479,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+
+      - name: Check required secrets (Cloudflare)
+        run: |
+          set -e
+          test -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" || (echo "CLOUDFLARE_API_TOKEN is missing" >&2; exit 1)
+          test -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" || (echo "CLOUDFLARE_ACCOUNT_ID is missing" >&2; exit 1)
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -497,6 +539,17 @@ jobs:
 
       - name: Generate required files
         run: pnpm codegen && pnpm gen:messages
+
+      - name: Verify generated artifacts in sync (codegen/messages)
+        run: |
+          set -e
+          git update-index -q --refresh
+          if ! git diff --quiet -- packages/api-contracts/codegen packages/shared/src/messages; then
+            echo "❌ Generated files are out of sync. Run 'pnpm codegen && pnpm gen:messages' and commit the results." >&2
+            echo "Changed files:" >&2
+            git --no-pager diff --name-only -- packages/api-contracts/codegen packages/shared/src/messages >&2 || true
+            exit 1
+          fi
 
       - name: Build backend
         run: pnpm build:backend
