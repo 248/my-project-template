@@ -2,6 +2,9 @@ import { UserButton } from '@clerk/nextjs'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 
+import { AppTitle } from '@/components/AppTitle'
+import { AuthBadge } from '@/components/AuthBadge'
+
 /**
  * 保護されたレイアウト
  * /home以下のすべてのページは認証が必要
@@ -26,11 +29,9 @@ export default async function ProtectedLayout({
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <h1 className="text-xl font-semibold text-gray-900">
-                Project Template
+                <AppTitle />
               </h1>
-              <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                認証済み
-              </span>
+              <AuthBadge />
             </div>
             <UserButton
               appearance={{

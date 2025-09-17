@@ -49,6 +49,6 @@ export async function getDetailedHealth() {
   return {
     success: isHealthy,
     data: response.data,
-    error: isHealthy ? null : 'サービスに問題が発生しています',
+    error: isHealthy ? null : 'Unknown error occurred',
   }
 }

@@ -63,7 +63,7 @@ export function useApiClient() {
     const token = await getToken({ template: 'backend' })
 
     if (!token) {
-      throw new Error('ユーザーがサインインしていません。認証が必要です。')
+      throw new Error('Authentication required')
     }
 
     return { Authorization: `Bearer ${token}` }

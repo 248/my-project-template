@@ -4,6 +4,7 @@
 import type { DetailedHealthCheck } from '@template/api-contracts-ts'
 import React, { useState } from 'react'
 
+import { useMessages } from '@/hooks/useMessages'
 import { getDetailedHealth } from '@/lib/api'
 
 interface HealthCheckState {
@@ -18,6 +19,7 @@ interface HealthCheckState {
  * システムの健全性状態を確認し、結果を表示
  */
 export function HealthCheckButton() {
+  const { tUI, t } = useMessages()
   const [state, setState] = useState<HealthCheckState>({
     isLoading: false,
     data: null,
@@ -37,14 +39,15 @@ export function HealthCheckButton() {
       setState({
         isLoading: false,
         data: result.data,
-        error: result.success ? null : 'サービスに問題が発生しています',
+        error: result.success ? null : t('error.unknown_error'),
         lastChecked: new Date(),
       })
     } catch (error) {
       setState({
         isLoading: false,
         data: null,
-        error: error instanceof Error ? error.message : 'エラーが発生しました',
+        error:
+          error instanceof Error ? error.message : t('error.unknown_error'),
         lastChecked: new Date(),
       })
     }
@@ -85,7 +88,9 @@ export function HealthCheckButton() {
   return (
     <div className="w-full max-w-2xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-4">システムヘルスチェック</h2>
+        <h2 className="text-2xl font-bold mb-4">
+          {tUI('ui.system_health_check_title')}
+        </h2>
 
         <button
           onClick={() => void handleHealthCheck()}
@@ -99,18 +104,21 @@ export function HealthCheckButton() {
             }
           `}
         >
-          {state.isLoading ? '確認中...' : 'ヘルスチェック実行'}
+          {state.isLoading ? tUI('ui.loading') : tUI('action.run_health_check')}
         </button>
 
         {state.lastChecked && (
           <p className="mt-2 text-sm text-gray-600">
-            最終確認: {state.lastChecked.toLocaleTimeString('ja-JP')}
+            {tUI('ui.last_checked')}:{' '}
+            {state.lastChecked.toLocaleTimeString('ja-JP')}
           </p>
         )}
 
         {state.error && (
           <div className="mt-4 p-4 bg-red-50 border border-red-300 rounded-md">
-            <p className="text-red-800 font-medium">エラー</p>
+            <p className="text-red-800 font-medium">
+              {t('action.error_occurred')}
+            </p>
             <p className="text-red-700">{state.error}</p>
           </div>
         )}
@@ -123,19 +131,20 @@ export function HealthCheckButton() {
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold text-lg">
-                  システムステータス: {getStatusIcon(state.data.status)}{' '}
+                  {tUI('ui.system_status')}: {getStatusIcon(state.data.status)}{' '}
                   {state.data.status}
                 </span>
                 <span className="text-sm">
-                  稼働時間: {Math.floor((state.data.uptime || 0) / 3600)}時間
-                  {Math.floor(((state.data.uptime || 0) % 3600) / 60)}分
+                  {tUI('ui.uptime')}:{' '}
+                  {Math.floor((state.data.uptime || 0) / 3600)}h
+                  {Math.floor(((state.data.uptime || 0) % 3600) / 60)}m
                 </span>
               </div>
             </div>
 
             {/* サービス個別ステータス */}
             <div className="bg-gray-50 rounded-md p-4">
-              <h3 className="font-bold mb-3">サービス状態</h3>
+              <h3 className="font-bold mb-3">{tUI('ui.service_status')}</h3>
               <div className="space-y-2">
                 {Object.entries(state.data.services).map(([name, service]) => (
                   <div
@@ -169,41 +178,16 @@ export function HealthCheckButton() {
               </div>
             </div>
 
-            {/* システムメトリクス */}
-            <div className="bg-gray-50 rounded-md p-4">
-              <h3 className="font-bold mb-3">システムメトリクス</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white p-3 rounded">
-                  <p className="text-sm text-gray-600">メモリ使用量</p>
-                  <p className="font-mono">
-                    {state.data.system.memory.heapUsed} /{' '}
-                    {state.data.system.memory.heapTotal} MB
-                  </p>
-                  <div className="mt-1 bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-500 h-2 rounded-full"
-                      style={{
-                        width: `${(state.data.system.memory.heapUsed / state.data.system.memory.heapTotal) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="bg-white p-3 rounded">
-                  <p className="text-sm text-gray-600">CPU時間</p>
-                  <p className="font-mono text-sm">
-                    User: {state.data.system.cpu.user}ms
-                  </p>
-                  <p className="font-mono text-sm">
-                    System: {state.data.system.cpu.system}ms
-                  </p>
-                </div>
-              </div>
-            </div>
+            {/* システムメトリクス（現状は計測不可のため非表示） */}
 
             {/* 環境情報 */}
             <div className="text-sm text-gray-600 flex justify-between">
-              <span>バージョン: {state.data.version}</span>
-              <span>環境: {state.data.environment}</span>
+              <span>
+                {tUI('ui.version')}: {state.data.version}
+              </span>
+              <span>
+                {tUI('ui.environment')}: {state.data.environment}
+              </span>
             </div>
           </div>
         )}

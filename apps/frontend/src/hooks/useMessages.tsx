@@ -176,6 +176,7 @@ export function useMessages(): MessageHookReturn {
    */
   const tUI = useCallback(
     (code: MessageKey, fallback?: string): string => {
+      // UI表示用のメッセージに限定（ui.* または action.*）
       if (!code.startsWith('ui.') && !code.startsWith('action.')) {
         console.warn(`Non-UI message key used in UI context: ${code}`)
         return fallback || code

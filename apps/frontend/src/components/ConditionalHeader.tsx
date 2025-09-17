@@ -2,12 +2,15 @@
 
 import { usePathname } from 'next/navigation'
 
+import { useMessages } from '@/hooks/useMessages'
+
 /**
  * 条件付きヘッダーコンポーネント
  * /home以外のページでのみヘッダーを表示
  */
 export function ConditionalHeader() {
   const pathname = usePathname()
+  const { tUI } = useMessages()
 
   // /homeで始まるパスの場合はヘッダーを表示しない
   if (pathname.startsWith('/home')) {
@@ -20,7 +23,7 @@ export function ConditionalHeader() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <h1 className="text-xl font-semibold text-gray-900">
-              Project Template
+              {tUI('ui.app_title')}
             </h1>
           </div>
         </div>
