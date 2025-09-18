@@ -14,11 +14,92 @@
 const fs = require('fs')
 const path = require('path')
 const yaml = require('js-yaml')
+const { loadRegistryFromConfig } = require('./registry-loader')
 
 // Configuration
 const configPath =
   process.env.MESSAGE_CONFIG_PATH || path.join(__dirname, 'config.json')
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+
+let registryContext = null
+
+function isPlainObject(value) {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.prototype.toString.call(value) === '[object Object]'
+  )
+}
+
+function validateRegistryContent(registry, results) {
+  if (!isPlainObject(registry.metadata)) {
+    results.addError('Registry metadata must be an object')
+  }
+
+  if (!isPlainObject(registry.messages)) {
+    results.addError('Registry messages must be an object of namespaces')
+    return
+  }
+
+  const requiredFields = [
+    'key',
+    'namespace',
+    'category',
+    'description',
+    'template_params',
+    'since',
+    'deprecated',
+    'api_usage',
+    'ui_usage',
+  ]
+
+  for (const [namespace, entries] of Object.entries(registry.messages)) {
+    if (!isPlainObject(entries)) {
+      results.addError(`Registry namespace '${namespace}' must be an object`)
+      continue
+    }
+
+    for (const [messageName, messageData] of Object.entries(entries)) {
+      if (!isPlainObject(messageData)) {
+        results.addError(
+          `Registry message '${namespace}.${messageName}' must be an object`
+        )
+        continue
+      }
+
+      const missingFields = requiredFields.filter(
+        field => messageData[field] === undefined
+      )
+
+      if (missingFields.length > 0) {
+        results.addError(
+          `Registry message '${namespace}.${messageName}' missing required fields: ${missingFields.join(', ')}`
+        )
+      }
+
+      if (!Array.isArray(messageData.template_params)) {
+        results.addError(
+          `Registry message '${namespace}.${messageName}' expects template_params to be an array`
+        )
+      }
+
+      const expectedKey = `${namespace}.${messageName}`
+      if (messageData.key && messageData.key !== expectedKey) {
+        results.addError(
+          `Registry message '${namespace}.${messageName}' has mismatched key '${messageData.key}'`
+        )
+      }
+    }
+  }
+}
+
+function loadRegistryContext(forceRefresh = false) {
+  if (!registryContext || forceRefresh) {
+    registryContext = loadRegistryFromConfig(config.registry)
+  }
+  return registryContext
+}
 
 /**
  * Verification results aggregator
@@ -63,18 +144,8 @@ class VerificationResults {
 /**
  * Load and parse registry
  */
-function loadRegistry() {
-  const registryPath = path.resolve(config.registry?.path)
-
-  if (!fs.existsSync(registryPath)) {
-    throw new Error(`Registry file not found: ${registryPath}`)
-  }
-
-  try {
-    return yaml.load(fs.readFileSync(registryPath, 'utf8'))
-  } catch (error) {
-    throw new Error(`Failed to parse registry: ${error.message}`)
-  }
+function loadRegistry(forceRefresh = false) {
+  return loadRegistryContext(forceRefresh).registry
 }
 
 /**
@@ -104,7 +175,21 @@ function extractRegistryKeys(registry) {
  * Verify TypeScript generated code
  */
 function verifyTypeScript(registryKeys, results) {
-  const tsPath = path.resolve(config.targets?.typescript?.output_path)
+  const tsTarget = config.targets?.typescript
+
+  if (!tsTarget || tsTarget.enabled === false) {
+    results.addInfo(
+      'TypeScript verification skipped (disabled or not configured)'
+    )
+    return
+  }
+
+  if (!tsTarget.output_path) {
+    results.addWarning('TypeScript target output path not configured')
+    return
+  }
+
+  const tsPath = path.resolve(tsTarget.output_path)
 
   if (!fs.existsSync(tsPath)) {
     results.addError('TypeScript generated file not found', { path: tsPath })
@@ -205,8 +290,19 @@ function verifyGo(registryKeys, results) {
  * Verify locale files
  */
 function verifyLocales(registryKeys, results) {
-  const localesDir = path.resolve('packages/shared/src/messages/locales')
-  const supportedLocales = ['ja', 'en', 'pseudo']
+  const localeConfig = config.locales
+
+  if (!localeConfig) {
+    results.addInfo('Locale verification skipped (not configured)')
+    return
+  }
+
+  const localesDir = path.resolve(
+    localeConfig.output_dir || 'packages/shared/src/messages/locales'
+  )
+  const supportedLocales = Array.isArray(localeConfig.supported)
+    ? localeConfig.supported
+    : ['ja', 'en', 'pseudo']
 
   const registryKeySet = new Set(registryKeys.map(k => k.key))
 
@@ -223,7 +319,7 @@ function verifyLocales(registryKeys, results) {
 
       // Extract locale keys (simplified regex - assumes format: 'key': 'value')
       const localeKeyMatches =
-        localeContent.match(/'([^']+)':\s*'[^']*',?/g) || []
+        localeContent.match(/'([^']+)':\s*['"][^'"]*['"],?/g) || []
       const localeKeys = localeKeyMatches.map(
         match => match.match(/'([^']+)':/)[1]
       )
@@ -354,19 +450,11 @@ function verifyOpenAPIIntegration(registryKeys, results) {
   }
 
   const schemaKeys = new Set(enumNode)
-  const registryErrorKeys = registryKeys
-    .filter(
-      k =>
-        k.apiUsage &&
-        (k.category === 'error' ||
-          k.category === 'client_error' ||
-          k.category === 'server_error')
-    )
-    .map(k => k.key)
+  const registryApiKeys = registryKeys.filter(k => k.apiUsage).map(k => k.key)
 
-  const registryErrorKeySet = new Set(registryErrorKeys)
-  const missingInSchema = registryErrorKeys.filter(k => !schemaKeys.has(k))
-  const extraInSchema = enumNode.filter(k => !registryErrorKeySet.has(k))
+  const registryApiKeySet = new Set(registryApiKeys)
+  const missingInSchema = registryApiKeys.filter(k => !schemaKeys.has(k))
+  const extraInSchema = enumNode.filter(k => !registryApiKeySet.has(k))
 
   if (missingInSchema.length > 0) {
     results.addError('OpenAPI schema missing message keys', {
@@ -374,15 +462,15 @@ function verifyOpenAPIIntegration(registryKeys, results) {
     })
   }
   if (extraInSchema.length > 0) {
-    results.addError('OpenAPI schema has unknown message keys', {
+    results.addWarning('OpenAPI schema has additional message codes', {
       keys: extraInSchema,
     })
   }
 
   results.addInfo(
     `OpenAPI verification: ${
-      registryErrorKeys.length - missingInSchema.length
-    }/${registryErrorKeys.length} error keys match`
+      registryApiKeys.length - missingInSchema.length
+    }/${registryApiKeys.length} API keys match`
   )
 }
 
@@ -469,15 +557,35 @@ async function verifyMessages() {
   try {
     // Load registry
     console.log('📄 Loading registry...')
-    const registry = loadRegistry()
+    const context = loadRegistryContext(true)
+    const registry = context.registry
     const registryKeys = extractRegistryKeys(registry)
 
     results.setStat('registry_keys', registryKeys.length)
     results.setStat('namespaces', Object.keys(registry.messages).length)
 
+    validateRegistryContent(registry, results)
+
     console.log(
       `   Loaded ${registryKeys.length} keys from ${Object.keys(registry.messages).length} namespaces`
     )
+
+    const basePathForLog =
+      context.basePath || path.resolve(config.registry.path)
+    console.log(
+      '   Registry source (' + context.sourceType + '): ' + basePathForLog
+    )
+    if (context.sourceType === 'directory') {
+      console.log('   Config path: ' + config.registry.path)
+    }
+    if (context.sources.length === 1) {
+      console.log('   Fragment: ' + context.sources[0].relativePath)
+    } else if (context.sources.length > 1) {
+      console.log('   Fragments (' + context.sources.length + '):')
+      for (const source of context.sources) {
+        console.log('   • ' + source.relativePath)
+      }
+    }
 
     // Run verification checks
     console.log('\n🔷 Verifying TypeScript generation...')

@@ -9,25 +9,41 @@
 
 const fs = require('fs')
 const path = require('path')
-const yaml = require('js-yaml')
+const { loadRegistryFromConfig } = require('./registry-loader')
+const { loadConfig } = require('./config-loader')
 
-// Load configuration
-const configPath =
-  process.env.MESSAGE_CONFIG_PATH || path.join(__dirname, 'config.json')
-const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+let currentConfig = null
+let registryContext = null
+let registry = null
+let registrySourceLabel = 'registry.yaml'
+let registryFragments = []
 
-// Load registry
-const registryPath = path.resolve(
-  config.registry?.path || 'contracts/messages/registry.yaml'
-)
-const registry = yaml.load(fs.readFileSync(registryPath, 'utf8'))
+function refreshRegistryContext(config) {
+  registry = registryContext.registry
+  if (
+    registryContext.sourceType === 'file' &&
+    registryContext.sources.length === 1
+  ) {
+    registrySourceLabel = registryContext.sources[0].relativePath
+  } else {
+    registrySourceLabel = registryContext.configuredPath
+  }
+  registryFragments = registryContext.sources.map(source => source.relativePath)
+}
 
 /**
  * Generate TypeScript keys file
  */
 function generateKeysFile() {
+  const config = currentConfig || loadConfig()
   const messages = registry.messages || {}
   const allKeys = []
+  const tsTarget = config.targets?.typescript
+  const customHeaderLines = Array.isArray(tsTarget?.imports)
+    ? tsTarget.imports
+    : []
+  const customHeaderBlock =
+    customHeaderLines.length > 0 ? customHeaderLines.join('\n') + '\n\n' : ''
 
   // Extract all keys from nested structure
   for (const [namespace, namespaceMessages] of Object.entries(messages)) {
@@ -42,17 +58,34 @@ function generateKeysFile() {
   const tsCode = `/**
  * Generated Message Keys - DO NOT EDIT MANUALLY
  * 
- * Generated from: ${config.registry?.path || 'registry.yaml'}
+ * Generated from: ${registrySourceLabel}
  * Version: ${registry.metadata?.version || 'unknown'}
  * Generated at: ${new Date().toISOString()}
  * 
  * Run 'pnpm gen:messages' to regenerate this file
  */
 
-export const MESSAGE_KEYS = {
+${customHeaderBlock}export const MESSAGE_KEYS = {
 ${allKeys
   .filter(key => key)
   .map(key => `  '${key}': '${key}',`)
+  .join('\n')}
+} as const
+
+export const MESSAGE_KEYS_BY_NAMESPACE = {
+${Object.entries(messages)
+  .map(([namespace, namespaceMessages]) => {
+    const entries = Object.entries(namespaceMessages)
+      .map(([messageName, messageData]) => {
+        if (!messageData || !messageData.key) return ''
+        return `    ${messageName}: '${messageData.key}',`
+      })
+      .filter(Boolean)
+      .join('\n')
+    return `  ${namespace}: {
+${entries}
+  },`
+  })
   .join('\n')}
 } as const
 
@@ -181,7 +214,11 @@ export const DEPRECATED_KEYS = ALL_MESSAGE_KEYS.filter(
  * Update types file with registry-based definitions
  */
 function updateTypesFile() {
-  const typesPath = path.resolve('packages/shared/src/messages/types.ts')
+  const config = currentConfig || loadConfig()
+  const typesOutputPath = path.resolve(
+    config.targets?.typescript?.types_output_path ||
+      'packages/shared/src/messages/types.ts'
+  )
 
   // Extract keys that have template parameters
   const templatedKeys = []
@@ -207,7 +244,7 @@ function updateTypesFile() {
 /**
  * Message parameters type definitions (auto-generated)
  * 
- * Generated from: ${config.registry?.path || 'registry.yaml'}
+ * Generated from: ${registrySourceLabel}
  * Version: ${registry.metadata?.version || 'unknown'}
  * Generated at: ${new Date().toISOString()}
  */
@@ -262,8 +299,8 @@ export interface MessageGetter {
  * This ensures a single source of truth for API response structures.
  */`
 
-  fs.writeFileSync(typesPath, typesCode, 'utf8')
-  console.log(`✅ Updated TypeScript types: ${typesPath}`)
+  fs.writeFileSync(typesOutputPath, typesCode, 'utf8')
+  console.log(`✅ Updated TypeScript types: ${typesOutputPath}`)
 }
 
 /**
@@ -326,9 +363,28 @@ export { verifyLocaleCompleteness }`
 /**
  * Main generation function
  */
-function generateTypeScript() {
+function generateTypeScript(configOverride) {
+  const config = configOverride || loadConfig()
+  currentConfig = config
+  registryContext = loadRegistryFromConfig(config.registry)
+  refreshRegistryContext(config)
   console.log('🚀 Generating TypeScript code from message registry...')
-  console.log(`📄 Registry: ${registryPath}`)
+  const basePathForLog =
+    registryContext.basePath || path.resolve(config.registry.path)
+  console.log(
+    '📄 Registry source (' + registryContext.sourceType + '): ' + basePathForLog
+  )
+  if (registryContext.sourceType === 'directory') {
+    console.log('   Config path: ' + config.registry.path)
+  }
+  if (registryFragments.length === 1) {
+    console.log('   Fragment: ' + registryFragments[0])
+  } else if (registryFragments.length > 1) {
+    console.log('   Fragments (' + registryFragments.length + '):')
+    for (const fragment of registryFragments) {
+      console.log('   • ' + fragment)
+    }
+  }
   console.log(
     `🎯 Target: ${config.targets?.typescript?.output_path || 'undefined'}`
   )

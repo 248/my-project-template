@@ -79,6 +79,8 @@ describe('Message Code Generation Orchestrator', () => {
             enabled: true,
             output_path:
               'tools/message-codegen/__tests__/fixtures/output/keys.ts',
+            types_output_path:
+              'tools/message-codegen/__tests__/fixtures/output/types.ts',
             imports: [
               '// Generated from test registry - DO NOT EDIT MANUALLY',
               '// Run test generation to regenerate',
@@ -151,6 +153,8 @@ describe('Message Code Generation Orchestrator', () => {
             enabled: true,
             output_path:
               'tools/message-codegen/__tests__/fixtures/output/keys.ts',
+            types_output_path:
+              'tools/message-codegen/__tests__/fixtures/output/types.ts',
           },
         },
         validation: {
@@ -258,6 +262,8 @@ describe('Message Code Generation Orchestrator', () => {
             enabled: true,
             output_path:
               'tools/message-codegen/__tests__/fixtures/output/keys.ts',
+            types_output_path:
+              'tools/message-codegen/__tests__/fixtures/output/types.ts',
           },
         },
         openapi_integration: {
@@ -294,6 +300,8 @@ messages:
             enabled: true,
             output_path:
               'tools/message-codegen/__tests__/fixtures/output/keys.ts',
+            types_output_path:
+              'tools/message-codegen/__tests__/fixtures/output/types.ts',
           },
         },
         openapi_integration: {
