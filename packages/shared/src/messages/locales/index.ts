@@ -25,7 +25,15 @@ export const DEFAULT_LOCALE: SupportedLocale = 'ja'
 /**
  * フォールバックロケール（メッセージが見つからない場合）
  */
-export const FALLBACK_LOCALE: SupportedLocale = 'en'
+export const FALLBACK_LOCALE: SupportedLocale = 'ja'
+
+/**
+ * フォールバック順序（プライマリ→セカンダリ）
+ * 重複を避けながら配列化して順序を保持する
+ */
+export const FALLBACK_SEQUENCE: SupportedLocale[] = Array.from(
+  new Set<SupportedLocale>([FALLBACK_LOCALE, 'en'])
+)
 
 /**
  * ロケールの有効性チェック

@@ -39,7 +39,7 @@ export function HealthCheckButton() {
       setState({
         isLoading: false,
         data: result.data,
-        error: result.success ? null : t('error.unknown_error'),
+        error: result.success ? null : result.error || t('error.unknown_error'),
         lastChecked: new Date(),
       })
     } catch (error) {
