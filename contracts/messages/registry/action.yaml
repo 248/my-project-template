@@ -1,0 +1,142 @@
+messages:
+  action:
+    auth_api_test:
+      key: action.auth_api_test
+      namespace: action
+      category: button
+      description: Authenticated API test button label
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    health_check_success:
+      key: action.health_check_success
+      namespace: action
+      category: status
+      description: Health check success message
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    response_data:
+      key: action.response_data
+      namespace: action
+      category: label
+      description: Response data section label
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    error_occurred:
+      key: action.error_occurred
+      namespace: action
+      category: error
+      description: Error occurred message
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    error_details:
+      key: action.error_details
+      namespace: action
+      category: label
+      description: Error details section label
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    sign_in:
+      key: action.sign_in
+      namespace: action
+      category: button
+      description: Sign in button label
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    sign_up:
+      key: action.sign_up
+      namespace: action
+      category: button
+      description: Sign up button label
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    open_api_docs:
+      key: action.open_api_docs
+      namespace: action
+      category: button
+      description: Open API docs action title
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    open_github:
+      key: action.open_github
+      namespace: action
+      category: button
+      description: Open GitHub repository action title
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    view_docs:
+      key: action.view_docs
+      namespace: action
+      category: button
+      description: View documentation action title
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    template_info:
+      key: action.template_info
+      namespace: action
+      category: button
+      description: Template info action title
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    apitest_run_all_tests:
+      key: action.apitest_run_all_tests
+      namespace: action
+      category: button
+      description: Run all tests button label
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    apitest_test_button:
+      key: action.apitest_test_button
+      namespace: action
+      category: button
+      description: Individual test button label
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    run_health_check:
+      key: action.run_health_check
+      namespace: action
+      category: button
+      description: Run health check button label
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true

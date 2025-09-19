@@ -221,6 +221,8 @@ describe('Message Code Generation Orchestrator', () => {
             enabled: false, // 無効化
             output_path:
               'tools/message-codegen/__tests__/fixtures/output/keys.ts',
+            types_output_path:
+              'tools/message-codegen/__tests__/fixtures/output/types.ts',
           },
         },
         validation: {
@@ -379,6 +381,8 @@ messages:
             enabled: true,
             output_path:
               'tools/message-codegen/__tests__/fixtures/output/keys.ts',
+            types_output_path:
+              'tools/message-codegen/__tests__/fixtures/output/types.ts',
           },
         },
         validation: {
