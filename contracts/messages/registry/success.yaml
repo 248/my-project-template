@@ -1,0 +1,32 @@
+messages:
+  success:
+    profile_retrieved:
+      key: success.profile_retrieved
+      namespace: success
+      category: info
+      description: Profile information retrieved successfully
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: false
+    profile_updated:
+      key: success.profile_updated
+      namespace: success
+      category: info
+      description: Profile information updated successfully
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true
+    user_ensured:
+      key: success.user_ensured
+      namespace: success
+      category: info
+      description: User information synchronized successfully
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: false

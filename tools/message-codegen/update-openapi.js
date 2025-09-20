@@ -10,23 +10,24 @@
 const fs = require('fs')
 const path = require('path')
 const yaml = require('js-yaml')
+const { loadRegistryFromConfig } = require('./registry-loader')
+const { loadConfig } = require('./config-loader')
 
-// Configuration
-const config = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8')
-)
+let currentConfig = null
+let registryContext = null
+
+function getRegistryContext(forceRefresh = false, config) {
+  if (!registryContext || forceRefresh) {
+    registryContext = loadRegistryFromConfig(config.registry)
+  }
+  return registryContext
+}
 
 /**
  * Load message registry
  */
-function loadRegistry() {
-  const registryPath = path.resolve(config.registry.path)
-
-  if (!fs.existsSync(registryPath)) {
-    throw new Error(`Registry file not found: ${registryPath}`)
-  }
-
-  return yaml.load(fs.readFileSync(registryPath, 'utf8'))
+function loadRegistry(forceRefresh = false, config) {
+  return getRegistryContext(forceRefresh, config).registry
 }
 
 /**
@@ -246,7 +247,7 @@ function createApiSchemas(messageKeys) {
 /**
  * Update OpenAPI schema file
  */
-function updateOpenApiSchema(messageKeys) {
+function updateOpenApiSchema(messageKeys, registry, config) {
   const schemaPath = path.resolve(config.openapi_integration.schema_path)
 
   if (!fs.existsSync(schemaPath)) {
@@ -274,7 +275,7 @@ function updateOpenApiSchema(messageKeys) {
   schema.components.schemas.MessageCode = {
     type: 'string',
     enum: messageKeys.map(k => k.key),
-    description: `Message codes from registry (version ${loadRegistry().metadata.version})`,
+    description: `Message codes from registry (version ${registry.metadata.version})`,
     'x-enum-descriptions': messageKeys.reduce((acc, k) => {
       acc[k.key] = `[${k.namespace}.${k.category}] ${k.description}`
       return acc
@@ -282,7 +283,6 @@ function updateOpenApiSchema(messageKeys) {
   }
 
   // Add registry metadata to info
-  const registry = loadRegistry()
   if (!schema.info['x-message-registry']) {
     schema.info['x-message-registry'] = {
       version: registry.metadata.version,
@@ -298,7 +298,7 @@ function updateOpenApiSchema(messageKeys) {
 /**
  * Generate schema validation report
  */
-function generateReport(messageKeys, updatedSchema) {
+function generateReport(messageKeys, updatedSchema, registry, config) {
   console.log('📄 OpenAPI Schema Update Report')
   console.log('='.repeat(50))
 
@@ -324,7 +324,7 @@ function generateReport(messageKeys, updatedSchema) {
   console.log(`   ✅ Added MessageCode enum documentation`)
 
   console.log(`\\n🔗 Integration:`)
-  console.log(`   Registry version: ${loadRegistry().metadata.version}`)
+  console.log(`   Registry version: ${registry.metadata.version}`)
   console.log(`   Schema file: ${config.openapi_integration.schema_path}`)
   console.log(`   Last updated: ${new Date().toISOString()}`)
 }
@@ -332,22 +332,42 @@ function generateReport(messageKeys, updatedSchema) {
 /**
  * Main update function
  */
-function updateOpenApi() {
+function updateOpenApi(configOverride) {
   console.log('📄 Updating OpenAPI schema with message registry...')
 
   try {
     // Load registry and extract keys
     console.log('📋 Loading message registry...')
-    const registry = loadRegistry()
+    const config = configOverride || loadConfig()
+    currentConfig = config
+    const context = getRegistryContext(true, config)
+    const registry = context.registry
     const messageKeys = extractMessageKeys(registry)
 
     console.log(
       `   Loaded ${messageKeys.length} keys from ${Object.keys(registry.messages).length} namespaces`
     )
 
+    const basePathForLog =
+      context.basePath || path.resolve(config.registry.path)
+    console.log(
+      '   Registry source (' + context.sourceType + '): ' + basePathForLog
+    )
+    if (context.sourceType === 'directory') {
+      console.log('   Config path: ' + config.registry.path)
+    }
+    if (context.sources.length === 1) {
+      console.log('   Fragment: ' + context.sources[0].relativePath)
+    } else if (context.sources.length > 1) {
+      console.log('   Fragments (' + context.sources.length + '):')
+      for (const source of context.sources) {
+        console.log('   • ' + source.relativePath)
+      }
+    }
+
     // Update schema
     console.log('🔄 Updating OpenAPI schema...')
-    const updatedSchema = updateOpenApiSchema(messageKeys)
+    const updatedSchema = updateOpenApiSchema(messageKeys, registry, config)
 
     // Write updated schema
     const schemaPath = path.resolve(config.openapi_integration.schema_path)
@@ -362,7 +382,7 @@ function updateOpenApi() {
     console.log(`✅ Updated schema: ${schemaPath}`)
 
     // Generate report
-    generateReport(messageKeys, updatedSchema)
+    generateReport(messageKeys, updatedSchema, registry, config)
 
     console.log('\\n✨ OpenAPI schema update completed successfully!')
     console.log('💡 Next steps:')

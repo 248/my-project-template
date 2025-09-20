@@ -1,0 +1,42 @@
+messages:
+  auth:
+    signin_required:
+      key: auth.signin_required
+      namespace: auth
+      category: error
+      description: User authentication required
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true
+    signin_success:
+      key: auth.signin_success
+      namespace: auth
+      category: success
+      description: User signed in successfully
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    user_ensured:
+      key: auth.user_ensured
+      namespace: auth
+      category: success
+      description: User information synchronized
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: false
+    ensure_failed:
+      key: auth.ensure_failed
+      namespace: auth
+      category: error
+      description: Failed to synchronize user information
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: false

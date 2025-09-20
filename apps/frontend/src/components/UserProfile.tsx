@@ -99,7 +99,7 @@ export function UserProfile() {
             <p className="mt-1 text-sm text-gray-900">
               {user.externalAccounts
                 ?.map(account => account.provider)
-                .join(', ') || 'Email'}
+                .join(', ') || tUI('ui.auth_provider_email')}
             </p>
           </div>
         </div>
@@ -113,7 +113,7 @@ export function UserProfile() {
           </label>
           <Image
             src={user.imageUrl}
-            alt="User avatar"
+            alt={tUI('ui.alt_user_avatar')}
             width={64}
             height={64}
             className="w-16 h-16 rounded-full border-2 border-gray-300"

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 
+import { useMessages } from '@/hooks/useMessages'
 import { getDetailedHealth, HealthCheckUtils } from '@/lib/api-improved'
 import type {
   DetailedHealthCheck,
@@ -20,6 +21,7 @@ interface HealthCheckState {
  * 型安全なエラーハンドリングと豊富なユーティリティ機能
  */
 export function HealthCheckButton() {
+  const { tUI, t } = useMessages()
   const [state, setState] = useState<HealthCheckState>({
     isLoading: false,
     result: null,
@@ -98,17 +100,19 @@ export function HealthCheckButton() {
    */
   const ErrorDisplay = ({ error }: { error: ApiError }) => (
     <div className="mt-4 p-4 bg-red-50 border border-red-300 rounded-md">
-      <h3 className="text-red-800 font-medium mb-2">エラー ({error.code})</h3>
+      <h3 className="text-red-800 font-medium mb-2">
+        {t('action.error_occurred')} ({error.code})
+      </h3>
       <p className="text-red-700 mb-2">{error.message}</p>
       {error.statusCode && (
         <p className="text-red-600 text-sm">
-          HTTPステータス: {error.statusCode}
+          {tUI('ui.http_status')}: {error.statusCode}
         </p>
       )}
       {process.env['NODE_ENV'] === 'development' && error.details ? (
         <details className="mt-2">
           <summary className="text-red-600 text-sm cursor-pointer">
-            詳細情報（開発用）
+            {tUI('ui.details_dev')}
           </summary>
           <pre className="mt-1 text-xs bg-red-100 p-2 rounded overflow-x-auto">
             {typeof error.details === 'string'
@@ -140,7 +144,7 @@ export function HealthCheckButton() {
 
     return (
       <div className="bg-gray-50 rounded-md p-4">
-        <h3 className="font-bold mb-3">サービス状態</h3>
+        <h3 className="font-bold mb-3">{tUI('ui.service_status')}</h3>
         <div className="space-y-2">
           {serviceEntries.map(({ name, service }) => (
             <div
@@ -181,51 +185,14 @@ export function HealthCheckButton() {
     )
   }
 
-  /**
-   * システムメトリクス表示コンポーネント
-   */
-  const SystemMetricsDisplay = ({ data }: { data: DetailedHealthCheck }) => {
-    const memoryPercentage = HealthCheckUtils.getMemoryUsagePercentage(data)
-
-    return (
-      <div className="bg-gray-50 rounded-md p-4">
-        <h3 className="font-bold mb-3">システムメトリクス</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-3 rounded">
-            <p className="text-sm text-gray-600">メモリ使用量</p>
-            <p className="font-mono">
-              {data.system.memory.heapUsed} / {data.system.memory.heapTotal} MB
-            </p>
-            <div className="mt-1 bg-gray-200 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full ${
-                  memoryPercentage > 80
-                    ? 'bg-red-500'
-                    : memoryPercentage > 60
-                      ? 'bg-yellow-500'
-                      : 'bg-blue-500'
-                }`}
-                style={{ width: `${memoryPercentage}%` }}
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">{memoryPercentage}%</p>
-          </div>
-          <div className="bg-white p-3 rounded">
-            <p className="text-sm text-gray-600">CPU時間</p>
-            <p className="font-mono text-sm">User: {data.system.cpu.user}ms</p>
-            <p className="font-mono text-sm">
-              System: {data.system.cpu.system}ms
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // システムメトリクスは現状取得できないため非表示
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-4">システムヘルスチェック</h2>
+        <h2 className="text-2xl font-bold mb-4">
+          {tUI('ui.system_health_check_title')}
+        </h2>
 
         <button
           onClick={() => void handleHealthCheck()}
@@ -239,12 +206,13 @@ export function HealthCheckButton() {
             }
           `}
         >
-          {state.isLoading ? '確認中...' : 'ヘルスチェック実行'}
+          {state.isLoading ? tUI('ui.loading') : tUI('action.run_health_check')}
         </button>
 
         {state.lastChecked && (
           <p className="mt-2 text-sm text-gray-600">
-            最終確認: {state.lastChecked.toLocaleString('ja-JP')}
+            {tUI('ui.last_checked')}:{' '}
+            {state.lastChecked.toLocaleString('ja-JP')}
           </p>
         )}
 
@@ -260,12 +228,12 @@ export function HealthCheckButton() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-lg">
-                      システムステータス:{' '}
+                      {tUI('ui.system_status')}:{' '}
                       {getStatusIcon(state.result.data.status)}{' '}
                       {state.result.data.status}
                     </span>
                     <span className="text-sm">
-                      稼働時間:{' '}
+                      {tUI('ui.uptime')}:{' '}
                       {HealthCheckUtils.formatUptime(
                         state.result.data.uptime || 0
                       )}
@@ -277,7 +245,7 @@ export function HealthCheckButton() {
                     state.result.data
                   ) && (
                     <div className="mt-2 p-2 bg-red-100 rounded text-red-800 text-sm">
-                      ⚠️ 重要なサービスに問題があります
+                      ⚠️ {t('error.unknown_error')}
                     </div>
                   )}
                 </div>
@@ -285,13 +253,16 @@ export function HealthCheckButton() {
                 {/* サービス個別ステータス */}
                 <ServicesDisplay data={state.result.data} />
 
-                {/* システムメトリクス */}
-                <SystemMetricsDisplay data={state.result.data} />
+                {/* システムメトリクス（非表示） */}
 
                 {/* 環境情報 */}
                 <div className="text-sm text-gray-600 flex justify-between">
-                  <span>バージョン: {state.result.data.version}</span>
-                  <span>環境: {state.result.data.environment}</span>
+                  <span>
+                    {tUI('ui.version')}: {state.result.data.version}
+                  </span>
+                  <span>
+                    {tUI('ui.environment')}: {state.result.data.environment}
+                  </span>
                 </div>
               </div>
             )}

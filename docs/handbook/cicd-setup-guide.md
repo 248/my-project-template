@@ -12,6 +12,7 @@
 - ✅ **競合実行防止** - 同一ブランチの古い実行を自動キャンセル
 - ✅ **Vercel CLI公式フロー** - 環境変数統一によるビルド成功率向上
 - ✅ **Prisma Client自動生成** - CI/CD失敗の根本原因を修正
+- ✅ **メッセージレジストリ自動検証** - `pnpm verify:messages` による整合性チェックと警告ガード
 - ✅ **段階的移行** - テスト無視 → テスト必須への段階的移行
 
 ## 🚀 クイックスタート
@@ -101,13 +102,20 @@
 ### PR作成時の動作
 
 1. **変更検出 (detect-changes)**: frontend / backend / packages / infra / docs-only を判定
-2. **品質チェック (quality-check)**: type-check, lint（GATE_DEPLOYで厳しさ制御）
+2. **品質チェック (quality-check)**: type-check / lint に加えて `pnpm verify:messages` を実行（GATE_DEPLOYで厳しさ制御）
 3. **テスト (test)**: 現在スキップ（将来有効化）
 4. **フロントエンドデプロイ (deploy-frontend)**: Vercel でプレビューをデプロイ（必要時のみ）
 5. **プレビューURL解決 (resolve-frontend-url)**: deploy-frontend 出力 or PRコメント履歴からURLを取得し、originへ正規化
 6. **フロントのみ更新時の同期 (sync-cors-origin)**: CORS_ORIGIN を更新して Workers をプレビュー環境へ再デプロイ
 7. **バックエンドデプロイ (deploy-backend)**: 上記で得た origin を CORS_ORIGIN として渡しデプロイ（必要時のみ）
 8. **コメント投稿**: PRにプレビューURLを自動コメント
+
+#### メッセージレジストリ検証
+
+- `quality-check` ジョブ内で `pnpm verify:messages` を実行し、メッセージレジストリ／ロケール／OpenAPI連携を包括的に検証します。
+- 結果ログから警告数を抽出し、GitHub Actions の step summary にロケール別の missing / extra キー一覧を自動出力します。
+- PR では警告が出てもデプロイは継続し、通知のみ表示します。`main` への push では警告を含む結果をエラーとして扱い、品質ゲートを強制します。
+- エラー（不足キーや生成物の不整合）が出た場合は常にジョブを失敗させるため、レジストリ更新時は必ず `pnpm verify:messages` でローカル確認してからプッシュしてください。
 
 ### 分岐ロジックの要点
 
@@ -118,7 +126,7 @@
 
 ### mainブランチへのpush時の動作
 
-1. **品質チェック** - lint/type-check + **Prisma Client生成**実行
+1. **品質チェック** - lint/type-check + **Prisma Client生成** + `pnpm verify:messages`（警告が出た時点で失敗）
 2. **テスト** - 現在はスキップ
 3. **本番デプロイ** - **現在は一時的にスキップ**（プレビューのみ対象）
 

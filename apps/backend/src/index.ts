@@ -16,7 +16,7 @@ import { disconnectRedis } from '@/lib/db/redis'
 import { tracingMiddleware } from '@/middleware/tracing'
 // API契約パッケージからOpenAPI生成型を使用
 import authRoutes from '@/routes/auth'
-import { healthApp } from '@/routes/health-improved'
+import { healthApp } from '@/routes/health'
 import usersRoutes from '@/routes/users'
 import { telemetrySDK } from '@/utils/telemetry'
 

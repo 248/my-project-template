@@ -1,0 +1,66 @@
+metadata:
+  version: 1.0.0
+  created: '2025-09-05'
+  description: Multi-language message registry for TypeScript and Go
+  supported_languages:
+    - typescript
+    - go
+  supported_locales:
+    - ja
+    - en
+    - pseudo
+namespaces:
+  auth:
+    description: Authentication and authorization related messages
+    primary_usage: api
+  error:
+    description: Error messages for API responses and UI display
+    primary_usage: api
+  success:
+    description: Success messages for API responses
+    primary_usage: api
+  ui:
+    description: User interface labels and static text
+    primary_usage: ui
+  action:
+    description: Action buttons and interactive element labels
+    primary_usage: ui
+  validation:
+    description: Input validation error messages
+    primary_usage: both
+categories:
+  error:
+    description: General error messages
+    severity: error
+  client_error:
+    description: Client-side errors (4xx)
+    severity: error
+  server_error:
+    description: Server-side errors (5xx)
+    severity: error
+  success:
+    description: Success messages
+    severity: info
+  info:
+    description: Informational messages
+    severity: info
+  label:
+    description: UI field labels and section titles
+    severity: none
+  status:
+    description: Status indicators and state messages
+    severity: none
+  button:
+    description: Button labels and clickable actions
+    severity: none
+validation_rules:
+  key_format: ^[a-z]+\.[a-z_]+$
+  namespace_format: ^[a-z]+$
+  max_template_params: 5
+  required_fields:
+    - key
+    - namespace
+    - category
+    - description
+    - since
+  deprecated_requires_replacement: true

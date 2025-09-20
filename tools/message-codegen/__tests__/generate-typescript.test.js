@@ -14,6 +14,7 @@ describe('TypeScript Code Generation', () => {
   const testRegistryPath = path.resolve(testDataDir, 'test-registry.yaml')
   const testConfigPath = path.resolve(testDataDir, 'test-config.json')
   const testOutputPath = path.resolve(testOutputDir, 'test-keys.ts')
+  const testTypesPath = path.resolve(testOutputDir, 'test-types.ts')
 
   beforeEach(() => {
     // テスト用ディレクトリ作成
@@ -27,7 +28,12 @@ describe('TypeScript Code Generation', () => {
 
   afterEach(() => {
     // テストファイルのクリーンアップ
-    const cleanupFiles = [testRegistryPath, testConfigPath, testOutputPath]
+    const cleanupFiles = [
+      testRegistryPath,
+      testConfigPath,
+      testOutputPath,
+      testTypesPath,
+    ]
     cleanupFiles.forEach(file => {
       if (fs.existsSync(file)) {
         fs.unlinkSync(file)
@@ -94,6 +100,8 @@ describe('TypeScript Code Generation', () => {
             output_path:
               'tools/message-codegen/__tests__/fixtures/output/test-keys.ts',
             imports: [],
+            types_output_path:
+              'tools/message-codegen/__tests__/fixtures/output/test-types.ts',
           },
         },
         validation: { strict_mode: false },
@@ -175,6 +183,8 @@ describe('TypeScript Code Generation', () => {
             output_path:
               'tools/message-codegen/__tests__/fixtures/output/test-keys.ts',
             imports: [],
+            types_output_path:
+              'tools/message-codegen/__tests__/fixtures/output/test-types.ts',
           },
         },
         openapi_integration: { enabled: false },
@@ -228,6 +238,8 @@ describe('TypeScript Code Generation', () => {
             output_path:
               'tools/message-codegen/__tests__/fixtures/output/test-keys.ts',
             imports: [],
+            types_output_path:
+              'tools/message-codegen/__tests__/fixtures/output/test-types.ts',
           },
         },
         openapi_integration: { enabled: false },
@@ -272,6 +284,8 @@ describe('TypeScript Code Generation', () => {
             output_path:
               'tools/message-codegen/__tests__/fixtures/output/test-keys.ts',
             imports: [],
+            types_output_path:
+              'tools/message-codegen/__tests__/fixtures/output/test-types.ts',
           },
         },
         openapi_integration: { enabled: false },
@@ -323,6 +337,8 @@ describe('TypeScript Code Generation', () => {
             output_path:
               'tools/message-codegen/__tests__/fixtures/output/test-keys.ts',
             imports: [],
+            types_output_path:
+              'tools/message-codegen/__tests__/fixtures/output/test-types.ts',
           },
         },
         openapi_integration: { enabled: false },

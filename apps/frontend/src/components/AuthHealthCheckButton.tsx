@@ -115,7 +115,7 @@ export function AuthHealthCheckButton() {
           <strong>{tUI('action.error_details')}:</strong> {error.message}
         </p>
         <p>
-          <strong>Status:</strong> {error.status}
+          <strong>{tUI('ui.http_status')}:</strong> {error.status}
         </p>
         {error.details != null && (
           <details className="mt-2">

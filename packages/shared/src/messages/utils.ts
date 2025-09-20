@@ -4,7 +4,7 @@ import type {
   MessageParameters,
   MessageKeyWithParams,
 } from './types'
-import { localeMessages, FALLBACK_LOCALE } from './locales'
+import { localeMessages, FALLBACK_LOCALE, FALLBACK_SEQUENCE } from './locales'
 
 /**
  * メッセージ補間のためのパラメータ置換
@@ -38,9 +38,17 @@ export function getMessageSafe(
   // 指定されたロケールで取得を試行
   let template = localeMessages[locale]?.[key]
 
-  // フォールバック試行
-  if (!template && locale !== FALLBACK_LOCALE) {
-    template = localeMessages[FALLBACK_LOCALE]?.[key]
+  // フォールバック試行（プライマリ→セカンダリの順で探索）
+  if (!template) {
+    for (const fallbackLocale of FALLBACK_SEQUENCE) {
+      if (fallbackLocale === locale) continue
+
+      const fallbackTemplate = localeMessages[fallbackLocale]?.[key]
+      if (fallbackTemplate) {
+        template = fallbackTemplate
+        break
+      }
+    }
   }
 
   // それでも見つからない場合はキーを返す
@@ -121,8 +129,15 @@ export function getMissingKeys(locale: SupportedLocale): MessageKey[] {
   const messages = localeMessages[locale]
   if (!messages) return []
 
-  const allKeys = Object.keys(localeMessages.en || {}) as MessageKey[]
-  return allKeys.filter(key => !(key in messages))
+  const referenceKeys = new Set<MessageKey>()
+  for (const fallbackLocale of FALLBACK_SEQUENCE) {
+    const sourceMessages = localeMessages[fallbackLocale] || {}
+    for (const key of Object.keys(sourceMessages)) {
+      referenceKeys.add(key as MessageKey)
+    }
+  }
+
+  return [...referenceKeys].filter(key => !(key in messages))
 }
 
 /**
@@ -132,7 +147,14 @@ export function getExtraKeys(locale: SupportedLocale): string[] {
   const messages = localeMessages[locale]
   if (!messages) return []
 
-  const referenceKeys = new Set(Object.keys(localeMessages.en || {}))
+  const referenceKeys = new Set<string>()
+  for (const fallbackLocale of FALLBACK_SEQUENCE) {
+    const sourceMessages = localeMessages[fallbackLocale] || {}
+    for (const key of Object.keys(sourceMessages)) {
+      referenceKeys.add(key)
+    }
+  }
+
   return Object.keys(messages).filter(key => !referenceKeys.has(key))
 }
 
@@ -148,13 +170,23 @@ export interface LocaleIntegrityReport {
 
 export function validateLocaleIntegrity(
   targetLocale: SupportedLocale,
-  referenceLocale: SupportedLocale = 'en'
+  referenceLocale: SupportedLocale = FALLBACK_LOCALE
 ): LocaleIntegrityReport {
-  const referenceKeys = new Set(
-    Object.keys(localeMessages[referenceLocale] || {})
-  )
+  const referenceLocales = new Set<SupportedLocale>([
+    referenceLocale,
+    ...FALLBACK_SEQUENCE,
+  ])
+  const referenceKeys = new Set<MessageKey>()
+  for (const localeKey of referenceLocales) {
+    const sourceMessages = localeMessages[localeKey] || {}
+    for (const key of Object.keys(sourceMessages)) {
+      referenceKeys.add(key as MessageKey)
+    }
+  }
   const targetMessages = localeMessages[targetLocale] || {}
-  const targetKeys = new Set(Object.keys(targetMessages))
+  const targetKeys = new Set<MessageKey>(
+    Object.keys(targetMessages) as MessageKey[]
+  )
 
   const missingKeys = [...referenceKeys].filter(
     key => !targetKeys.has(key)

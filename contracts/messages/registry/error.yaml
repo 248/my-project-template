@@ -1,0 +1,63 @@
+messages:
+  error:
+    user_not_found:
+      key: error.user_not_found
+      namespace: error
+      category: client_error
+      description: User record not found in database
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true
+    profile_retrieval_failed:
+      key: error.profile_retrieval_failed
+      namespace: error
+      category: server_error
+      description: Failed to retrieve user profile
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true
+    profile_update_failed:
+      key: error.profile_update_failed
+      namespace: error
+      category: server_error
+      description: Failed to update user profile
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true
+    validation_failed:
+      key: error.validation_failed
+      namespace: error
+      category: client_error
+      description: Request validation failed
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true
+    invalid_response_format:
+      key: error.invalid_response_format
+      namespace: error
+      category: server_error
+      description: Server returned invalid response format
+      template_params: []
+      since: 1.0.0
+      deprecated: false
+      api_usage: false
+      ui_usage: true
+    unknown_error:
+      key: error.unknown_error
+      namespace: error
+      category: server_error
+      description: An unexpected error occurred
+      template_params:
+        - details
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true

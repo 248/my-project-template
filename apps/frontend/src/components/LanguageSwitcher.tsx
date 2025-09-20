@@ -2,7 +2,7 @@
 
 import type { SupportedLocale } from '@template/shared'
 
-import { useMessages } from '../hooks/useMessages'
+import { useMessages, getLocaleDisplayName } from '../hooks/useMessages'
 
 /**
  * 言語切り替えコンポーネント
@@ -12,11 +12,13 @@ import { useMessages } from '../hooks/useMessages'
 export function LanguageSwitcher() {
   const { locale, changeLocale, t, tUI, tError } = useMessages()
 
-  const localeOptions = [
-    { value: 'ja', label: '日本語' },
-    { value: 'en', label: 'English' },
-    { value: 'pseudo', label: '[!! Pseudo !!]' },
-  ] as const satisfies ReadonlyArray<{ value: SupportedLocale; label: string }>
+  const localeOptions: ReadonlyArray<{
+    value: SupportedLocale
+    label: string
+  }> = (['ja', 'en', 'pseudo'] as const).map(v => ({
+    value: v as SupportedLocale,
+    label: getLocaleDisplayName(v as SupportedLocale),
+  }))
 
   const handleLocaleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newLocale = event.target.value
@@ -34,7 +36,7 @@ export function LanguageSwitcher() {
           htmlFor="locale-select"
           className="block text-sm font-medium text-gray-700 mb-2"
         >
-          Language / 言語:
+          {tUI('ui.language_label')}
         </label>
         <select
           id="locale-select"
@@ -53,40 +55,45 @@ export function LanguageSwitcher() {
       {/* 翻訳テスト表示 */}
       <div className="space-y-3">
         <div className="p-3 bg-gray-50 rounded">
-          <h3 className="font-semibold text-gray-900 mb-2">UI Labels Test:</h3>
+          <h3 className="font-semibold text-gray-900 mb-2">
+            {tUI('ui.ui_labels_test_title')}
+          </h3>
           <ul className="space-y-1 text-sm text-gray-700">
             <li>
-              <strong>User ID:</strong> {tUI('ui.user_id')}
+              <strong>{tUI('ui.user_id')}:</strong> {tUI('ui.user_id')}
             </li>
             <li>
-              <strong>Display Name:</strong> {tUI('ui.display_name')}
+              <strong>{tUI('ui.display_name')}:</strong>{' '}
+              {tUI('ui.display_name')}
             </li>
             <li>
-              <strong>Email:</strong> {tUI('ui.email_address')}
+              <strong>{tUI('ui.email_address')}:</strong>{' '}
+              {tUI('ui.email_address')}
             </li>
             <li>
-              <strong>Loading:</strong> {tUI('ui.loading')}
+              <strong>{tUI('ui.loading')}:</strong> {tUI('ui.loading')}
             </li>
             <li>
-              <strong>Unknown:</strong> {tUI('ui.unknown')}
+              <strong>{tUI('ui.unknown')}:</strong> {tUI('ui.unknown')}
             </li>
           </ul>
         </div>
 
         <div className="p-3 bg-red-50 rounded">
           <h3 className="font-semibold text-red-900 mb-2">
-            Error Messages Test:
+            {tUI('ui.error_messages_test_title')}
           </h3>
           <ul className="space-y-1 text-sm text-red-700">
             <li>
-              <strong>Sign-in Required:</strong>{' '}
+              <strong>{tUI('ui.sign_in_prompt')}:</strong>{' '}
               {tError('auth.signin_required')}
             </li>
             <li>
-              <strong>User Not Found:</strong> {tError('error.user_not_found')}
+              <strong>{tUI('ui.user_id')}:</strong>{' '}
+              {tError('error.user_not_found')}
             </li>
             <li>
-              <strong>Profile Failed:</strong>{' '}
+              <strong>{tUI('ui.profile_info')}:</strong>{' '}
               {tError('error.profile_retrieval_failed')}
             </li>
           </ul>
@@ -94,17 +101,19 @@ export function LanguageSwitcher() {
 
         <div className="p-3 bg-blue-50 rounded">
           <h3 className="font-semibold text-blue-900 mb-2">
-            Action Messages Test:
+            {tUI('ui.action_messages_test_title')}
           </h3>
           <ul className="space-y-1 text-sm text-blue-700">
             <li>
-              <strong>API Test:</strong> {tUI('action.auth_api_test')}
+              <strong>{tUI('ui.apitest_panel_title')}:</strong>{' '}
+              {tUI('action.auth_api_test')}
             </li>
             <li>
-              <strong>Error Occurred:</strong> {t('action.error_occurred')}
+              <strong>{tUI('action.error_details')}:</strong>{' '}
+              {t('action.error_occurred')}
             </li>
             <li>
-              <strong>Health Check:</strong>{' '}
+              <strong>{tUI('ui.system_health_check_title')}:</strong>{' '}
               {tUI('action.health_check_success')}
             </li>
           </ul>
@@ -113,10 +122,10 @@ export function LanguageSwitcher() {
         {/* 現在のロケール表示 */}
         <div className="mt-4 p-3 bg-green-50 rounded">
           <p className="text-sm text-green-800">
-            <strong>Current Locale:</strong> {locale}
+            <strong>{tUI('ui.current_locale')}:</strong> {locale}
           </p>
           <p className="text-xs text-green-600 mt-1">
-            Stored in LocalStorage and used for all message translations
+            {tUI('ui.locale_storage_note')}
           </p>
         </div>
       </div>

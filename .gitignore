@@ -127,3 +127,6 @@ tmp
 html/
 
 .vercel
+
+# kiroは永続的に使わない
+.kiro

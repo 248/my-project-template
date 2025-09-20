@@ -311,6 +311,83 @@ jobs:
             exit 1
           fi
 
+      - name: Verify message registry
+        id: verify_messages
+        working-directory: .
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm verify:messages | tee verify.log
+          status=$?
+          warnings=$(sed -n 's/^ *Warnings: *\([0-9][0-9]*\).*$/\1/p' verify.log | tail -n1)
+          warnings=${warnings:-0}
+          echo "warnings=$warnings" >> "$GITHUB_OUTPUT"
+          echo "verify_status=$status" >> "$GITHUB_OUTPUT"
+          if [ "$status" -ne 0 ]; then
+            echo "::warning::Message registry verification reported errors (see log above)."
+          fi
+
+      - name: Publish locale coverage summary
+        if: always()
+        working-directory: .
+        shell: bash
+        run: |
+          node tools/message-codegen/report-locale-summary.js > locale-summary.json
+          node - <<'NODE'
+          const fs = require('fs')
+          const path = process.env.GITHUB_STEP_SUMMARY
+          const summary = JSON.parse(fs.readFileSync('locale-summary.json', 'utf8'))
+          let markdown = '### Message locale coverage\n\n'
+          markdown += `Total registry keys: **${summary.registryKeyCount}**\n\n`
+          for (const [locale, data] of Object.entries(summary.locales)) {
+            const missingCount = data.missing.length
+            const extraCount = data.extra.length
+            markdown += `- **${locale}** → missing: ${missingCount}, extra: ${extraCount}`
+            if (data.error) {
+              markdown += ` (error: ${data.error})`
+            }
+            markdown += '\n'
+            if (missingCount > 0) {
+              const preview = data.missing.slice(0, 10)
+              markdown += `  - Missing keys: ${preview.join(', ')}`
+              if (missingCount > preview.length) {
+                markdown += ` … (+${missingCount - preview.length} more)`
+              }
+              markdown += '\n'
+            }
+            if (extraCount > 0) {
+              const preview = data.extra.slice(0, 10)
+              markdown += `  - Extra keys: ${preview.join(', ')}`
+              if (extraCount > preview.length) {
+                markdown += ` … (+${extraCount - preview.length} more)`
+              }
+              markdown += '\n'
+            }
+          }
+          markdown += '\n'
+          fs.appendFileSync(path, markdown)
+          NODE
+
+      - name: Enforce message verification thresholds
+        if: always()
+        shell: bash
+        run: |
+          status="${{ steps.verify_messages.outputs.verify_status }}"
+          warnings="${{ steps.verify_messages.outputs.warnings }}"
+          status=${status:-0}
+          warnings=${warnings:-0}
+          if [ "$status" -ne 0 ]; then
+            echo "::error::Message registry verification failed with errors."
+            exit 1
+          fi
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ] && [ "$warnings" -gt 0 ]; then
+            echo "::error::Message registry verification produced $warnings warning(s) on main."
+            exit 1
+          fi
+          if [ "$warnings" -gt 0 ]; then
+            echo "::notice::Message registry verification produced $warnings warning(s)."
+          fi
+
       # パス検証（リポジトリルートから実行）
       - name: Assert PWD and files (repo root)
         working-directory: .

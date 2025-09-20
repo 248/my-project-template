@@ -245,33 +245,16 @@ pnpm --filter @template/backend wrangler       # wrangler CLI直接実行
 
 ### メッセージキー生成
 
+日常的な運用フローや CLI オプション、レジストリ分割のルールは [Message System Guide](./message-system-guide.md) に集約しています。以下はクイックリファレンスです。
+
 ```bash
-# メッセージレジストリの検証
-pnpm verify:messages
-
-# メッセージキーの生成（TypeScript型定義生成）
-node tools/message-codegen/generate.js
-
-# ドライラン実行（ファイルを変更せず動作確認）
+# 代表的なコマンド
+pnpm verify:messages          # レジストリと生成物の整合性検証
+node tools/message-codegen/generate.js    # TypeScript/Go/OpenAPI 生成
 node tools/message-codegen/generate.js --dry-run
 ```
 
-**dry-runモードの使用場面:**
-
-- `contracts/messages/registry.yaml`編集後の影響確認
-- CI/CDパイプラインでの動作検証
-- 生成される内容の事前確認
-- 書き込み権限がない環境での動作テスト
-
-**出力例:**
-
-```
-🧪 Dry run summary:
-   • Would generate TypeScript code at packages/shared/src/messages/keys.ts
-   • Would process locale files
-   • Would update OpenAPI schema at packages/api-contracts/openapi.yaml
-✨ Dry run completed for 38 messages across 6 namespaces
-```
+より詳細な手順（レジストリ構成、`MESSAGE_CONFIG_PATH` の使い分け、テスト方法など）は Message System Guide を参照してください。
 
 ---
 

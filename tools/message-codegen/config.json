@@ -35,6 +35,6 @@
   "openapi_integration": {
     "enabled": true,
     "schema_path": "packages/api-contracts/openapi.yaml",
-    "error_code_enum_path": "components.schemas.ApiError.properties.code.enum"
+    "error_code_enum_path": "components.schemas.MessageCode.enum"
   }
 }

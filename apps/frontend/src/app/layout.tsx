@@ -2,7 +2,9 @@ import { ClerkProvider } from '@clerk/nextjs'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { headers } from 'next/headers'
+
 import './globals.css'
+import { ConditionalHeader } from '@/components/ConditionalHeader'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -30,17 +32,7 @@ export default async function RootLayout({
           publishableKey={process.env['NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY']}
         >
           <div className="min-h-screen bg-gray-50">
-            <nav className="bg-white shadow-sm border-b">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
-                  <div className="flex items-center">
-                    <h1 className="text-xl font-semibold text-gray-900">
-                      Project Template
-                    </h1>
-                  </div>
-                </div>
-              </div>
-            </nav>
+            <ConditionalHeader />
             <main>{children}</main>
           </div>
         </ClerkProvider>

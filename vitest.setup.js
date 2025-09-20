@@ -18,6 +18,16 @@ beforeEach(() => {
   // vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 
+// ブラウザロケールのデフォルトを日本語に固定（メッセージの初期レンダリングに合わせる）
+Object.defineProperty(window.navigator, 'language', {
+  value: 'ja-JP',
+  configurable: true,
+})
+Object.defineProperty(window.navigator, 'languages', {
+  value: ['ja-JP', 'ja'],
+  configurable: true,
+})
+
 // グローバルなモック設定
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
