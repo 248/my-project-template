@@ -88,7 +88,17 @@ export function UserProfile() {
 
 ### **Step 1: レジストリに定義追加**
 
-`contracts/messages/registry.yaml`:
+メッセージレジストリはカテゴリ／機能単位で `contracts/messages/registry/` に分割されています。新しいキーはそれぞれのファイルに追加してください。
+
+```
+contracts/messages/registry/
+├── ui.yaml
+├── action.yaml
+└── features/
+    └── home.yaml
+```
+
+例: `contracts/messages/registry/ui.yaml` に追加する場合
 
 ```yaml
 messages:
@@ -127,8 +137,15 @@ export const enMessages: LocaleMessages = {
 ### **Step 3: TypeScript型生成・確認**
 
 ```bash
-# 型が自動更新されることを確認
-pnpm type-check
+# CLI で生成・検証（MESSAGE_CONFIG_PATH を指定すると任意設定を使用）
+pnpm verify:messages
+node tools/message-codegen/generate.js
+
+# ドライランで影響確認
+node tools/message-codegen/generate.js --dry-run
+
+# ツール全体テスト
+pnpm test:tools
 ```
 
 ### **Step 4: コードで使用**

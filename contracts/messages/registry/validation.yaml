@@ -1,0 +1,59 @@
+messages:
+  validation:
+    field_required:
+      key: validation.field_required
+      namespace: validation
+      category: client_error
+      description: Required field validation error
+      template_params:
+        - field
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true
+    invalid_email:
+      key: validation.invalid_email
+      namespace: validation
+      category: client_error
+      description: Invalid email format validation error
+      template_params:
+        - email
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true
+    invalid_url:
+      key: validation.invalid_url
+      namespace: validation
+      category: client_error
+      description: Invalid URL format validation error
+      template_params:
+        - url
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true
+    string_too_short:
+      key: validation.string_too_short
+      namespace: validation
+      category: client_error
+      description: String too short validation error
+      template_params:
+        - field
+        - minLength
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true
+    string_too_long:
+      key: validation.string_too_long
+      namespace: validation
+      category: client_error
+      description: String too long validation error
+      template_params:
+        - field
+        - maxLength
+      since: 1.0.0
+      deprecated: false
+      api_usage: true
+      ui_usage: true

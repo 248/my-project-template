@@ -213,6 +213,20 @@ components:
         code:
           type: string
           enum:
+            - action.auth_api_test
+            - action.health_check_success
+            - action.response_data
+            - action.error_occurred
+            - action.error_details
+            - action.sign_in
+            - action.sign_up
+            - action.open_api_docs
+            - action.open_github
+            - action.view_docs
+            - action.template_info
+            - action.apitest_run_all_tests
+            - action.apitest_test_button
+            - action.run_health_check
             - auth.signin_required
             - auth.signin_success
             - auth.user_ensured
@@ -236,16 +250,80 @@ components:
             - ui.avatar
             - ui.not_set
             - ui.unknown
+            - ui.welcome_title
+            - ui.welcome_stack_line
+            - ui.badge_nextjs
+            - ui.badge_tailwind
+            - ui.badge_hono
+            - ui.badge_clerk
+            - ui.sign_in_prompt
+            - ui.no_account_yet
+            - ui.auth_provider_email
+            - ui.language_label
+            - ui.ui_labels_test_title
+            - ui.error_messages_test_title
+            - ui.action_messages_test_title
+            - ui.current_locale
+            - ui.locale_storage_note
+            - ui.alt_user_avatar
+            - ui.http_status
+            - ui.details_dev
             - ui.dashboard
             - ui.authenticated_user_page
             - ui.loading
             - ui.executing
             - ui.last_execution
-            - action.auth_api_test
-            - action.health_check_success
-            - action.response_data
-            - action.error_occurred
-            - action.error_details
+            - ui.project_template_title
+            - ui.project_template_description
+            - ui.badge_fullstack
+            - ui.badge_typescript
+            - ui.badge_authentication_included
+            - ui.badge_production_ready
+            - ui.tech_stack_title
+            - ui.tech_nextjs_desc
+            - ui.tech_typescript_desc
+            - ui.tech_tailwind_desc
+            - ui.tech_hono_desc
+            - ui.tech_clerk_desc
+            - ui.tech_prisma_desc
+            - ui.quick_actions_title
+            - ui.open_api_docs_desc
+            - ui.open_github_desc
+            - ui.view_docs_desc
+            - ui.template_info_desc
+            - ui.template_info_modal
+            - ui.app_title
+            - ui.authenticated_badge
+            - ui.system_health_check_title
+            - ui.last_checked
+            - ui.system_status
+            - ui.uptime
+            - ui.service_status
+            - ui.system_metrics
+            - ui.memory_usage
+            - ui.cpu_time
+            - ui.version
+            - ui.environment
+            - ui.cpu_user_label
+            - ui.cpu_system_label
+            - ui.apitest_panel_title
+            - ui.apitest_running_status
+            - ui.apitest_success_status
+            - ui.apitest_error_status
+            - ui.apitest_response_details
+            - ui.apitest_root_health_name
+            - ui.apitest_root_health_description
+            - ui.apitest_simple_health_name
+            - ui.apitest_simple_health_description
+            - ui.apitest_detailed_health_name
+            - ui.apitest_detailed_health_description
+            - ui.apitest_ensure_user_name
+            - ui.apitest_ensure_user_description
+            - ui.apitest_get_profile_name
+            - ui.apitest_get_profile_description
+            - ui.apitest_update_profile_name
+            - ui.apitest_update_profile_description
+            - ui.apitest_test_user_prefix
             - validation.field_required
             - validation.invalid_email
             - validation.invalid_url
@@ -418,6 +496,20 @@ components:
     MessageCode:
       type: string
       enum:
+        - action.auth_api_test
+        - action.health_check_success
+        - action.response_data
+        - action.error_occurred
+        - action.error_details
+        - action.sign_in
+        - action.sign_up
+        - action.open_api_docs
+        - action.open_github
+        - action.view_docs
+        - action.template_info
+        - action.apitest_run_all_tests
+        - action.apitest_test_button
+        - action.run_health_check
         - auth.signin_required
         - auth.signin_success
         - auth.user_ensured
@@ -441,16 +533,80 @@ components:
         - ui.avatar
         - ui.not_set
         - ui.unknown
+        - ui.welcome_title
+        - ui.welcome_stack_line
+        - ui.badge_nextjs
+        - ui.badge_tailwind
+        - ui.badge_hono
+        - ui.badge_clerk
+        - ui.sign_in_prompt
+        - ui.no_account_yet
+        - ui.auth_provider_email
+        - ui.language_label
+        - ui.ui_labels_test_title
+        - ui.error_messages_test_title
+        - ui.action_messages_test_title
+        - ui.current_locale
+        - ui.locale_storage_note
+        - ui.alt_user_avatar
+        - ui.http_status
+        - ui.details_dev
         - ui.dashboard
         - ui.authenticated_user_page
         - ui.loading
         - ui.executing
         - ui.last_execution
-        - action.auth_api_test
-        - action.health_check_success
-        - action.response_data
-        - action.error_occurred
-        - action.error_details
+        - ui.project_template_title
+        - ui.project_template_description
+        - ui.badge_fullstack
+        - ui.badge_typescript
+        - ui.badge_authentication_included
+        - ui.badge_production_ready
+        - ui.tech_stack_title
+        - ui.tech_nextjs_desc
+        - ui.tech_typescript_desc
+        - ui.tech_tailwind_desc
+        - ui.tech_hono_desc
+        - ui.tech_clerk_desc
+        - ui.tech_prisma_desc
+        - ui.quick_actions_title
+        - ui.open_api_docs_desc
+        - ui.open_github_desc
+        - ui.view_docs_desc
+        - ui.template_info_desc
+        - ui.template_info_modal
+        - ui.app_title
+        - ui.authenticated_badge
+        - ui.system_health_check_title
+        - ui.last_checked
+        - ui.system_status
+        - ui.uptime
+        - ui.service_status
+        - ui.system_metrics
+        - ui.memory_usage
+        - ui.cpu_time
+        - ui.version
+        - ui.environment
+        - ui.cpu_user_label
+        - ui.cpu_system_label
+        - ui.apitest_panel_title
+        - ui.apitest_running_status
+        - ui.apitest_success_status
+        - ui.apitest_error_status
+        - ui.apitest_response_details
+        - ui.apitest_root_health_name
+        - ui.apitest_root_health_description
+        - ui.apitest_simple_health_name
+        - ui.apitest_simple_health_description
+        - ui.apitest_detailed_health_name
+        - ui.apitest_detailed_health_description
+        - ui.apitest_ensure_user_name
+        - ui.apitest_ensure_user_description
+        - ui.apitest_get_profile_name
+        - ui.apitest_get_profile_description
+        - ui.apitest_update_profile_name
+        - ui.apitest_update_profile_description
+        - ui.apitest_test_user_prefix
         - validation.field_required
         - validation.invalid_email
         - validation.invalid_url
@@ -458,6 +614,20 @@ components:
         - validation.string_too_long
       description: Message codes from registry (version 1.0.0)
       x-enum-descriptions:
+        action.auth_api_test: '[action.button] Authenticated API test button label'
+        action.health_check_success: '[action.status] Health check success message'
+        action.response_data: '[action.label] Response data section label'
+        action.error_occurred: '[action.error] Error occurred message'
+        action.error_details: '[action.label] Error details section label'
+        action.sign_in: '[action.button] Sign in button label'
+        action.sign_up: '[action.button] Sign up button label'
+        action.open_api_docs: '[action.button] Open API docs action title'
+        action.open_github: '[action.button] Open GitHub repository action title'
+        action.view_docs: '[action.button] View documentation action title'
+        action.template_info: '[action.button] Template info action title'
+        action.apitest_run_all_tests: '[action.button] Run all tests button label'
+        action.apitest_test_button: '[action.button] Individual test button label'
+        action.run_health_check: '[action.button] Run health check button label'
         auth.signin_required: '[auth.error] User authentication required'
         auth.signin_success: '[auth.success] User signed in successfully'
         auth.user_ensured: '[auth.success] User information synchronized'
@@ -481,16 +651,80 @@ components:
         ui.avatar: '[ui.label] Avatar field label'
         ui.not_set: '[ui.status] Field value not set indicator'
         ui.unknown: '[ui.status] Unknown value indicator'
+        ui.welcome_title: '[ui.label] Welcome title on landing page'
+        ui.welcome_stack_line: '[ui.label] Tech stack line on landing page'
+        ui.badge_nextjs: '[ui.label] Badge: Next.js'
+        ui.badge_tailwind: '[ui.label] Badge: Tailwind CSS'
+        ui.badge_hono: '[ui.label] Badge: Hono'
+        ui.badge_clerk: '[ui.label] Badge: Clerk'
+        ui.sign_in_prompt: '[ui.label] Prompt to sign in'
+        ui.no_account_yet: '[ui.label] No account yet text'
+        ui.auth_provider_email: '[ui.label] Auth provider: Email'
+        ui.language_label: '[ui.label] Language selector label'
+        ui.ui_labels_test_title: '[ui.label] UI labels test section title'
+        ui.error_messages_test_title: '[ui.label] Error messages test section title'
+        ui.action_messages_test_title: '[ui.label] Action messages test section title'
+        ui.current_locale: '[ui.label] Current locale label'
+        ui.locale_storage_note: '[ui.info] Note about locale storage'
+        ui.alt_user_avatar: '[ui.label] Alt text for user avatar'
+        ui.http_status: '[ui.label] HTTP status label'
+        ui.details_dev: '[ui.label] Details (dev) label'
         ui.dashboard: '[ui.label] Dashboard page title'
         ui.authenticated_user_page: '[ui.info] Page description for authenticated users only'
         ui.loading: '[ui.status] Loading state indicator'
         ui.executing: '[ui.status] Executing state indicator'
         ui.last_execution: '[ui.label] Last execution time label'
-        action.auth_api_test: '[action.button] Authenticated API test button label'
-        action.health_check_success: '[action.status] Health check success message'
-        action.response_data: '[action.label] Response data section label'
-        action.error_occurred: '[action.error] Error occurred message'
-        action.error_details: '[action.label] Error details section label'
+        ui.project_template_title: '[ui.label] Project template title'
+        ui.project_template_description: '[ui.label] Project template description paragraph'
+        ui.badge_fullstack: '[ui.label] Badge: Fullstack'
+        ui.badge_typescript: '[ui.label] Badge: TypeScript'
+        ui.badge_authentication_included: '[ui.label] Badge: Authentication included'
+        ui.badge_production_ready: '[ui.label] Badge: Production ready'
+        ui.tech_stack_title: '[ui.label] Tech stack section title'
+        ui.tech_nextjs_desc: '[ui.label] Description for Next.js'
+        ui.tech_typescript_desc: '[ui.label] Description for TypeScript'
+        ui.tech_tailwind_desc: '[ui.label] Description for Tailwind CSS'
+        ui.tech_hono_desc: '[ui.label] Description for Hono'
+        ui.tech_clerk_desc: '[ui.label] Description for Clerk'
+        ui.tech_prisma_desc: '[ui.label] Description for Prisma'
+        ui.quick_actions_title: '[ui.label] Quick actions section title'
+        ui.open_api_docs_desc: '[ui.label] Open backend API docs description'
+        ui.open_github_desc: '[ui.label] Open GitHub repository description'
+        ui.view_docs_desc: '[ui.label] View documentation description'
+        ui.template_info_desc: '[ui.label] Template info description'
+        ui.template_info_modal: '[ui.label] Template info modal content'
+        ui.app_title: '[ui.label] Application title'
+        ui.authenticated_badge: '[ui.status] Authenticated badge label'
+        ui.system_health_check_title: '[ui.label] System health check section title'
+        ui.last_checked: '[ui.label] Last checked label'
+        ui.system_status: '[ui.label] System status label'
+        ui.uptime: '[ui.label] Uptime label'
+        ui.service_status: '[ui.label] Service status section title'
+        ui.system_metrics: '[ui.label] System metrics section title'
+        ui.memory_usage: '[ui.label] Memory usage label'
+        ui.cpu_time: '[ui.label] CPU time label'
+        ui.version: '[ui.label] Version label'
+        ui.environment: '[ui.label] Environment label'
+        ui.cpu_user_label: '[ui.label] CPU time - user label'
+        ui.cpu_system_label: '[ui.label] CPU time - system label'
+        ui.apitest_panel_title: '[ui.label] API test panel title'
+        ui.apitest_running_status: '[ui.status] Test running status'
+        ui.apitest_success_status: '[ui.status] Test success status'
+        ui.apitest_error_status: '[ui.status] Test error status'
+        ui.apitest_response_details: '[ui.label] Response details section label'
+        ui.apitest_root_health_name: '[ui.label] Root health check test name'
+        ui.apitest_root_health_description: '[ui.label] Root health check test description'
+        ui.apitest_simple_health_name: '[ui.label] Simple health check test name'
+        ui.apitest_simple_health_description: '[ui.label] Simple health check test description'
+        ui.apitest_detailed_health_name: '[ui.label] Detailed health check test name'
+        ui.apitest_detailed_health_description: '[ui.label] Detailed health check test description'
+        ui.apitest_ensure_user_name: '[ui.label] Ensure user test name'
+        ui.apitest_ensure_user_description: '[ui.label] Ensure user test description'
+        ui.apitest_get_profile_name: '[ui.label] Get profile test name'
+        ui.apitest_get_profile_description: '[ui.label] Get profile test description'
+        ui.apitest_update_profile_name: '[ui.label] Update profile test name'
+        ui.apitest_update_profile_description: '[ui.label] Update profile test description'
+        ui.apitest_test_user_prefix: '[ui.label] Test user display name prefix'
         validation.field_required: '[validation.client_error] Required field validation error'
         validation.invalid_email: '[validation.client_error] Invalid email format validation error'
         validation.invalid_url: '[validation.client_error] Invalid URL format validation error'

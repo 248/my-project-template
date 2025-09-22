@@ -1,4 +1,6 @@
 import type { paths } from '@template/api-contracts-ts'
+import type { MessageKey } from '@template/shared'
+import { MESSAGE_KEYS_BY_NAMESPACE } from '@template/shared'
 import createClient from 'openapi-fetch'
 
 import { getApiBaseUrl } from './utils/api-config'
@@ -18,27 +20,36 @@ export const apiClient = createClient<paths>({
  * ヘルスチェックAPI呼び出し
  * システムの詳細な健全性状態を取得
  */
+const UNKNOWN_ERROR_KEY = MESSAGE_KEYS_BY_NAMESPACE.error.unknown_error
+
 export async function getDetailedHealth() {
   const response = await apiClient.GET('/api/health')
 
   if (!response.data) {
-    // エラーの場合
-    let errorMessage = 'Health check failed'
+    let errorMessage: MessageKey = UNKNOWN_ERROR_KEY
 
     if (response.error) {
-      // エラーオブジェクトの内容を安全に文字列化
       const error: unknown = response.error
+
       if (typeof error === 'string') {
-        errorMessage = error
+        errorMessage = error.startsWith('error.')
+          ? (error as MessageKey)
+          : UNKNOWN_ERROR_KEY
       } else if (error && typeof error === 'object') {
-        // エラーオブジェクトを文字列化
-        try {
-          errorMessage = JSON.stringify(error)
-        } catch {
-          errorMessage = 'Unknown error occurred'
+        const maybeMessage = (error as { message?: unknown }).message
+
+        if (typeof maybeMessage === 'string') {
+          errorMessage = maybeMessage.startsWith('error.')
+            ? (maybeMessage as MessageKey)
+            : UNKNOWN_ERROR_KEY
         }
       }
     }
+
+    console.error('Failed to fetch detailed health check.', {
+      rawError: response.error,
+      status: response.response.status,
+    })
 
     throw new Error(errorMessage)
   }
@@ -49,6 +60,6 @@ export async function getDetailedHealth() {
   return {
     success: isHealthy,
     data: response.data,
-    error: isHealthy ? null : 'サービスに問題が発生しています',
+    error: isHealthy ? null : UNKNOWN_ERROR_KEY,
   }
 }

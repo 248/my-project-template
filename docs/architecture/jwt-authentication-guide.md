@@ -189,47 +189,24 @@ export function useApiClient() {
 }
 ```
 
-## 🐳 Docker環境での設定
+## 🧪 ローカル開発時の注意点
 
-### CORS設定の重要性
+現在のローカル開発フローは `pnpm dev:full` で Next.js と Cloudflare Workers を同時に起動します。
 
-Docker環境では、フロントエンドとバックエンドが異なるコンテナで動作するため、適切なCORS設定が必要です。
+- フロントエンドの Origin は `http://localhost:3000`
+- Workers は `http://127.0.0.1:8787` で応答
+- `.dev.vars` の `CORS_ORIGIN` に `http://localhost:3000` を含める
 
 ```typescript
-// apps/backend/src/index.ts
+// apps/backend/src/worker.ts (抜粋)
 app.use(
   '*',
   cors({
-    origin: [
-      'http://localhost:3000', // ローカル開発環境
-      'http://frontend:3000', // Docker環境でのコンテナ間通信
-    ],
+    origin: ['http://localhost:3000'],
     allowHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   })
 )
-```
-
-### Docker Compose設定
-
-```yaml
-# infra/docker/docker-compose.yml
-services:
-  backend:
-    env_file:
-      - ../../.env # 環境変数を.envファイルから読み込み
-    environment:
-      - DATABASE_URL=postgresql://user:pass@postgres:5432/db
-    networks:
-      - app-network
-
-  frontend:
-    env_file:
-      - ../../.env
-    depends_on:
-      - backend
-    networks:
-      - app-network
 ```
 
 ## 🔍 トラブルシューティング
@@ -245,14 +222,11 @@ services:
   - バックエンドの`audience`設定を確認
 
 - **環境変数の未設定**
-
-  ```bash
-  # 環境変数の確認
-  docker compose exec backend env | grep CLERK
-  ```
+  - `apps/backend/.dev.vars` が最新か確認
+  - `pnpm dev:full` 実行中のログに `CORS_ORIGIN` や `CLERK_SECRET_KEY` の警告が出ていないか確認
 
 - **CORS設定の不備**
-  - Docker環境では`http://frontend:3000`を追加
+  - `.dev.vars` の `CORS_ORIGIN` に `http://localhost:3000` が含まれているか
   - ブラウザの開発者ツールでCORSエラーを確認
 
 #### 2. JWT検証エラー
@@ -269,14 +243,14 @@ console.log('Clerk config:', {
 console.log('JWT payload:', payload)
 ```
 
-#### 3. Docker環境での接続エラー
+#### 3. Workers開発サーバーでの接続エラー
 
 **チェックリスト：**
 
-- [ ] 環境変数が正しく設定されているか
-- [ ] コンテナ間ネットワークが適切に構成されているか
-- [ ] CORS設定にDocker用のオリジンが含まれているか
-- [ ] JWKSエンドポイントへの外部接続が可能か
+- [ ] `pnpm dev:workers` または `pnpm dev:full` が起動し、ポート8787で待ち受けているか
+- [ ] `.dev.vars` の `DATABASE_URL`、`CLERK_SECRET_KEY` が有効か
+- [ ] `workerd` プロセスが残っている場合は終了させて再起動したか
+- [ ] JWKSエンドポイント（`<issuer>/.well-known/jwks.json`）へアクセスできるか
 
 ### パフォーマンス最適化
 
@@ -297,4 +271,5 @@ console.log('JWT payload:', payload)
 
 ## 🔄 更新履歴
 
+- 2025-09-22: ローカル開発手順を `pnpm dev:full` ベースに更新
 - 2025-09-05: 初版作成 - Docker環境対応、JWKS検証実装

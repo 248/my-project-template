@@ -9,16 +9,27 @@
 
 const fs = require('fs')
 const path = require('path')
-const yaml = require('js-yaml')
+const { loadRegistryFromConfig } = require('./registry-loader')
+const { loadConfig } = require('./config-loader')
 
-// Load configuration
-const config = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8')
-)
+let currentConfig = null
+let registryContext = null
+let registry = null
+let registrySourceLabel = 'registry.yaml'
+let registryFragments = []
 
-// Load registry
-const registryPath = path.resolve(config.registry.path)
-const registry = yaml.load(fs.readFileSync(registryPath, 'utf8'))
+function refreshRegistryContext() {
+  registry = registryContext.registry
+  if (
+    registryContext.sourceType === 'file' &&
+    registryContext.sources.length === 1
+  ) {
+    registrySourceLabel = registryContext.sources[0].relativePath
+  } else {
+    registrySourceLabel = registryContext.configuredPath
+  }
+  registryFragments = registryContext.sources.map(source => source.relativePath)
+}
 
 /**
  * Convert snake_case to PascalCase for Go constants
@@ -49,6 +60,7 @@ function toGoConstantName(key) {
  * Generate Go code file
  */
 function generateGoFile() {
+  const config = currentConfig || loadConfig()
   const messages = registry.messages || {}
   const allKeys = []
 
@@ -78,7 +90,7 @@ function generateGoFile() {
 
   const goCode = `// Code generated from message registry - DO NOT EDIT
 //
-// Generated from: ${config.registry.path}
+// Generated from: ${registrySourceLabel}
 // Version: ${registry.metadata.version}
 // Generated at: ${new Date().toISOString()}
 //
@@ -306,14 +318,34 @@ func (s *APISuccess) WithData(data interface{}) *APISuccess {
 /**
  * Main generation function
  */
-function generateGo() {
-  if (!config.targets.go.enabled) {
+function generateGo(configOverride) {
+  const config = configOverride || loadConfig()
+  currentConfig = config
+
+  if (!config.targets?.go?.enabled) {
     console.log('⏭️  Go code generation is disabled')
     return
   }
 
+  registryContext = loadRegistryFromConfig(config.registry)
+  refreshRegistryContext()
   console.log('🚀 Generating Go code from message registry...')
-  console.log(`📄 Registry: ${registryPath}`)
+  const basePathForLog =
+    registryContext.basePath || path.resolve(config.registry.path)
+  console.log(
+    '📄 Registry source (' + registryContext.sourceType + '): ' + basePathForLog
+  )
+  if (registryContext.sourceType === 'directory') {
+    console.log('   Config path: ' + config.registry.path)
+  }
+  if (registryFragments.length === 1) {
+    console.log('   Fragment: ' + registryFragments[0])
+  } else if (registryFragments.length > 1) {
+    console.log('   Fragments (' + registryFragments.length + '):')
+    for (const fragment of registryFragments) {
+      console.log('   • ' + fragment)
+    }
+  }
   console.log(`🎯 Target: ${config.targets.go.output_path}`)
 
   try {

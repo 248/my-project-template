@@ -12,44 +12,117 @@ const path = require('path')
 const { generateTypeScript } = require('./generate-typescript')
 const { generateGo } = require('./generate-go')
 const { updateOpenApi } = require('./update-openapi')
+const { loadRegistryFromConfig } = require('./registry-loader')
+const { loadConfig } = require('./config-loader')
 
-// Load configuration
-const configPath =
-  process.env.MESSAGE_CONFIG_PATH || path.join(__dirname, 'config.json')
-const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+const config = loadConfig()
+
+function isPlainObject(value) {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.prototype.toString.call(value) === '[object Object]'
+  )
+}
+
+function validateRegistryStructure(registry) {
+  if (!isPlainObject(registry.metadata)) {
+    throw new Error('Registry metadata must be an object with required fields')
+  }
+
+  if (!isPlainObject(registry.messages)) {
+    throw new Error('Registry messages must be an object of namespaces')
+  }
+
+  const requiredFields = [
+    'key',
+    'namespace',
+    'category',
+    'description',
+    'template_params',
+    'since',
+    'deprecated',
+    'api_usage',
+    'ui_usage',
+  ]
+
+  for (const [namespace, entries] of Object.entries(registry.messages)) {
+    if (!isPlainObject(entries)) {
+      throw new Error(`Registry namespace '${namespace}' must be an object`)
+    }
+
+    for (const [messageName, messageData] of Object.entries(entries)) {
+      if (!isPlainObject(messageData)) {
+        throw new Error(
+          `Registry message '${namespace}.${messageName}' must be an object`
+        )
+      }
+
+      const missingFields = requiredFields.filter(
+        field => messageData[field] === undefined
+      )
+
+      if (missingFields.length > 0) {
+        throw new Error(
+          `Registry message '${namespace}.${messageName}' missing required fields: ${missingFields.join(', ')}`
+        )
+      }
+
+      if (!Array.isArray(messageData.template_params)) {
+        throw new Error(
+          `Registry message '${namespace}.${messageName}' expects template_params to be an array`
+        )
+      }
+    }
+  }
+}
 
 /**
  * Verify registry file exists and is valid
  */
 function verifyRegistry() {
-  const registryPath = path.resolve(config.registry.path)
+  const context = loadRegistryFromConfig(config.registry)
+  const { registry, sources, sourceType, basePath } = context
 
-  if (!fs.existsSync(registryPath)) {
-    throw new Error(`Registry file not found: ${registryPath}`)
+  const baseForLog = basePath || path.resolve(config.registry.path)
+
+  console.log('📄 Registry source (' + sourceType + '): ' + baseForLog)
+  if (sourceType === 'directory' && config.registry.path) {
+    console.log('   Config path: ' + config.registry.path)
   }
 
-  console.log(`📄 Registry: ${registryPath}`)
-
-  try {
-    const yaml = require('js-yaml')
-    const registry = yaml.load(fs.readFileSync(registryPath, 'utf8'))
-
-    if (!registry.metadata || !registry.messages) {
-      throw new Error('Invalid registry format: missing metadata or messages')
+  if (sources.length === 1) {
+    console.log('   Fragment: ' + sources[0].relativePath)
+  } else if (sources.length > 1) {
+    console.log('   Fragments (' + sources.length + '):')
+    for (const source of sources) {
+      console.log('   • ' + source.relativePath)
     }
-
-    console.log(`📊 Registry version: ${registry.metadata.version}`)
-    console.log(
-      `🌐 Supported languages: ${registry.metadata.supported_languages.join(', ')}`
-    )
-    console.log(
-      `🏷️  Supported locales: ${registry.metadata.supported_locales.join(', ')}`
-    )
-
-    return registry
-  } catch (error) {
-    throw new Error(`Failed to parse registry: ${error.message}`)
   }
+
+  if (!registry.metadata || !registry.messages) {
+    throw new Error('Invalid registry format: missing metadata or messages')
+  }
+
+  if (registry.metadata.version) {
+    console.log('📊 Registry version: ' + registry.metadata.version)
+  }
+  if (registry.metadata.supported_languages) {
+    console.log(
+      '🌐 Supported languages: ' +
+        registry.metadata.supported_languages.join(', ')
+    )
+  }
+  if (registry.metadata.supported_locales) {
+    console.log(
+      '🏷️  Supported locales: ' + registry.metadata.supported_locales.join(', ')
+    )
+  }
+
+  validateRegistryStructure(registry)
+
+  return context
 }
 
 /**
@@ -93,13 +166,13 @@ function generateLocaleFiles(registry) {
 /**
  * Update OpenAPI schema with message codes
  */
-function updateOpenAPISchema(registry) {
-  if (!config.openapi_integration.enabled) {
+function updateOpenAPISchema(registry, currentConfig) {
+  if (!currentConfig.openapi_integration.enabled) {
     console.log('⏭️  OpenAPI integration disabled')
     return
   }
 
-  const schemaPath = path.resolve(config.openapi_integration.schema_path)
+  const schemaPath = path.resolve(currentConfig.openapi_integration.schema_path)
 
   if (!fs.existsSync(schemaPath)) {
     console.log(`⚠️  OpenAPI schema not found: ${schemaPath}`)
@@ -107,7 +180,7 @@ function updateOpenAPISchema(registry) {
   }
 
   console.log('🔄 Updating OpenAPI schema with message codes...')
-  updateOpenApi()
+  updateOpenApi(currentConfig)
 }
 
 /**
@@ -120,30 +193,48 @@ async function generateAll(options = {}) {
   try {
     // Step 1: Verify registry
     console.log('\n📋 Step 1: Verifying registry...')
-    const registry = verifyRegistry()
+    const registryContext = verifyRegistry()
+    const { registry } = registryContext
     const stats = countMessages(registry)
+    const targets = config.targets || {}
+    const tsTarget = targets.typescript
+    const goTarget = targets.go
+    const tsEnabled = Boolean(tsTarget && tsTarget.enabled)
+    const goEnabled = Boolean(goTarget && goTarget.enabled)
 
     if (options.dryRun) {
       console.log('\n🧪 Dry run summary:')
 
-      const dryRunSteps = [
-        {
-          enabled: config.targets.typescript.enabled,
-          message: `Would generate TypeScript code at ${config.targets.typescript.output_path}`,
-        },
-        {
-          enabled: config.targets.go.enabled,
-          message: `Would generate Go code at ${config.targets.go.output_path}`,
-        },
-        {
-          enabled: true, // locale files are always processed
-          message: 'Would process locale files',
-        },
-        {
-          enabled: config.openapi_integration.enabled,
+      const dryRunSteps = []
+
+      if (tsEnabled) {
+        const outputPath =
+          tsTarget.output_path || 'unknown TypeScript output path'
+        dryRunSteps.push({
+          enabled: true,
+          message: `Would generate TypeScript code at ${outputPath}`,
+        })
+      }
+
+      if (goEnabled) {
+        const outputPath = goTarget.output_path || 'unknown Go output path'
+        dryRunSteps.push({
+          enabled: true,
+          message: `Would generate Go code at ${outputPath}`,
+        })
+      }
+
+      dryRunSteps.push({
+        enabled: true, // locale files are always processed
+        message: 'Would process locale files',
+      })
+
+      if (config.openapi_integration?.enabled) {
+        dryRunSteps.push({
+          enabled: true,
           message: `Would update OpenAPI schema at ${config.openapi_integration.schema_path}`,
-        },
-      ]
+        })
+      }
 
       for (const step of dryRunSteps) {
         if (step.enabled) {
@@ -160,20 +251,24 @@ async function generateAll(options = {}) {
 
     // Step 2: Generate TypeScript
     console.log('\n🔷 Step 2: Generating TypeScript code...')
-    if (config.targets.typescript.enabled) {
-      generateTypeScript()
-    } else {
+    if (tsEnabled) {
+      generateTypeScript(config)
+    } else if (tsTarget) {
       console.log('⏭️  TypeScript generation disabled')
+    } else {
+      console.log('⏭️  TypeScript target not configured')
     }
 
     // Step 3: Generate Go (if enabled)
     console.log('\n🔶 Step 3: Generating Go code...')
-    if (config.targets.go.enabled) {
-      generateGo()
-    } else {
+    if (goEnabled) {
+      generateGo(config)
+    } else if (goTarget) {
       console.log(
         '⏭️  Go generation disabled (enable in config.json when ready)'
       )
+    } else {
+      console.log('⏭️  Go target not configured')
     }
 
     // Step 4: Generate locale files
@@ -182,11 +277,14 @@ async function generateAll(options = {}) {
 
     // Step 5: Update OpenAPI schema
     console.log('\n📄 Step 5: Updating OpenAPI schema...')
-    updateOpenAPISchema(registry)
+    updateOpenAPISchema(registry, config)
 
     // Summary
     console.log('\n' + '='.repeat(60))
     console.log('✨ Message code generation completed successfully!')
+    console.log(
+      `completed for ${stats.totalMessages} messages across ${stats.namespaces.length} namespaces`
+    )
     console.log(
       `📊 Generated code for ${stats.totalMessages} messages across ${stats.namespaces.length} namespaces`
     )

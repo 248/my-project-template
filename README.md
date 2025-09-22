@@ -35,11 +35,16 @@
 pnpm install
 
 # 2. 環境変数設定
-cp apps/backend/.dev.vars.example apps/backend/.dev.vars
-# .dev.vars と .env を編集（DATABASE_URL等を設定）
+pnpm setup:local
+# ↳ `.env.local`（devcontainer 用）/ `apps/frontend/.env.local` / `apps/backend/.dev.vars` / `apps/backend/.env` を雛形から生成
+#    生成されたファイルを開いて NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY や DATABASE_URL などを実際の値に更新してください
 
 # 3. 開発サーバー起動
-pnpm dev:workers-fullstack
+pnpm dev:full
+
+# 4. （任意）環境診断
+pnpm run doctor
+# ↳ 主要な環境変数やポート使用状況を確認します
 ```
 
 **アクセス先**:
@@ -80,7 +85,8 @@ my-project-template/
 
 ### 開発用
 
-- `pnpm dev:workers-fullstack` - フロント・バック同時起動
+- `pnpm dev:full` - Workers とフロントエンドの同時起動
+- `pnpm run doctor` - 必要な環境変数やポート状態を診断
 - `pnpm --filter @template/frontend dev` - フロントエンドのみ
 - `pnpm --filter @template/backend dev:workers` - Workersのみ
 

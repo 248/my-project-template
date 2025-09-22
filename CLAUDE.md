@@ -105,7 +105,7 @@ git commit -m "fix: ヘルスチェックのバグを修正"
 
 Claude は以下のサーバー関連操作を**一切実行してはならない**：
 
-- `pnpm dev`, `pnpm dev:workers`, `pnpm dev:fullstack` の実行
+- `pnpm dev`, `pnpm dev:workers`, `pnpm dev:full` の実行
 - `wrangler dev`, `wrangler deploy` の実行
 - その他あらゆるサーバー起動・再起動・停止コマンド
 
@@ -115,7 +115,7 @@ Claude は以下のサーバー関連操作を**一切実行してはならな�
 
 ```
 Workersサーバーの起動が必要です。以下のコマンドを実行してください：
-pnpm dev:workers-fullstack
+pnpm dev:full
 ```
 
 #### 品質チェック迂回・設定変更は要確認

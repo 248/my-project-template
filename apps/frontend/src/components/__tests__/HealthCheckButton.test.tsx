@@ -1,4 +1,5 @@
 import type { DetailedHealthCheck } from '@template/api-contracts-ts'
+import { getMessageSafe, type MessageKey } from '@template/shared'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -13,6 +14,10 @@ vi.mock('@/lib/api', () => ({
 }))
 
 const mockedGetDetailedHealth = vi.mocked(getDetailedHealth)
+
+type HealthResult = Awaited<ReturnType<typeof getDetailedHealth>>
+
+const t = (key: MessageKey) => getMessageSafe(key, 'ja')
 
 describe('HealthCheckButton', () => {
   const mockHealthyResponse: DetailedHealthCheck = {
@@ -75,18 +80,26 @@ describe('HealthCheckButton', () => {
     it('should render initial state correctly', () => {
       render(<HealthCheckButton />)
 
-      expect(screen.getByText('システムヘルスチェック')).toBeInTheDocument()
       expect(
-        screen.getByRole('button', { name: 'ヘルスチェック実行' })
+        screen.getByText(t('ui.system_health_check_title'))
       ).toBeInTheDocument()
-      expect(screen.queryByText('最終確認:')).not.toBeInTheDocument()
-      expect(screen.queryByText('エラー')).not.toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: t('action.run_health_check') })
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByText(`${t('ui.last_checked')}:`)
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByText(t('action.error_occurred'))
+      ).not.toBeInTheDocument()
     })
 
     it('should have correct button styling in initial state', () => {
       render(<HealthCheckButton />)
 
-      const button = screen.getByRole('button', { name: 'ヘルスチェック実行' })
+      const button = screen.getByRole('button', {
+        name: t('action.run_health_check'),
+      })
       expect(button).toHaveClass(
         'bg-blue-600',
         'text-white',
@@ -99,16 +112,8 @@ describe('HealthCheckButton', () => {
   describe('Loading State', () => {
     it('should show loading state during API call', async () => {
       // APIレスポンスを遅延させる
-      let resolvePromise: (value: {
-        success: boolean
-        data: DetailedHealthCheck
-        error: string | null
-      }) => void
-      const mockPromise = new Promise<{
-        success: boolean
-        data: DetailedHealthCheck
-        error: string | null
-      }>(resolve => {
+      let resolvePromise: (value: HealthResult) => void
+      const mockPromise = new Promise<HealthResult>(resolve => {
         resolvePromise = resolve
       })
       mockedGetDetailedHealth.mockReturnValue(mockPromise)
@@ -119,7 +124,7 @@ describe('HealthCheckButton', () => {
       fireEvent.click(button)
 
       // ローディング状態の確認
-      expect(screen.getByText('確認中...')).toBeInTheDocument()
+      expect(screen.getByText(t('ui.loading'))).toBeInTheDocument()
       expect(button).toBeDisabled()
       expect(button).toHaveClass(
         'bg-gray-400',
@@ -137,7 +142,7 @@ describe('HealthCheckButton', () => {
       // state更新を待つ
       await waitFor(
         () => {
-          expect(screen.queryByText('確認中...')).not.toBeInTheDocument()
+          expect(screen.queryByText(t('ui.loading'))).not.toBeInTheDocument()
         },
         { timeout: 3000 }
       )
@@ -163,7 +168,7 @@ describe('HealthCheckButton', () => {
 
       await waitFor(
         () => {
-          expect(screen.queryByText('確認中...')).not.toBeInTheDocument()
+          expect(screen.queryByText(t('ui.loading'))).not.toBeInTheDocument()
         },
         { timeout: 3000 }
       )
@@ -186,8 +191,13 @@ describe('HealthCheckButton', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(screen.queryByText('エラー')).not.toBeInTheDocument()
-        expect(screen.getByText(/最終確認:/)).toBeInTheDocument()
+        expect(
+          screen.queryByText(t('action.error_occurred'))
+        ).not.toBeInTheDocument()
+        const lastChecked = screen.getByText(content =>
+          content.startsWith(`${t('ui.last_checked')}:`)
+        )
+        expect(lastChecked).toBeInTheDocument()
       })
     })
 
@@ -198,9 +208,10 @@ describe('HealthCheckButton', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(
-          screen.getByText(/最終確認: \d{1,2}:\d{2}:\d{2}/)
-        ).toBeInTheDocument()
+        const lastChecked = screen.getByText(content =>
+          content.startsWith(`${t('ui.last_checked')}:`)
+        )
+        expect(lastChecked.textContent ?? '').toMatch(/\d{1,2}:\d{2}:\d{2}$/)
       })
     })
   })
@@ -210,7 +221,7 @@ describe('HealthCheckButton', () => {
       mockedGetDetailedHealth.mockResolvedValue({
         success: false,
         data: mockUnhealthyResponse,
-        error: 'サービスに問題が発生しています',
+        error: 'error.unknown_error',
       })
     })
 
@@ -221,12 +232,10 @@ describe('HealthCheckButton', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(screen.getByText('エラー')).toBeInTheDocument()
+        expect(screen.getByText(t('action.error_occurred'))).toBeInTheDocument()
       })
 
-      expect(
-        screen.getByText('サービスに問題が発生しています')
-      ).toBeInTheDocument()
+      expect(screen.getByText(t('error.unknown_error'))).toBeInTheDocument()
     })
   })
 
@@ -241,11 +250,15 @@ describe('HealthCheckButton', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(screen.getByText('エラー')).toBeInTheDocument()
+        expect(screen.getByText(t('action.error_occurred'))).toBeInTheDocument()
         expect(screen.getByText(errorMessage)).toBeInTheDocument()
       })
 
-      expect(screen.queryByText(/システムステータス:/)).not.toBeInTheDocument()
+      expect(
+        screen.queryByText(content =>
+          content.startsWith(`${t('ui.system_status')}:`)
+        )
+      ).not.toBeInTheDocument()
     })
 
     it('should handle non-Error objects gracefully', async () => {
@@ -257,7 +270,7 @@ describe('HealthCheckButton', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(screen.getByText('エラーが発生しました')).toBeInTheDocument()
+        expect(screen.getByText(t('action.error_occurred'))).toBeInTheDocument()
       })
     })
   })
@@ -277,23 +290,26 @@ describe('HealthCheckButton', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(screen.queryByText('エラー')).not.toBeInTheDocument()
-        expect(screen.getByText(/最終確認:/)).toBeInTheDocument()
+        expect(
+          screen.queryByText(t('action.error_occurred'))
+        ).not.toBeInTheDocument()
+        const lastChecked = screen.getByText(content =>
+          content.startsWith(`${t('ui.last_checked')}:`)
+        )
+        expect(lastChecked).toBeInTheDocument()
       })
 
       // 2回目はエラー
       mockedGetDetailedHealth.mockResolvedValueOnce({
         success: false,
         data: mockUnhealthyResponse,
-        error: 'Service unavailable',
+        error: 'error.unknown_error',
       })
 
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(
-          screen.getByText('サービスに問題が発生しています')
-        ).toBeInTheDocument()
+        expect(screen.getByText(t('error.unknown_error'))).toBeInTheDocument()
       })
     })
 
@@ -322,8 +338,13 @@ describe('HealthCheckButton', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(screen.queryByText('エラー')).not.toBeInTheDocument()
-        expect(screen.getByText(/最終確認:/)).toBeInTheDocument()
+        expect(
+          screen.queryByText(t('action.error_occurred'))
+        ).not.toBeInTheDocument()
+        const lastChecked = screen.getByText(content =>
+          content.startsWith(`${t('ui.last_checked')}:`)
+        )
+        expect(lastChecked).toBeInTheDocument()
       })
     })
   })
@@ -332,11 +353,13 @@ describe('HealthCheckButton', () => {
     it('should have proper ARIA roles and labels', () => {
       render(<HealthCheckButton />)
 
-      const button = screen.getByRole('button', { name: 'ヘルスチェック実行' })
+      const button = screen.getByRole('button', {
+        name: t('action.run_health_check'),
+      })
       expect(button).toBeInTheDocument()
 
       const heading = screen.getByRole('heading', {
-        name: 'システムヘルスチェック',
+        name: t('ui.system_health_check_title'),
       })
       expect(heading).toBeInTheDocument()
     })
@@ -359,8 +382,13 @@ describe('HealthCheckButton', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(screen.queryByText('エラー')).not.toBeInTheDocument()
-        expect(screen.getByText(/最終確認:/)).toBeInTheDocument()
+        expect(
+          screen.queryByText(t('action.error_occurred'))
+        ).not.toBeInTheDocument()
+        const lastChecked = screen.getByText(content =>
+          content.startsWith(`${t('ui.last_checked')}:`)
+        )
+        expect(lastChecked).toBeInTheDocument()
       })
     })
   })

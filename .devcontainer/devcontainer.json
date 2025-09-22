@@ -6,7 +6,7 @@
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "forwardPorts": [5173],
+  "forwardPorts": [3000, 8787, 5173],
   "runArgs": ["--env-file", ".env.local"],
   "postCreateCommand": "bash -lc 'bash .devcontainer/postCreate.sh'",
   "shutdownAction": "stopContainer",

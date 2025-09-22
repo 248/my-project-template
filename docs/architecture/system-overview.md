@@ -55,7 +55,7 @@ status: published
 ├─ tools/
 │  └─ codegen/                  # コード生成スクリプト
 ├─ infra/
-│  ├─ docker/                   # Docker 環境設定
+│  ├─ docker/                   # 旧Docker資材（現在は未使用）
 │  └─ scripts/                  # 開発プロセス停止スクリプト
 ├─ docs/                        # プロジェクトドキュメント
 │  ├─ api/                      # API仕様
@@ -91,7 +91,7 @@ status: published
 - **Code Generation**: OpenAPI Generator
 - **Linting**: ESLint + Prettier
 - **Testing**: Vitest / Jest
-- **Container**: Docker + Docker Compose
+- **Container**: （Legacy）Docker
 
 ## 🔄 データフロー
 

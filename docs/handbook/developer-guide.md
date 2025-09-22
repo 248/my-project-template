@@ -31,15 +31,27 @@ pnpm install
 ### 2. 環境変数設定
 
 ```bash
-# バックエンド環境変数設定（Workers用）
-cp apps/backend/.dev.vars.example apps/backend/.dev.vars
-# .dev.vars ファイルを編集して実際の認証情報を設定
-
-# Prisma用環境変数設定
-# apps/backend/.env ファイルを作成（DATABASE_URLのみ）
-echo 'DATABASE_URL="postgresql://username:password@endpoint.neon.tech/dbname?sslmode=require"' > apps/backend/.env
-# 実際のNeon PostgreSQLの接続文字列に置き換えてください
+# 推奨: 自動セットアップ
+pnpm setup:local
 ```
+
+- `apps/frontend/.env.local`（Next.js 用）と `apps/backend/.dev.vars`（Workers 用）が雛形から生成されます。
+- `.env.local` は devcontainer 向けの共通設定として生成されます（必要に応じて編集してください）。
+- `apps/backend/.env`（Prisma CLI 用）も作成され、`DATABASE_URL` の雛形が書き込まれます。
+- 生成されたファイルを開き、Clerk の公開鍵や `DATABASE_URL` など実際の値に更新してください。
+
+> **NOTE:** `apps/frontend/.env.local` の `NEXT_PUBLIC_API_BASE_URL` はローカル Workers が待ち受ける `http://127.0.0.1:8787` を指す必要があります。値が未設定のままだと `pnpm dev:full` 実行時に API クライアント初期化で失敗します。
+
+#### 手動セットアップ（補足）
+
+```bash
+cp apps/backend/.dev.vars.example apps/backend/.dev.vars
+cp apps/frontend/.env.local.example apps/frontend/.env.local
+cp .env.local.example .env.local
+echo 'DATABASE_URL="postgresql://username:password@endpoint.neon.tech/dbname?sslmode=require"' > apps/backend/.env
+```
+
+> `apps/frontend/.env.local` と `apps/backend/.dev.vars` で、DATABASE_URL / CLERK_SECRET_KEY / NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY などをプロジェクトに合わせて編集してください。
 
 ### 3. 型・スキーマ生成（必須）
 
@@ -63,7 +75,7 @@ pnpm codegen && pnpm gen:messages && pnpm --filter @template/backend db:generate
 
 ```bash
 # フロントエンド（Next.js）とバックエンド（Cloudflare Workers）を同時起動
-pnpm dev:workers-fullstack
+pnpm dev:full
 
 # または個別起動
 pnpm --filter @template/frontend dev         # Next.js (localhost:3000)
@@ -82,6 +94,9 @@ pnpm gen:messages    # メッセージキー型生成確認
 pnpm type-check      # TypeScript エラー: 0件必須
 pnpm lint            # ESLint（段階的厳格化対応）
 pnpm test:run        # テスト実行
+
+# 環境診断
+pnpm run doctor      # 主要な環境変数とポートの状態を確認
 
 # コード整形
 pnpm lint:fix        # 自動修正可能なESLintエラー修正
@@ -152,7 +167,7 @@ pnpm gen:messages        # メッセージキー型定義生成
 # 開発
 pnpm dev                 # フロントエンド開発サーバー
 pnpm dev:workers         # バックエンドWorkers開発サーバー
-pnpm dev:workers-fullstack # フルスタック開発環境
+pnpm dev:full             # フルスタック開発環境
 
 # 品質チェック
 pnpm type-check          # TypeScript型チェック
@@ -235,7 +250,7 @@ pnpm codegen             # OpenAPI→型安全なクライアント生成
 pnpm postinstall         # 依存関係インストール後の自動生成
 pnpm prebuild            # ビルド前の自動生成
 pnpm quality-check       # 型チェック→Lint一括実行
-pnpm dev:workers-fullstack  # フロント・バック同時起動（Workers環境）
+pnpm dev:full               # フロント・バック同時起動（Workers環境）
 
 # Workers個別コマンド
 pnpm --filter @template/backend dev:workers    # Cloudflare Workers ローカル開発
@@ -245,33 +260,16 @@ pnpm --filter @template/backend wrangler       # wrangler CLI直接実行
 
 ### メッセージキー生成
 
+日常的な運用フローや CLI オプション、レジストリ分割のルールは [Message System Guide](./message-system-guide.md) に集約しています。以下はクイックリファレンスです。
+
 ```bash
-# メッセージレジストリの検証
-pnpm verify:messages
-
-# メッセージキーの生成（TypeScript型定義生成）
-node tools/message-codegen/generate.js
-
-# ドライラン実行（ファイルを変更せず動作確認）
+# 代表的なコマンド
+pnpm verify:messages          # レジストリと生成物の整合性検証
+node tools/message-codegen/generate.js    # TypeScript/Go/OpenAPI 生成
 node tools/message-codegen/generate.js --dry-run
 ```
 
-**dry-runモードの使用場面:**
-
-- `contracts/messages/registry.yaml`編集後の影響確認
-- CI/CDパイプラインでの動作検証
-- 生成される内容の事前確認
-- 書き込み権限がない環境での動作テスト
-
-**出力例:**
-
-```
-🧪 Dry run summary:
-   • Would generate TypeScript code at packages/shared/src/messages/keys.ts
-   • Would process locale files
-   • Would update OpenAPI schema at packages/api-contracts/openapi.yaml
-✨ Dry run completed for 38 messages across 6 namespaces
-```
+より詳細な手順（レジストリ構成、`MESSAGE_CONFIG_PATH` の使い分け、テスト方法など）は Message System Guide を参照してください。
 
 ---
 
