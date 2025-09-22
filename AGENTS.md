@@ -14,6 +14,7 @@
 - フロント: `pnpm dev` → http://localhost:3000
 - Workers: `pnpm dev:workers` → http://127.0.0.1:8787
 - フルスタック: `pnpm dev:full`
+- 環境診断: `pnpm run doctor`
 - Prisma: `pnpm db:generate|push|migrate|studio`
 - ビルド: `pnpm build`、起動: `pnpm start` / `pnpm start:api`
 - 品質: `pnpm type-check` / `pnpm lint` / `pnpm format:check` / `pnpm quality-check`

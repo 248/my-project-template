@@ -35,13 +35,16 @@
 pnpm install
 
 # 2. 環境変数設定
-cp apps/backend/.dev.vars.example apps/backend/.dev.vars
-cp apps/frontend/.env.local.example apps/frontend/.env.local
-# .dev.vars と .env.local を編集（DATABASE_URL や NEXT_PUBLIC_API_BASE_URL などを設定）
-# Prisma CLI 用に .env に DATABASE_URL を記載
+pnpm setup:local
+# ↳ `.env.local`（devcontainer 用）/ `apps/frontend/.env.local` / `apps/backend/.dev.vars` / `apps/backend/.env` を雛形から生成
+#    生成されたファイルを開いて NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY や DATABASE_URL などを実際の値に更新してください
 
 # 3. 開発サーバー起動
 pnpm dev:full
+
+# 4. （任意）環境診断
+pnpm run doctor
+# ↳ 主要な環境変数やポート使用状況を確認します
 ```
 
 **アクセス先**:
@@ -83,6 +86,7 @@ my-project-template/
 ### 開発用
 
 - `pnpm dev:full` - Workers とフロントエンドの同時起動
+- `pnpm run doctor` - 必要な環境変数やポート状態を診断
 - `pnpm --filter @template/frontend dev` - フロントエンドのみ
 - `pnpm --filter @template/backend dev:workers` - Workersのみ
 

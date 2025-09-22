@@ -31,21 +31,27 @@ pnpm install
 ### 2. 環境変数設定
 
 ```bash
-# バックエンド環境変数設定（Workers用）
-cp apps/backend/.dev.vars.example apps/backend/.dev.vars
-# .dev.vars ファイルを編集して実際の認証情報を設定（DATABASE_URL / CLERK_SECRET_KEY / CORS_ORIGIN など）
-
-# フロントエンド環境変数設定
-cp .env.local.example .env.local
-# NEXT_PUBLIC_API_BASE_URL を Workers のURL（例: http://127.0.0.1:8787）に設定
-
-# Prisma用環境変数設定
-# apps/backend/.env ファイルを作成（DATABASE_URLのみ）
-echo 'DATABASE_URL="postgresql://username:password@endpoint.neon.tech/dbname?sslmode=require"' > apps/backend/.env
-# 実際のNeon PostgreSQLの接続文字列に置き換えてください
+# 推奨: 自動セットアップ
+pnpm setup:local
 ```
 
-> **NOTE:** `.env.local` の `NEXT_PUBLIC_API_BASE_URL` は、ローカル開発中の Cloudflare Workers が待ち受ける `http://127.0.0.1:8787` を指すように設定してください。値が未設定のままだと `pnpm dev:full` 実行時に API クライアントの初期化で失敗します。
+- `apps/frontend/.env.local`（Next.js 用）と `apps/backend/.dev.vars`（Workers 用）が雛形から生成されます。
+- `.env.local` は devcontainer 向けの共通設定として生成されます（必要に応じて編集してください）。
+- `apps/backend/.env`（Prisma CLI 用）も作成され、`DATABASE_URL` の雛形が書き込まれます。
+- 生成されたファイルを開き、Clerk の公開鍵や `DATABASE_URL` など実際の値に更新してください。
+
+> **NOTE:** `apps/frontend/.env.local` の `NEXT_PUBLIC_API_BASE_URL` はローカル Workers が待ち受ける `http://127.0.0.1:8787` を指す必要があります。値が未設定のままだと `pnpm dev:full` 実行時に API クライアント初期化で失敗します。
+
+#### 手動セットアップ（補足）
+
+```bash
+cp apps/backend/.dev.vars.example apps/backend/.dev.vars
+cp apps/frontend/.env.local.example apps/frontend/.env.local
+cp .env.local.example .env.local
+echo 'DATABASE_URL="postgresql://username:password@endpoint.neon.tech/dbname?sslmode=require"' > apps/backend/.env
+```
+
+> `apps/frontend/.env.local` と `apps/backend/.dev.vars` で、DATABASE_URL / CLERK_SECRET_KEY / NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY などをプロジェクトに合わせて編集してください。
 
 ### 3. 型・スキーマ生成（必須）
 
@@ -88,6 +94,9 @@ pnpm gen:messages    # メッセージキー型生成確認
 pnpm type-check      # TypeScript エラー: 0件必須
 pnpm lint            # ESLint（段階的厳格化対応）
 pnpm test:run        # テスト実行
+
+# 環境診断
+pnpm run doctor      # 主要な環境変数とポートの状態を確認
 
 # コード整形
 pnpm lint:fix        # 自動修正可能なESLintエラー修正

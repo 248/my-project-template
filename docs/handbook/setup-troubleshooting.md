@@ -201,6 +201,9 @@ rm -rf .next apps/frontend/.next
 
 # 4. 再起動
 pnpm dev:full
+
+# 5. 追加チェック
+pnpm run doctor
 ```
 
 ---

@@ -36,6 +36,8 @@
 - `CLOUDFLARE_API_TOKEN` - [Cloudflareダッシュボード](https://dash.cloudflare.com/profile/api-tokens)から取得
 - `CLOUDFLARE_ACCOUNT_ID` - CloudflareダッシュボードのURL内のID
 
+> 🔐 **APIトークン権限**: `Account.Workers Scripts`（編集）と Cloudflare推奨の `User.Profile`（読み取り）の2権限を付与してください。`wrangler secret put` と Workers デプロイの双方が正しく動作します。
+
 ### 2. GitHub Variables の設定（オプション）
 
 段階的移行用の変数を設定：
@@ -75,6 +77,8 @@
 - CI/CDパイプラインの完全制御
 - プレビュー環境の動的URL設定が可能
 - バックエンドとの依存関係管理が確実
+
+> ℹ️ **`vercel link` は不要です**: `.vercel/project.json` はリポジトリに含めていません。GitHub Actions では `VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` の3つのSecretsだけでプロジェクトを識別します。ローカルでも `vercel link` を実行しないでください（過去に `Project not found` の原因になりました）。
 
 ### 5. 動的URL設定と本番環境スキップ
 
@@ -206,7 +210,8 @@ pnpm build:backend && pnpm deploy:workers:production
 以下のコマンドは**削除されました**（使用頻度が低いため）:
 
 - `build:vercel` - `pnpm build:frontend`で代用可能
-- `vercel:env` / `vercel:link` - 初回セットアップ時のみ手動実行
+- `vercel:env` - 必要ならCLIから個別に実行（通常はVercel Dashboardで管理）
+- `vercel:link` - ❌ 実行禁止。Secretsでプロジェクトを識別しているため不要です。
 - フロントエンドの`db:*`コマンド群 - DBはバックエンドで管理
 
 ## 🔧 トラブルシューティング

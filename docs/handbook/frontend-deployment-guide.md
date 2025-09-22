@@ -84,6 +84,7 @@ apps/frontend/
 2. **Project Name不一致**: 想定外の名前でプロジェクトが作成される問題
 3. **GUIでCommand設定**: GUI設定は空欄にして`vercel.json`の設定を使用する
 4. **Build Command順序**: `codegen` → `gen:messages` → `build`の順序が重要
+5. **`vercel link`の実行**: Secrets連携でCLIが自動判別するため、ローカル/CIともに実行不要です。
 
 #### 📄 実際の動作設定（`apps/frontend/vercel.json`）
 

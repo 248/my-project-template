@@ -8,6 +8,8 @@
     "dev:api": "pnpm --filter @template/backend dev",
     "dev:workers": "pnpm --filter @template/backend dev:workers",
     "dev:full": "concurrently \"pnpm dev:workers\" \"pnpm dev\" --names \"workers,frontend\" --prefix-colors \"blue,green\"",
+    "setup:local": "node tools/setup-local.mjs",
+    "doctor": "node tools/doctor.mjs",
     "db:push": "pnpm --filter @template/backend db:push",
     "db:migrate": "pnpm --filter @template/backend db:migrate",
     "db:seed": "pnpm --filter @template/backend db:seed",
