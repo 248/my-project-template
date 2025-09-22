@@ -5,7 +5,6 @@ interface TechStackItem {
   name: string
   version: string
   color: string
-  description: string
 }
 
 const techStackItems: TechStackItem[] = [
@@ -13,37 +12,31 @@ const techStackItems: TechStackItem[] = [
     name: 'Next.js',
     version: '15',
     color: 'bg-blue-100 text-blue-800',
-    description: 'React フレームワーク',
   },
   {
     name: 'TypeScript',
     version: '5.x',
     color: 'bg-green-100 text-green-800',
-    description: '型安全な JavaScript',
   },
   {
     name: 'Tailwind CSS',
     version: '3.x',
     color: 'bg-purple-100 text-purple-800',
-    description: 'ユーティリティファースト CSS',
   },
   {
     name: 'Hono',
     version: '4.x',
     color: 'bg-orange-100 text-orange-800',
-    description: 'Web API フレームワーク',
   },
   {
     name: 'Clerk',
     version: '5.x',
     color: 'bg-red-100 text-red-800',
-    description: '認証・ユーザー管理',
   },
   {
     name: 'Prisma',
     version: '5.x',
     color: 'bg-indigo-100 text-indigo-800',
-    description: 'データベース ORM',
   },
 ]
 

@@ -2,11 +2,31 @@
 
 import { useAuth } from '@clerk/nextjs'
 import type { paths, components } from '@template/api-contracts-ts'
+import type { MessageKey } from '@template/shared'
+import { MESSAGE_KEYS_BY_NAMESPACE } from '@template/shared'
 import createClient from 'openapi-fetch'
 
 import { getApiBaseUrl } from './utils/api-config'
 
 const API_BASE_URL = getApiBaseUrl()
+const MESSAGE_KEYS = MESSAGE_KEYS_BY_NAMESPACE
+const UNKNOWN_ERROR_KEY = MESSAGE_KEYS.error.unknown_error
+const AUTH_SIGNIN_REQUIRED_KEY = MESSAGE_KEYS.auth.signin_required
+const AUTH_ENSURE_FAILED_KEY = MESSAGE_KEYS.auth.ensure_failed
+
+// API path constants (not user-facing strings)
+// eslint-disable-next-line @template/message-keys/no-hardcoded-messages
+export const ENSURE_USER_ENDPOINT = '/api/auth/users/ensure' as const
+
+class AuthError extends Error {
+  readonly code: MessageKey
+
+  constructor(code: MessageKey) {
+    super(code)
+    this.name = 'AuthError'
+    this.code = code
+  }
+}
 
 /**
  * Result型パターンによるエラーハンドリング
@@ -55,6 +75,35 @@ export function useApiClient() {
     return error
   }
 
+  const buildAbsoluteUrl = (path: string): string => {
+    try {
+      return new URL(path, API_BASE_URL).toString()
+    } catch {
+      return path
+    }
+  }
+
+  const createApiError = (
+    error: unknown,
+    status = 500,
+    fallback: MessageKey = UNKNOWN_ERROR_KEY
+  ): ApiError => {
+    if (error instanceof AuthError) {
+      return {
+        message: error.code,
+        status: 401,
+      }
+    }
+
+    const details = formatErrorDetails(error)
+
+    return {
+      message: fallback,
+      status,
+      ...(details ? { details } : {}),
+    }
+  }
+
   /**
    * 認証ヘッダーを取得
    */
@@ -63,7 +112,7 @@ export function useApiClient() {
     const token = await getToken({ template: 'backend' })
 
     if (!token) {
-      throw new Error('Authentication required')
+      throw new AuthError(AUTH_SIGNIN_REQUIRED_KEY)
     }
 
     return { Authorization: `Bearer ${token}` }
@@ -120,7 +169,7 @@ export function useApiClient() {
   const ensureUser = async (): Promise<ApiResult<UserResponse>> => {
     try {
       const headers = await getAuthHeaders()
-      const response = await client.POST('/api/auth/users/ensure', {
+      const response = await client.POST(ENSURE_USER_ENDPOINT, {
         headers,
       })
 
@@ -129,7 +178,7 @@ export function useApiClient() {
           success: false,
           data: null,
           error: {
-            message: 'Failed to ensure user',
+            message: AUTH_ENSURE_FAILED_KEY,
             status: 500,
             details: formatErrorDetails(
               'error' in response ? response.error : null
@@ -143,7 +192,7 @@ export function useApiClient() {
           success: false,
           data: null,
           error: {
-            message: 'Invalid response format',
+            message: 'error.invalid_response_format',
             status: 500,
           },
         }
@@ -158,10 +207,7 @@ export function useApiClient() {
       return {
         success: false,
         data: null,
-        error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          status: 500,
-        },
+        error: createApiError(error),
       }
     }
   }
@@ -181,7 +227,7 @@ export function useApiClient() {
           success: false,
           data: null,
           error: {
-            message: 'Failed to get profile',
+            message: 'error.profile_retrieval_failed',
             status: 500,
             details: formatErrorDetails(
               'error' in response ? response.error : null
@@ -195,7 +241,7 @@ export function useApiClient() {
           success: false,
           data: null,
           error: {
-            message: 'Invalid response format',
+            message: 'error.invalid_response_format',
             status: 500,
           },
         }
@@ -210,10 +256,7 @@ export function useApiClient() {
       return {
         success: false,
         data: null,
-        error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          status: 500,
-        },
+        error: createApiError(error),
       }
     }
   }
@@ -236,7 +279,7 @@ export function useApiClient() {
           success: false,
           data: null,
           error: {
-            message: 'Failed to update profile',
+            message: 'error.profile_update_failed',
             status: 500,
             details: formatErrorDetails(
               'error' in response ? response.error : null
@@ -250,7 +293,7 @@ export function useApiClient() {
           success: false,
           data: null,
           error: {
-            message: 'Invalid response format',
+            message: 'error.invalid_response_format',
             status: 500,
           },
         }
@@ -265,10 +308,7 @@ export function useApiClient() {
       return {
         success: false,
         data: null,
-        error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          status: 500,
-        },
+        error: createApiError(error),
       }
     }
   }
@@ -286,7 +326,7 @@ export function useApiClient() {
           success: false,
           data: null,
           error: {
-            message: 'Health check failed',
+            message: UNKNOWN_ERROR_KEY,
             status: 500,
             details: formatErrorDetails(responseError),
           },
@@ -298,7 +338,7 @@ export function useApiClient() {
           success: false,
           data: null,
           error: {
-            message: 'Invalid response format',
+            message: 'error.invalid_response_format',
             status: 500,
           },
         }
@@ -313,10 +353,38 @@ export function useApiClient() {
       return {
         success: false,
         data: null,
-        error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          status: 500,
-        },
+        error: createApiError(error),
+      }
+    }
+  }
+
+  const simpleHealthCheck = async (): Promise<ApiResult<unknown>> => {
+    try {
+      const response = await fetch(buildAbsoluteUrl('/health'))
+      const data = await response.json().catch(() => null)
+
+      if (!response.ok) {
+        return {
+          success: false,
+          data: null,
+          error: {
+            message: UNKNOWN_ERROR_KEY,
+            status: response.status,
+            details: data,
+          },
+        }
+      }
+
+      return {
+        success: true,
+        data,
+        error: null,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        data: null,
+        error: createApiError(error),
       }
     }
   }
@@ -326,6 +394,7 @@ export function useApiClient() {
     getProfile,
     updateProfile,
     healthCheck,
+    simpleHealthCheck,
     checkAuthState,
   }
 }

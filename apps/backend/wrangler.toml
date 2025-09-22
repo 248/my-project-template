@@ -6,6 +6,12 @@ compatibility_flags = ["nodejs_compat"]
 
 keep_vars = true  # ← Dashboard側の未指定Varsを消さない
 
+# dev containerの対応
+[dev]
+ip = "0.0.0.0"
+port = 8787
+local_protocol = "http"
+
 # プレビュー環境
 [env.preview]
 name = "my-project-template-api-preview"

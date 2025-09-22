@@ -1,5 +1,5 @@
 'use client'
-
+import { getMessageSafe, type MessageKey } from '@template/shared'
 import { useState } from 'react'
 
 import { useMessages } from '@/hooks/useMessages'
@@ -25,13 +25,25 @@ interface ComponentState {
  */
 export function AuthHealthCheckButton() {
   const api = useApiClient()
-  const { tError, tUI, t } = useMessages()
+  const { tError, tUI, t, locale } = useMessages()
 
   const [state, setState] = useState<ComponentState>({
     isLoading: false,
     result: null,
     lastUpdated: null,
   })
+
+  const isMessageKey = (value: string): value is MessageKey => {
+    return value.startsWith('error.') || value.startsWith('auth.')
+  }
+
+  const resolveApiErrorMessage = (message: string): string => {
+    if (isMessageKey(message)) {
+      return getMessageSafe(message, locale)
+    }
+
+    return message
+  }
 
   /**
    * 認証付きAPIテスト実行
@@ -93,8 +105,9 @@ export function AuthHealthCheckButton() {
           success: false,
           data: null,
           error: {
-            message: error instanceof Error ? error.message : 'Unknown error',
+            message: 'error.unknown_error',
             status: 500,
+            details: error instanceof Error ? error.message : String(error),
           },
         },
         lastUpdated: new Date(),
@@ -112,7 +125,8 @@ export function AuthHealthCheckButton() {
       </h4>
       <div className="text-sm text-red-700 space-y-1">
         <p>
-          <strong>{tUI('action.error_details')}:</strong> {error.message}
+          <strong>{tUI('action.error_details')}:</strong>{' '}
+          {resolveApiErrorMessage(error.message)}
         </p>
         <p>
           <strong>{tUI('ui.http_status')}:</strong> {error.status}

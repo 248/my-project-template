@@ -2,6 +2,7 @@
 'use client'
 
 import type { DetailedHealthCheck } from '@template/api-contracts-ts'
+import { getMessageSafe, type MessageKey } from '@template/shared'
 import React, { useState } from 'react'
 
 import { useMessages } from '@/hooks/useMessages'
@@ -19,13 +20,29 @@ interface HealthCheckState {
  * システムの健全性状態を確認し、結果を表示
  */
 export function HealthCheckButton() {
-  const { tUI, t } = useMessages()
+  const { tUI, t, locale } = useMessages()
   const [state, setState] = useState<HealthCheckState>({
     isLoading: false,
     data: null,
     error: null,
     lastChecked: null,
   })
+
+  const isTranslatableError = (value: string): value is MessageKey => {
+    return value.startsWith('error.') || value.startsWith('auth.')
+  }
+
+  const resolveErrorMessage = (message: string | null): string => {
+    if (!message) {
+      return t('error.unknown_error')
+    }
+
+    if (isTranslatableError(message)) {
+      return getMessageSafe(message, locale)
+    }
+
+    return message
+  }
 
   /**
    * ヘルスチェック実行
@@ -39,15 +56,18 @@ export function HealthCheckButton() {
       setState({
         isLoading: false,
         data: result.data,
-        error: result.success ? null : result.error || t('error.unknown_error'),
+        error: result.success
+          ? null
+          : resolveErrorMessage(result.error ?? null),
         lastChecked: new Date(),
       })
     } catch (error) {
       setState({
         isLoading: false,
         data: null,
-        error:
-          error instanceof Error ? error.message : t('error.unknown_error'),
+        error: resolveErrorMessage(
+          error instanceof Error ? error.message : null
+        ),
         lastChecked: new Date(),
       })
     }
@@ -75,13 +95,13 @@ export function HealthCheckButton() {
   const getStatusIcon = (status?: string) => {
     switch (status) {
       case 'healthy':
-        return '✅'
+        return '\u2705'
       case 'degraded':
-        return '⚠️'
+        return '\u26A0\uFE0F'
       case 'unhealthy':
-        return '❌'
+        return '\u274C'
       default:
-        return '❓'
+        return '\u2753'
     }
   }
 

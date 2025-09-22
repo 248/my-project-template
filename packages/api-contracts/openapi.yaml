@@ -213,6 +213,20 @@ components:
         code:
           type: string
           enum:
+            - action.auth_api_test
+            - action.health_check_success
+            - action.response_data
+            - action.error_occurred
+            - action.error_details
+            - action.sign_in
+            - action.sign_up
+            - action.open_api_docs
+            - action.open_github
+            - action.view_docs
+            - action.template_info
+            - action.apitest_run_all_tests
+            - action.apitest_test_button
+            - action.run_health_check
             - auth.signin_required
             - auth.signin_success
             - auth.user_ensured
@@ -310,20 +324,6 @@ components:
             - ui.apitest_update_profile_name
             - ui.apitest_update_profile_description
             - ui.apitest_test_user_prefix
-            - action.auth_api_test
-            - action.health_check_success
-            - action.response_data
-            - action.error_occurred
-            - action.error_details
-            - action.sign_in
-            - action.sign_up
-            - action.open_api_docs
-            - action.open_github
-            - action.view_docs
-            - action.template_info
-            - action.apitest_run_all_tests
-            - action.apitest_test_button
-            - action.run_health_check
             - validation.field_required
             - validation.invalid_email
             - validation.invalid_url
@@ -496,6 +496,20 @@ components:
     MessageCode:
       type: string
       enum:
+        - action.auth_api_test
+        - action.health_check_success
+        - action.response_data
+        - action.error_occurred
+        - action.error_details
+        - action.sign_in
+        - action.sign_up
+        - action.open_api_docs
+        - action.open_github
+        - action.view_docs
+        - action.template_info
+        - action.apitest_run_all_tests
+        - action.apitest_test_button
+        - action.run_health_check
         - auth.signin_required
         - auth.signin_success
         - auth.user_ensured
@@ -593,20 +607,6 @@ components:
         - ui.apitest_update_profile_name
         - ui.apitest_update_profile_description
         - ui.apitest_test_user_prefix
-        - action.auth_api_test
-        - action.health_check_success
-        - action.response_data
-        - action.error_occurred
-        - action.error_details
-        - action.sign_in
-        - action.sign_up
-        - action.open_api_docs
-        - action.open_github
-        - action.view_docs
-        - action.template_info
-        - action.apitest_run_all_tests
-        - action.apitest_test_button
-        - action.run_health_check
         - validation.field_required
         - validation.invalid_email
         - validation.invalid_url
@@ -614,6 +614,20 @@ components:
         - validation.string_too_long
       description: Message codes from registry (version 1.0.0)
       x-enum-descriptions:
+        action.auth_api_test: '[action.button] Authenticated API test button label'
+        action.health_check_success: '[action.status] Health check success message'
+        action.response_data: '[action.label] Response data section label'
+        action.error_occurred: '[action.error] Error occurred message'
+        action.error_details: '[action.label] Error details section label'
+        action.sign_in: '[action.button] Sign in button label'
+        action.sign_up: '[action.button] Sign up button label'
+        action.open_api_docs: '[action.button] Open API docs action title'
+        action.open_github: '[action.button] Open GitHub repository action title'
+        action.view_docs: '[action.button] View documentation action title'
+        action.template_info: '[action.button] Template info action title'
+        action.apitest_run_all_tests: '[action.button] Run all tests button label'
+        action.apitest_test_button: '[action.button] Individual test button label'
+        action.run_health_check: '[action.button] Run health check button label'
         auth.signin_required: '[auth.error] User authentication required'
         auth.signin_success: '[auth.success] User signed in successfully'
         auth.user_ensured: '[auth.success] User information synchronized'
@@ -711,20 +725,6 @@ components:
         ui.apitest_update_profile_name: '[ui.label] Update profile test name'
         ui.apitest_update_profile_description: '[ui.label] Update profile test description'
         ui.apitest_test_user_prefix: '[ui.label] Test user display name prefix'
-        action.auth_api_test: '[action.button] Authenticated API test button label'
-        action.health_check_success: '[action.status] Health check success message'
-        action.response_data: '[action.label] Response data section label'
-        action.error_occurred: '[action.error] Error occurred message'
-        action.error_details: '[action.label] Error details section label'
-        action.sign_in: '[action.button] Sign in button label'
-        action.sign_up: '[action.button] Sign up button label'
-        action.open_api_docs: '[action.button] Open API docs action title'
-        action.open_github: '[action.button] Open GitHub repository action title'
-        action.view_docs: '[action.button] View documentation action title'
-        action.template_info: '[action.button] Template info action title'
-        action.apitest_run_all_tests: '[action.button] Run all tests button label'
-        action.apitest_test_button: '[action.button] Individual test button label'
-        action.run_health_check: '[action.button] Run health check button label'
         validation.field_required: '[validation.client_error] Required field validation error'
         validation.invalid_email: '[validation.client_error] Invalid email format validation error'
         validation.invalid_url: '[validation.client_error] Invalid URL format validation error'

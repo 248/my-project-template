@@ -15,6 +15,8 @@ vi.mock('@/lib/api', () => ({
 
 const mockedGetDetailedHealth = vi.mocked(getDetailedHealth)
 
+type HealthResult = Awaited<ReturnType<typeof getDetailedHealth>>
+
 const t = (key: MessageKey) => getMessageSafe(key, 'ja')
 
 describe('HealthCheckButton', () => {
@@ -110,16 +112,8 @@ describe('HealthCheckButton', () => {
   describe('Loading State', () => {
     it('should show loading state during API call', async () => {
       // APIレスポンスを遅延させる
-      let resolvePromise: (value: {
-        success: boolean
-        data: DetailedHealthCheck
-        error: string | null
-      }) => void
-      const mockPromise = new Promise<{
-        success: boolean
-        data: DetailedHealthCheck
-        error: string | null
-      }>(resolve => {
+      let resolvePromise: (value: HealthResult) => void
+      const mockPromise = new Promise<HealthResult>(resolve => {
         resolvePromise = resolve
       })
       mockedGetDetailedHealth.mockReturnValue(mockPromise)
@@ -227,7 +221,7 @@ describe('HealthCheckButton', () => {
       mockedGetDetailedHealth.mockResolvedValue({
         success: false,
         data: mockUnhealthyResponse,
-        error: 'サービスに問題が発生しています',
+        error: 'error.unknown_error',
       })
     })
 
@@ -241,9 +235,7 @@ describe('HealthCheckButton', () => {
         expect(screen.getByText(t('action.error_occurred'))).toBeInTheDocument()
       })
 
-      expect(
-        screen.getByText('サービスに問題が発生しています')
-      ).toBeInTheDocument()
+      expect(screen.getByText(t('error.unknown_error'))).toBeInTheDocument()
     })
   })
 
@@ -308,17 +300,16 @@ describe('HealthCheckButton', () => {
       })
 
       // 2回目はエラー
-      const secondErrorMessage = 'Service unavailable'
       mockedGetDetailedHealth.mockResolvedValueOnce({
         success: false,
         data: mockUnhealthyResponse,
-        error: secondErrorMessage,
+        error: 'error.unknown_error',
       })
 
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(screen.getByText(secondErrorMessage)).toBeInTheDocument()
+        expect(screen.getByText(t('error.unknown_error'))).toBeInTheDocument()
       })
     })
 

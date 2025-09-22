@@ -3,8 +3,11 @@
 import { useState } from 'react'
 
 import { useMessages } from '@/hooks/useMessages'
-import { useApiClient, type ApiResult } from '@/lib/client-api'
-import { getApiBaseUrl } from '@/lib/utils/api-config'
+import {
+  useApiClient,
+  type ApiResult,
+  ENSURE_USER_ENDPOINT,
+} from '@/lib/client-api'
 
 interface TestResult {
   endpoint: string
@@ -29,15 +32,6 @@ export function ApiTestPanel() {
   const { tUI, tError } = useMessages()
   const [results, setResults] = useState<Record<string, TestResult>>({})
 
-  // APIベースオリジン（envから取得してプレーンfetchにも適用）
-  let apiOrigin = ''
-  try {
-    const base = getApiBaseUrl()
-    apiOrigin = new URL(base).origin
-  } catch {
-    apiOrigin = ''
-  }
-
   // テスト可能なAPIエンドポイント定義
   const apiTests: ApiTest[] = [
     {
@@ -47,26 +41,7 @@ export function ApiTestPanel() {
       method: 'GET',
       description: tUI('ui.apitest_root_health_description'),
       requiresAuth: false,
-      testFn: async () => {
-        const url = apiOrigin ? `${apiOrigin}/` : '/'
-        const response = await fetch(url)
-        const data = await response.json()
-        return response.ok
-          ? {
-              success: true,
-              data,
-              error: null,
-            }
-          : {
-              success: false,
-              data: null,
-              error: {
-                message: `HTTP ${response.status}: ${response.statusText}`,
-                status: response.status,
-                details: data,
-              },
-            }
-      },
+      testFn: () => api.healthCheck(),
     },
     {
       id: 'simple-health',
@@ -75,26 +50,7 @@ export function ApiTestPanel() {
       method: 'GET',
       description: tUI('ui.apitest_simple_health_description'),
       requiresAuth: false,
-      testFn: async () => {
-        const url = apiOrigin ? `${apiOrigin}/health` : '/health'
-        const response = await fetch(url)
-        const data = await response.json()
-        return response.ok
-          ? {
-              success: true,
-              data,
-              error: null,
-            }
-          : {
-              success: false,
-              data: null,
-              error: {
-                message: `HTTP ${response.status}: ${response.statusText}`,
-                status: response.status,
-                details: data,
-              },
-            }
-      },
+      testFn: () => api.simpleHealthCheck(),
     },
     {
       id: 'detailed-health',
@@ -108,7 +64,9 @@ export function ApiTestPanel() {
     {
       id: 'ensure-user',
       name: tUI('ui.apitest_ensure_user_name'),
-      endpoint: '/api/auth/users/ensure',
+      // APIパスは開発者向け情報のためメッセージキー対象外
+      // eslint-disable-next-line @template/message-keys/no-hardcoded-messages
+      endpoint: ENSURE_USER_ENDPOINT,
       method: 'POST',
       description: tUI('ui.apitest_ensure_user_description'),
       requiresAuth: true,
@@ -199,8 +157,9 @@ export function ApiTestPanel() {
             success: false,
             data: null,
             error: {
-              message: error instanceof Error ? error.message : 'Unknown error',
+              message: 'error.unknown_error',
               status: 500,
+              details: error instanceof Error ? error.message : String(error),
             },
           },
           timestamp: new Date(),
@@ -217,17 +176,17 @@ export function ApiTestPanel() {
     }
   }
 
+  const LOCK_ICON = '\u{1F512}'
+
+  const statusIcons: Record<TestResult['status'], string> = {
+    idle: '\u26AA',
+    loading: '\u23F3',
+    success: '\u2705',
+    error: '\u274C',
+  }
+
   const getStatusIcon = (status: TestResult['status']) => {
-    switch (status) {
-      case 'loading':
-        return '⏳'
-      case 'success':
-        return '✅'
-      case 'error':
-        return '❌'
-      default:
-        return '⚪'
-    }
+    return statusIcons[status] ?? statusIcons.idle
   }
 
   const getStatusColor = (status: TestResult['status']) => {
@@ -275,8 +234,7 @@ export function ApiTestPanel() {
                       {test.name}
                     </h3>
                     <p className="text-xs text-gray-500">
-                      {test.method} {test.endpoint}
-                      {test.requiresAuth && ' 🔒'}
+                      {`${test.method} ${test.endpoint}${test.requiresAuth ? ` ${LOCK_ICON}` : ''}`}
                     </p>
                   </div>
                 </div>
