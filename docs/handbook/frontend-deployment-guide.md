@@ -260,7 +260,7 @@ permissions:
 
 - `apps/backend/` - バックエンドのみ
 - `docs/`, `*.md` - ドキュメント
-- `infra/docker/` - Docker設定
+- `infra/docker/` - 旧Docker設定（現在は未使用）
 
 **強制ビルド対応:**
 緊急時にどうしてもビルドしたい場合、Vercelの環境変数で`FORCE_BUILD=1`を設定すると必ずビルドが実行されます。

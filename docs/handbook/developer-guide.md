@@ -33,13 +33,19 @@ pnpm install
 ```bash
 # バックエンド環境変数設定（Workers用）
 cp apps/backend/.dev.vars.example apps/backend/.dev.vars
-# .dev.vars ファイルを編集して実際の認証情報を設定
+# .dev.vars ファイルを編集して実際の認証情報を設定（DATABASE_URL / CLERK_SECRET_KEY / CORS_ORIGIN など）
+
+# フロントエンド環境変数設定
+cp .env.local.example .env.local
+# NEXT_PUBLIC_API_BASE_URL を Workers のURL（例: http://127.0.0.1:8787）に設定
 
 # Prisma用環境変数設定
 # apps/backend/.env ファイルを作成（DATABASE_URLのみ）
 echo 'DATABASE_URL="postgresql://username:password@endpoint.neon.tech/dbname?sslmode=require"' > apps/backend/.env
 # 実際のNeon PostgreSQLの接続文字列に置き換えてください
 ```
+
+> **NOTE:** `.env.local` の `NEXT_PUBLIC_API_BASE_URL` は、ローカル開発中の Cloudflare Workers が待ち受ける `http://127.0.0.1:8787` を指すように設定してください。値が未設定のままだと `pnpm dev:full` 実行時に API クライアントの初期化で失敗します。
 
 ### 3. 型・スキーマ生成（必須）
 
@@ -63,7 +69,7 @@ pnpm codegen && pnpm gen:messages && pnpm --filter @template/backend db:generate
 
 ```bash
 # フロントエンド（Next.js）とバックエンド（Cloudflare Workers）を同時起動
-pnpm dev:workers-fullstack
+pnpm dev:full
 
 # または個別起動
 pnpm --filter @template/frontend dev         # Next.js (localhost:3000)
@@ -152,7 +158,7 @@ pnpm gen:messages        # メッセージキー型定義生成
 # 開発
 pnpm dev                 # フロントエンド開発サーバー
 pnpm dev:workers         # バックエンドWorkers開発サーバー
-pnpm dev:workers-fullstack # フルスタック開発環境
+pnpm dev:full             # フルスタック開発環境
 
 # 品質チェック
 pnpm type-check          # TypeScript型チェック
@@ -235,7 +241,7 @@ pnpm codegen             # OpenAPI→型安全なクライアント生成
 pnpm postinstall         # 依存関係インストール後の自動生成
 pnpm prebuild            # ビルド前の自動生成
 pnpm quality-check       # 型チェック→Lint一括実行
-pnpm dev:workers-fullstack  # フロント・バック同時起動（Workers環境）
+pnpm dev:full               # フロント・バック同時起動（Workers環境）
 
 # Workers個別コマンド
 pnpm --filter @template/backend dev:workers    # Cloudflare Workers ローカル開発

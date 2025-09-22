@@ -82,7 +82,6 @@ lsof -ti:3000,8000 | xargs kill -9  # ポート3000,8000解放
 | 問題                     | 症状                   | 事前回避策                   |
 | ------------------------ | ---------------------- | ---------------------------- |
 | **依存パッケージ不足**   | native modules失敗     | build-essential インストール |
-| **権限問題**             | Docker使用時権限エラー | ユーザーをdockerグループ追加 |
 | **メモリ不足**           | ビルド途中でクラッシュ | スワップファイル作成         |
 | **文字エンコーディング** | ファイル名文字化け     | UTF-8環境設定                |
 
@@ -98,8 +97,6 @@ curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 # 3. Docker権限設定
-sudo usermod -aG docker $USER
-# 再ログイン必要
 ```
 
 ---
@@ -175,39 +172,35 @@ pnpm db:generate
 pnpm dev
 ```
 
-### ❌ **Docker環境問題**
+### ❌ **Workers 開発サーバー問題**
 
 #### 症状パターン
 
 ```bash
-# パターン1: Docker未起動
-Cannot connect to the Docker daemon
+# パターン1: Workersのポートが使用中
+Error: failed: ::bind(sockfd, &addr.generic, addrlen)
 
 # パターン2: ポート競合
 Port is already allocated
 
 # パターン3: メモリ不足
-docker: Error response from daemon: OOMKilled
 ```
 
 #### 解決手順
 
 ```bash
-# 1. Dockerサービス確認・起動
-sudo systemctl start docker    # Linux
-open -a Docker                 # macOS
+# 1. 残存プロセスの停止
+pkill -f workerd 2>/dev/null || true
+pkill -f "next dev" 2>/dev/null || true
 
-# 2. 既存コンテナ・ポート確認
-docker ps -a
-docker-compose down  # 既存環境停止
+# 2. ポート状況確認
+ss -ltnp | grep ':3000\|:8787'
 
-# 3. リソース確認
-docker system df
-docker system prune  # 不要リソース削除
+# 3. キャッシュやビルド成果物のクリーンアップ
+rm -rf .next apps/frontend/.next
 
 # 4. 再起動
-pnpm docker:down
-pnpm dev:fullstack
+pnpm dev:full
 ```
 
 ---
@@ -229,9 +222,6 @@ pnpm --version
 git config user.name
 git config user.email
 
-# Docker 動作確認（Docker使用時）
-docker --version
-docker-compose --version
 ```
 
 ### ✅ **空きポート確認**

@@ -44,9 +44,9 @@ taskkill /IM node.exe /F
 # Unix系
 pkill -f node
 
-# 3. Dockerコンテナが原因の場合
-docker compose down
-docker ps -a  # 停止確認
+# 3. Workers/Next.jsが残っている場合
+pkill -f workerd 2>/dev/null || true
+pkill -f "next dev" 2>/dev/null || true
 ```
 
 ### プロセスが完全に停止しない
@@ -84,44 +84,37 @@ taskkill /IM node.exe /F /T
 sudo pkill -f node
 ```
 
-### Dockerコンテナの問題
+### Workers開発サーバーの問題
 
 **症状:**
 
-- `docker compose up` でエラー
-- コンテナが起動しない
-- データベース接続エラー
+- `pnpm dev:full` 実行直後に `::bind` などのエラーで落ちる
+- API へのリクエストが `fetch failed` になる
+- `pnpm dev:full` の実行ログに CORS や環境変数関連の警告が繰り返し出力される
 
 **調査方法:**
 
 ```bash
-# コンテナ状態確認
-docker compose ps
-docker compose logs
+# ポート使用状況確認（8787）
+ss -ltnp | grep 8787
 
-# 特定サービスのログ確認
-docker compose logs frontend
-docker compose logs backend
-docker compose logs postgres
+# 残存プロセス確認
+pgrep -fl workerd
 
-# ポート使用状況確認
-docker port [コンテナ名]
+# ログ確認（pnpm dev:full のコンソール出力）
 ```
 
 **対処方法:**
 
 ```bash
-# 1. 完全再起動
-docker compose down
-docker compose up --build
+# 1. 残存プロセスを停止
+pkill -f workerd 2>/dev/null || true
 
-# 2. ボリューム含む完全クリーンアップ
-docker compose down -v
-docker system prune -f
-docker compose up --build
+# 2. CORS_ORIGIN や DATABASE_URL が apps/backend/.dev.vars に設定されているか確認
+grep -E '^(CORS_ORIGIN|DATABASE_URL|CLERK_SECRET_KEY)=' apps/backend/.dev.vars
 
-# 3. 特定サービスのみ再起動
-docker compose restart [サービス名]
+# 3. 開発サーバーを再起動
+pnpm dev:full
 ```
 
 ## 🔍 詳細調査方法
@@ -172,19 +165,19 @@ fuser [ファイルパス]
 # 推奨停止手順
 1. Ctrl+C でグレースフル停止を試行
 2. 数秒待機
-3. プロセスが残っている場合は docker compose down
-4. それでも残る場合は個別にプロセス停止
+3. プロセスが残っている場合は `pkill -f workerd` などで個別に停止
+4. 再起動前に `ss -ltnp | grep 8787` でポートが空いているか確認
 ```
 
 ### 2. 開発環境の分離
 
 ```bash
-# Docker環境を使用（推奨）
-pnpm dev:fullstack  # Dockerで完全分離
+# Workers とフロントエンドを分離して起動
+pnpm dev:workers
+pnpm dev
 
-# ポートを変更して実行
-PORT=3001 pnpm dev
-BACKEND_PORT=8001 pnpm dev:api
+# APIベースURLを明示して起動
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8787 pnpm dev
 ```
 
 ### 3. 環境変数の確認
@@ -206,24 +199,16 @@ echo $PORT
 
 ```bash
 # Windows
-# Node.js系プロセス全停止
+# Node.js / pnpm / workerd 系プロセスを強制停止
 taskkill /IM node.exe /F /T
 taskkill /IM pnpm.exe /F /T
-
-# Docker完全停止
-docker compose down
-docker stop $(docker ps -aq)
-docker rm $(docker ps -aq)
+taskkill /IM workerd.exe /F /T 2>nul
 
 # Unix系
-# Node.js系プロセス全停止
+# Node.js / pnpm / workerd 系プロセスを強制停止
 sudo pkill -f node
 sudo pkill -f pnpm
-
-# Docker完全停止
-docker compose down
-docker stop $(docker ps -aq)
-docker rm $(docker ps -aq)
+sudo pkill -f workerd 2>/dev/null || true
 ```
 
 **システム再起動**
@@ -233,7 +218,7 @@ docker rm $(docker ps -aq)
 ## 📞 サポート
 
 1. **ドキュメント確認**: [開発者ガイド](developer-guide.md)
-2. **ログ確認**: `pnpm docker:logs` でエラーの詳細を確認
+2. **ログ確認**: `pnpm dev:full` のターミナル出力でエラー内容を確認
 3. **環境の初期化**: プロジェクトの再クローンと環境構築からやり直し
 
 ---

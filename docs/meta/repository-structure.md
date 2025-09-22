@@ -43,9 +43,9 @@ repo/
 │  ├─ ci/                       # CI/CD用スクリプト
 │  └─ docs/                     # docsビルド用スクリプト（Docusaurus/MkDocs等）
 ├─ infra/
-│  ├─ docker/                   # Dockerfile群（fe/be）
+│  ├─ docker/                   # 旧Docker環境（現在は未使用）
 │  ├─ k8s/                      # (任意) マニフェスト
-│  └─ docker-compose.yml        # FE/BE/DB/Redis まとめ起動
+│  └─ docker-compose.yml        # 旧Docker構成
 ├─ .devcontainer/               # VS Code/Devcontainers（FE/BE両方入る）
 ├─ .github/workflows/           # CI（パスベースで分離デプロイ）
 └─ CODEOWNERS

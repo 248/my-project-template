@@ -5,16 +5,16 @@
 - `apps/frontend`: Next.js 15（React 19, TS）。`src/` にUI・ページ。
 - `apps/backend`: Hono API。`prisma/` にスキーマ/seed。
 - `packages/`: 共通ライブラリ — `shared/`（utils/メッセージ）、`ui/`（コンポーネント）、`api-contracts/`（OpenAPI）、`config/`。
-- `infra/docker`: ローカル Docker（Postgres/Redis/pgAdmin）。
+- `infra/docker`: 旧ローカル環境（現在は未使用）。
 - `tools/`: コード生成・メッセージツール（生成物は手編集禁止）。
 
 ## 開発・ビルド・テスト
 
 - 依存関係: `pnpm install`
 - フロント: `pnpm dev` → http://localhost:3000
-- バックエンド: `pnpm dev:api` → http://localhost:8080
-- フルスタック（Docker）: `pnpm dev:fullstack` / `pnpm docker:up` / `pnpm docker:down`
-- DB: `pnpm db:up|down|restart|logs`、Prisma: `pnpm db:generate|push|migrate|studio`
+- Workers: `pnpm dev:workers` → http://127.0.0.1:8787
+- フルスタック: `pnpm dev:full`
+- Prisma: `pnpm db:generate|push|migrate|studio`
 - ビルド: `pnpm build`、起動: `pnpm start` / `pnpm start:api`
 - 品質: `pnpm type-check` / `pnpm lint` / `pnpm format:check` / `pnpm quality-check`
 - テスト: `pnpm test`、実行専用: `pnpm test:run`、カバレッジ: `pnpm test:coverage`
@@ -43,4 +43,4 @@
 ## セキュリティと設定
 
 - `.env` は `cp .env.example .env` で用意。秘密はコミットしない。
-- `infra/docker` や契約（OpenAPI）の変更は PR で合意し段階的に。
+- `infra/docker`（レガシー資材）や契約（OpenAPI）の変更は PR で合意し段階的に。

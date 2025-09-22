@@ -148,7 +148,7 @@ pnpm lint --fix    # 自動修正
 ### ⚠️ 要計画（影響大）
 
 - `scripts/**` - 自動生成スクリプト
-- `infra/docker/**` - Docker設定
+- `infra/docker/**` - 旧Docker設定（現在は未使用）
 - `package.json` - 依存関係・スクリプト
 - `contracts/openapi.yaml` - OpenAPI仕様
 

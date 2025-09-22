@@ -157,7 +157,7 @@
 
 - `pnpm dev` - フロントエンド開発サーバー起動
 - `pnpm dev:workers` - バックエンドWorkers開発サーバー起動
-- `pnpm dev:workers-fullstack` - フルスタック開発環境起動
+- `pnpm dev:full` - Workers とフロントエンドの同時起動
 
 **ビルド用:**
 
